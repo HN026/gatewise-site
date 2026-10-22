@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 275" role="img" aria-label="middleware-architecture">
+<defs><marker id="arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0L7 3.5L0 7" fill="#91ab9a"/></marker></defs>
+<rect width="800" height="275" fill="#101a13"/>
+<path d="M185 137.0 H217.5 V137.0 H247" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M430 137.0 H482.5 V62.0 H532" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M430 137.0 H482.5 V212.0 H532" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="20" y="105" width="165" height="64" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="102.5" y="130" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Application router</text>
+<text x="102.5" y="151" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Assign route priority</text>
+<rect x="250" y="105" width="180" height="64" rx="2" fill="#142019" stroke="#6faf91"/>
+<text x="340.0" y="130" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Shared Service</text>
+<text x="340.0" y="151" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">One admission budget</text>
+<rect x="535" y="30" width="240" height="64" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="655.0" y="55" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Critical handler</text>
+<text x="655.0" y="76" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Uses total capacity</text>
+<rect x="535" y="180" width="240" height="64" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="655.0" y="205" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Background handler</text>
+<text x="655.0" y="226" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Also checks background quota</text>
+</svg>

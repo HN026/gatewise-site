@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 385" role="img" aria-label="overload">
+<defs><marker id="arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0L7 3.5L0 7" fill="#91ab9a"/></marker></defs>
+<rect width="800" height="385" fill="#101a13"/>
+<path d="M170 62.0 H285.0 V62.0 H397" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M560 62.0 H585.0 V62.0 H607" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M170 207.0 H190.0 V207.0 H207" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M360 207.0 H380.0 V207.0 H397" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M560 207.0 H585.0 V207.0 H607" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M285.0 239 V287" fill="none" stroke="#ef8d7d" stroke-width="1.4" marker-end="url(#arrow)"/>
+<text x="293.0" y="264.5" fill="#ef8d7d" text-anchor="start" font-family="Arial,sans-serif" font-size="11">full</text>
+<rect x="20" y="30" width="150" height="64" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="95.0" y="55" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Without admission</text>
+<text x="95.0" y="76" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">120 requests/s</text>
+<rect x="400" y="30" width="160" height="64" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="480.0" y="55" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Active handlers</text>
+<text x="480.0" y="76" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Average ~60 in flight</text>
+<rect x="610" y="30" width="160" height="64" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="690.0" y="55" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Slow dependency</text>
+<text x="690.0" y="76" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Mean duration 500ms</text>
+<rect x="20" y="175" width="150" height="64" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="95.0" y="200" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">With admission</text>
+<text x="95.0" y="221" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">120 requests/s</text>
+<rect x="210" y="175" width="150" height="64" rx="2" fill="#142019" stroke="#6faf91"/>
+<text x="285.0" y="200" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Concurrency guard</text>
+<text x="285.0" y="221" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">L = 20</text>
+<rect x="400" y="175" width="160" height="64" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="480.0" y="200" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Active handlers</text>
+<text x="480.0" y="221" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">At most 20 admitted</text>
+<rect x="610" y="175" width="160" height="64" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="690.0" y="200" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Slow dependency</text>
+<text x="690.0" y="221" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Mean duration 500ms</text>
+<rect x="210" y="290" width="150" height="64" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="285.0" y="315" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">HTTP 503</text>
+<text x="285.0" y="336" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Excess arrivals</text>
+</svg>

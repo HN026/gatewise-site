@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 190" role="img" aria-label="feedback-loop">
+<defs><marker id="arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0L7 3.5L0 7" fill="#91ab9a"/></marker></defs>
+<rect width="800" height="190" fill="#101a13"/>
+<path d="M205 62.0 H252.5 V62.0 H297" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M510 62.0 H555.0 V62.0 H597" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M690.0 94 V160 H112.5 V97" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<text x="401.25" y="152" fill="#91ab9a" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">New limit applies to subsequent requests</text>
+<rect x="20" y="30" width="185" height="64" rx="2" fill="#142019" stroke="#6faf91"/>
+<text x="112.5" y="55" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Admission at limit L</text>
+<text x="112.5" y="76" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Record generation</text>
+<rect x="300" y="30" width="210" height="64" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="405.0" y="55" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Handler completes</text>
+<text x="405.0" y="76" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Release slot; record feedback</text>
+<rect x="600" y="30" width="180" height="64" rx="2" fill="#142019" stroke="#6faf91"/>
+<text x="690.0" y="55" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Evaluate window</text>
+<text x="690.0" y="76" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Hold / decrease / increase L</text>
+</svg>

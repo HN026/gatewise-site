@@ -1,0 +1,141 @@
+# HELP gatewise_concurrency_limit Current admission limit.
+# TYPE gatewise_concurrency_limit gauge
+gatewise_concurrency_limit{service="benchmark"} 4
+# HELP gatewise_concurrency_max_limit Configured admission ceiling.
+# TYPE gatewise_concurrency_max_limit gauge
+gatewise_concurrency_max_limit{service="benchmark"} 6
+# HELP gatewise_concurrency_min_limit Configured lower admission bound.
+# TYPE gatewise_concurrency_min_limit gauge
+gatewise_concurrency_min_limit{service="benchmark"} 2
+# HELP gatewise_concurrency_reserved_critical Capacity unavailable to background work.
+# TYPE gatewise_concurrency_reserved_critical gauge
+gatewise_concurrency_reserved_critical{service="benchmark"} 1
+# HELP gatewise_limit_adjustments_total Adaptive limit changes.
+# TYPE gatewise_limit_adjustments_total counter
+gatewise_limit_adjustments_total{direction="decrease",reason="healthy_saturation",service="benchmark"} 0
+gatewise_limit_adjustments_total{direction="decrease",reason="latency_pressure",service="benchmark"} 5
+gatewise_limit_adjustments_total{direction="decrease",reason="server_errors",service="benchmark"} 0
+gatewise_limit_adjustments_total{direction="increase",reason="healthy_saturation",service="benchmark"} 4
+gatewise_limit_adjustments_total{direction="increase",reason="latency_pressure",service="benchmark"} 0
+gatewise_limit_adjustments_total{direction="increase",reason="server_errors",service="benchmark"} 0
+# HELP gatewise_request_duration_seconds Duration of admitted handler work, excluding admission rejections.
+# TYPE gatewise_request_duration_seconds histogram
+gatewise_request_duration_seconds_bucket{outcome="canceled",priority="background",service="benchmark",le="0.005"} 0
+gatewise_request_duration_seconds_bucket{outcome="canceled",priority="background",service="benchmark",le="0.01"} 0
+gatewise_request_duration_seconds_bucket{outcome="canceled",priority="background",service="benchmark",le="0.025"} 0
+gatewise_request_duration_seconds_bucket{outcome="canceled",priority="background",service="benchmark",le="0.05"} 0
+gatewise_request_duration_seconds_bucket{outcome="canceled",priority="background",service="benchmark",le="0.1"} 0
+gatewise_request_duration_seconds_bucket{outcome="canceled",priority="background",service="benchmark",le="0.25"} 0
+gatewise_request_duration_seconds_bucket{outcome="canceled",priority="background",service="benchmark",le="0.5"} 0
+gatewise_request_duration_seconds_bucket{outcome="canceled",priority="background",service="benchmark",le="1"} 0
+gatewise_request_duration_seconds_bucket{outcome="canceled",priority="background",service="benchmark",le="2.5"} 0
+gatewise_request_duration_seconds_bucket{outcome="canceled",priority="background",service="benchmark",le="5"} 0
+gatewise_request_duration_seconds_bucket{outcome="canceled",priority="background",service="benchmark",le="10"} 0
+gatewise_request_duration_seconds_bucket{outcome="canceled",priority="background",service="benchmark",le="+Inf"} 0
+gatewise_request_duration_seconds_sum{outcome="canceled",priority="background",service="benchmark"} 0
+gatewise_request_duration_seconds_count{outcome="canceled",priority="background",service="benchmark"} 0
+gatewise_request_duration_seconds_bucket{outcome="canceled",priority="critical",service="benchmark",le="0.005"} 0
+gatewise_request_duration_seconds_bucket{outcome="canceled",priority="critical",service="benchmark",le="0.01"} 0
+gatewise_request_duration_seconds_bucket{outcome="canceled",priority="critical",service="benchmark",le="0.025"} 0
+gatewise_request_duration_seconds_bucket{outcome="canceled",priority="critical",service="benchmark",le="0.05"} 0
+gatewise_request_duration_seconds_bucket{outcome="canceled",priority="critical",service="benchmark",le="0.1"} 0
+gatewise_request_duration_seconds_bucket{outcome="canceled",priority="critical",service="benchmark",le="0.25"} 0
+gatewise_request_duration_seconds_bucket{outcome="canceled",priority="critical",service="benchmark",le="0.5"} 0
+gatewise_request_duration_seconds_bucket{outcome="canceled",priority="critical",service="benchmark",le="1"} 0
+gatewise_request_duration_seconds_bucket{outcome="canceled",priority="critical",service="benchmark",le="2.5"} 0
+gatewise_request_duration_seconds_bucket{outcome="canceled",priority="critical",service="benchmark",le="5"} 0
+gatewise_request_duration_seconds_bucket{outcome="canceled",priority="critical",service="benchmark",le="10"} 0
+gatewise_request_duration_seconds_bucket{outcome="canceled",priority="critical",service="benchmark",le="+Inf"} 0
+gatewise_request_duration_seconds_sum{outcome="canceled",priority="critical",service="benchmark"} 0
+gatewise_request_duration_seconds_count{outcome="canceled",priority="critical",service="benchmark"} 0
+gatewise_request_duration_seconds_bucket{outcome="completed",priority="background",service="benchmark",le="0.005"} 0
+gatewise_request_duration_seconds_bucket{outcome="completed",priority="background",service="benchmark",le="0.01"} 0
+gatewise_request_duration_seconds_bucket{outcome="completed",priority="background",service="benchmark",le="0.025"} 1054
+gatewise_request_duration_seconds_bucket{outcome="completed",priority="background",service="benchmark",le="0.05"} 1054
+gatewise_request_duration_seconds_bucket{outcome="completed",priority="background",service="benchmark",le="0.1"} 1111
+gatewise_request_duration_seconds_bucket{outcome="completed",priority="background",service="benchmark",le="0.25"} 1175
+gatewise_request_duration_seconds_bucket{outcome="completed",priority="background",service="benchmark",le="0.5"} 1175
+gatewise_request_duration_seconds_bucket{outcome="completed",priority="background",service="benchmark",le="1"} 1175
+gatewise_request_duration_seconds_bucket{outcome="completed",priority="background",service="benchmark",le="2.5"} 1175
+gatewise_request_duration_seconds_bucket{outcome="completed",priority="background",service="benchmark",le="5"} 1175
+gatewise_request_duration_seconds_bucket{outcome="completed",priority="background",service="benchmark",le="10"} 1175
+gatewise_request_duration_seconds_bucket{outcome="completed",priority="background",service="benchmark",le="+Inf"} 1175
+gatewise_request_duration_seconds_sum{outcome="completed",priority="background",service="benchmark"} 34.47603000499996
+gatewise_request_duration_seconds_count{outcome="completed",priority="background",service="benchmark"} 1175
+gatewise_request_duration_seconds_bucket{outcome="completed",priority="critical",service="benchmark",le="0.005"} 0
+gatewise_request_duration_seconds_bucket{outcome="completed",priority="critical",service="benchmark",le="0.01"} 0
+gatewise_request_duration_seconds_bucket{outcome="completed",priority="critical",service="benchmark",le="0.025"} 152
+gatewise_request_duration_seconds_bucket{outcome="completed",priority="critical",service="benchmark",le="0.05"} 152
+gatewise_request_duration_seconds_bucket{outcome="completed",priority="critical",service="benchmark",le="0.1"} 182
+gatewise_request_duration_seconds_bucket{outcome="completed",priority="critical",service="benchmark",le="0.25"} 206
+gatewise_request_duration_seconds_bucket{outcome="completed",priority="critical",service="benchmark",le="0.5"} 206
+gatewise_request_duration_seconds_bucket{outcome="completed",priority="critical",service="benchmark",le="1"} 206
+gatewise_request_duration_seconds_bucket{outcome="completed",priority="critical",service="benchmark",le="2.5"} 206
+gatewise_request_duration_seconds_bucket{outcome="completed",priority="critical",service="benchmark",le="5"} 206
+gatewise_request_duration_seconds_bucket{outcome="completed",priority="critical",service="benchmark",le="10"} 206
+gatewise_request_duration_seconds_bucket{outcome="completed",priority="critical",service="benchmark",le="+Inf"} 206
+gatewise_request_duration_seconds_sum{outcome="completed",priority="critical",service="benchmark"} 8.536645367999999
+gatewise_request_duration_seconds_count{outcome="completed",priority="critical",service="benchmark"} 206
+gatewise_request_duration_seconds_bucket{outcome="panicked",priority="background",service="benchmark",le="0.005"} 0
+gatewise_request_duration_seconds_bucket{outcome="panicked",priority="background",service="benchmark",le="0.01"} 0
+gatewise_request_duration_seconds_bucket{outcome="panicked",priority="background",service="benchmark",le="0.025"} 0
+gatewise_request_duration_seconds_bucket{outcome="panicked",priority="background",service="benchmark",le="0.05"} 0
+gatewise_request_duration_seconds_bucket{outcome="panicked",priority="background",service="benchmark",le="0.1"} 0
+gatewise_request_duration_seconds_bucket{outcome="panicked",priority="background",service="benchmark",le="0.25"} 0
+gatewise_request_duration_seconds_bucket{outcome="panicked",priority="background",service="benchmark",le="0.5"} 0
+gatewise_request_duration_seconds_bucket{outcome="panicked",priority="background",service="benchmark",le="1"} 0
+gatewise_request_duration_seconds_bucket{outcome="panicked",priority="background",service="benchmark",le="2.5"} 0
+gatewise_request_duration_seconds_bucket{outcome="panicked",priority="background",service="benchmark",le="5"} 0
+gatewise_request_duration_seconds_bucket{outcome="panicked",priority="background",service="benchmark",le="10"} 0
+gatewise_request_duration_seconds_bucket{outcome="panicked",priority="background",service="benchmark",le="+Inf"} 0
+gatewise_request_duration_seconds_sum{outcome="panicked",priority="background",service="benchmark"} 0
+gatewise_request_duration_seconds_count{outcome="panicked",priority="background",service="benchmark"} 0
+gatewise_request_duration_seconds_bucket{outcome="panicked",priority="critical",service="benchmark",le="0.005"} 0
+gatewise_request_duration_seconds_bucket{outcome="panicked",priority="critical",service="benchmark",le="0.01"} 0
+gatewise_request_duration_seconds_bucket{outcome="panicked",priority="critical",service="benchmark",le="0.025"} 0
+gatewise_request_duration_seconds_bucket{outcome="panicked",priority="critical",service="benchmark",le="0.05"} 0
+gatewise_request_duration_seconds_bucket{outcome="panicked",priority="critical",service="benchmark",le="0.1"} 0
+gatewise_request_duration_seconds_bucket{outcome="panicked",priority="critical",service="benchmark",le="0.25"} 0
+gatewise_request_duration_seconds_bucket{outcome="panicked",priority="critical",service="benchmark",le="0.5"} 0
+gatewise_request_duration_seconds_bucket{outcome="panicked",priority="critical",service="benchmark",le="1"} 0
+gatewise_request_duration_seconds_bucket{outcome="panicked",priority="critical",service="benchmark",le="2.5"} 0
+gatewise_request_duration_seconds_bucket{outcome="panicked",priority="critical",service="benchmark",le="5"} 0
+gatewise_request_duration_seconds_bucket{outcome="panicked",priority="critical",service="benchmark",le="10"} 0
+gatewise_request_duration_seconds_bucket{outcome="panicked",priority="critical",service="benchmark",le="+Inf"} 0
+gatewise_request_duration_seconds_sum{outcome="panicked",priority="critical",service="benchmark"} 0
+gatewise_request_duration_seconds_count{outcome="panicked",priority="critical",service="benchmark"} 0
+# HELP gatewise_requests_admitted_total Requests admitted to handlers.
+# TYPE gatewise_requests_admitted_total counter
+gatewise_requests_admitted_total{priority="background",service="benchmark"} 1175
+gatewise_requests_admitted_total{priority="critical",service="benchmark"} 206
+# HELP gatewise_requests_completed_total Admitted requests that ended.
+# TYPE gatewise_requests_completed_total counter
+gatewise_requests_completed_total{outcome="canceled",priority="background",service="benchmark",status_class="none"} 0
+gatewise_requests_completed_total{outcome="canceled",priority="critical",service="benchmark",status_class="none"} 0
+gatewise_requests_completed_total{outcome="completed",priority="background",service="benchmark",status_class="1xx"} 0
+gatewise_requests_completed_total{outcome="completed",priority="background",service="benchmark",status_class="2xx"} 1175
+gatewise_requests_completed_total{outcome="completed",priority="background",service="benchmark",status_class="3xx"} 0
+gatewise_requests_completed_total{outcome="completed",priority="background",service="benchmark",status_class="4xx"} 0
+gatewise_requests_completed_total{outcome="completed",priority="background",service="benchmark",status_class="5xx"} 0
+gatewise_requests_completed_total{outcome="completed",priority="background",service="benchmark",status_class="other"} 0
+gatewise_requests_completed_total{outcome="completed",priority="critical",service="benchmark",status_class="1xx"} 0
+gatewise_requests_completed_total{outcome="completed",priority="critical",service="benchmark",status_class="2xx"} 206
+gatewise_requests_completed_total{outcome="completed",priority="critical",service="benchmark",status_class="3xx"} 0
+gatewise_requests_completed_total{outcome="completed",priority="critical",service="benchmark",status_class="4xx"} 0
+gatewise_requests_completed_total{outcome="completed",priority="critical",service="benchmark",status_class="5xx"} 0
+gatewise_requests_completed_total{outcome="completed",priority="critical",service="benchmark",status_class="other"} 0
+gatewise_requests_completed_total{outcome="panicked",priority="background",service="benchmark",status_class="none"} 0
+gatewise_requests_completed_total{outcome="panicked",priority="critical",service="benchmark",status_class="none"} 0
+# HELP gatewise_requests_in_flight Currently admitted work; may exceed a reduced limit while draining.
+# TYPE gatewise_requests_in_flight gauge
+gatewise_requests_in_flight{priority="background",service="benchmark"} 0
+gatewise_requests_in_flight{priority="critical",service="benchmark"} 0
+# HELP gatewise_requests_rejected_total Requests rejected before reaching handlers.
+# TYPE gatewise_requests_rejected_total counter
+gatewise_requests_rejected_total{priority="background",reason="concurrency_limit",service="benchmark"} 1435
+gatewise_requests_rejected_total{priority="background",reason="critical_capacity_reserved",service="benchmark"} 189
+gatewise_requests_rejected_total{priority="critical",reason="concurrency_limit",service="benchmark"} 194
+gatewise_requests_rejected_total{priority="critical",reason="critical_capacity_reserved",service="benchmark"} 0
+# HELP gatewise_service_info Service configuration information.
+# TYPE gatewise_service_info gauge
+gatewise_service_info{mode="adaptive",service="benchmark"} 1

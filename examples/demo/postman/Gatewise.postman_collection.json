@@ -1,0 +1,1080 @@
+{
+  "info": {
+    "name": "Gatewise",
+    "description": "Routing, admission, middleware, adaptive concurrency, metrics and benchmark-fixture checks. Prepare services and run individual folders as described in README.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Both backends running",
+      "item": [
+        {
+          "name": "Gatewise health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{gatewise_url}}/healthz"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Expected response\", function () { pm.expect(pm.response.json().status).to.eql(\"ok\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Users service greeting",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{gatewise_url}}/users/hello"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Expected response\", function () { pm.expect(pm.response.json().message).to.eql(\"Hello from the demo backend\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Catalog service greeting",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{gatewise_url}}/catalog/hello"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Expected response\", function () { pm.expect(pm.response.json().service).to.eql(\"catalog\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Catalog products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{gatewise_url}}/catalog/products"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Expected response\", function () { const b=pm.response.json(); pm.expect(b.service).to.eql(\"catalog\"); pm.expect(b.products).to.have.lengthOf(2); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Prefix stripped, POST body and query preserved",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{gatewise_url}}/users/echo?tag=a&tag=b",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"message\":\"routed\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Expected response\", function () { const b=pm.response.json(); pm.expect(b.path).to.eql(\"/echo\"); pm.expect(b.method).to.eql(\"POST\"); pm.expect(b.query.tag).to.eql([\"a\",\"b\"]); pm.expect(JSON.parse(b.body)).to.deep.eql({message:\"routed\"}); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Catalog short delay",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{gatewise_url}}/catalog/slow?delay={{short_delay}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Expected response\", function () { pm.expect(pm.response.json().service).to.eql(\"catalog\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Catalog header timeout",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{gatewise_url}}/catalog/slow?delay={{timeout_delay}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", function () { pm.response.to.have.status(504); });",
+                  "pm.test(\"Expected response\", function () { pm.expect(pm.response.json().error).to.eql(\"upstream_timeout\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Users header timeout",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{gatewise_url}}/users/slow?delay={{timeout_delay}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", function () { pm.response.to.have.status(504); });",
+                  "pm.test(\"Expected response\", function () { pm.expect(pm.response.json().error).to.eql(\"upstream_timeout\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "No partial prefix match",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{gatewise_url}}/users-other/hello"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", function () { pm.response.to.have.status(404); });",
+                  "pm.test(\"Expected response\", function () { pm.expect(pm.response.json().error).to.eql(\"route_not_found\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "No configured route",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{gatewise_url}}/hello"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", function () { pm.response.to.have.status(404); });",
+                  "pm.test(\"Expected response\", function () { pm.expect(pm.response.json().error).to.eql(\"route_not_found\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Backend 404 passes through",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{gatewise_url}}/catalog/missing"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", function () { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Proxy concurrency (both running)",
+      "description": "Both services must be running and idle. Defaults: users_limit=2, catalog_limit=2, saturation_delay_ms=1000; header timeout must exceed that delay. Each saturation request sends an asynchronous burst and verifies exact admissions, immediate 503s, other-service availability and independent health. Run folder sequentially, not individual burst items in parallel.",
+      "item": [
+        {
+          "name": "Saturate users; reject excess and keep catalog available",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{gatewise_url}}/healthz"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\nconst limit=Number(pm.environment.get(\"users_limit\"));\nconst holdMs=Number(pm.environment.get(\"saturation_delay_ms\"));\nif (!Number.isInteger(limit) || limit < 1 || limit > 16 || !Number.isInteger(holdMs) || holdMs < 200) {\n    throw new Error(\"Set users_limit to the configured limit (1-16) and saturation_delay_ms >= 200, below the proxy header timeout.\");\n}\nconst base=pm.environment.get(\"gatewise_url\");\nconst total=limit+4;\nconst results=[];\nlet otherResult=null, healthResult=null, completed=0;\nfunction finished() {\n    completed++;\n    if (completed !== total+2) return;\n    const accepted=results.filter(r => r.status===200);\n    const rejected=results.filter(r => r.status===503);\n    pm.test(\"Burst has exactly the configured number of accepted requests\", function () {\n        pm.expect(accepted.length).to.eql(limit);\n        pm.expect(rejected.length).to.eql(total-limit);\n        pm.expect(accepted.length+rejected.length).to.eql(total);\n    });\n    pm.test(\"Overload responses identify the service and are not queued\", function () {\n        rejected.forEach(r => {\n            pm.expect(r.body.error).to.eql(\"service_overloaded\");\n            pm.expect(r.body.service).to.eql(\"users\");\n            pm.expect(r.elapsed).to.be.below(holdMs);\n        });\n    });\n    pm.test(\"Other service stays available during the burst\", function () {\n        pm.expect(otherResult.status).to.eql(200);\n    });\n    pm.test(\"Gatewise health bypasses service limits\", function () {\n        pm.expect(healthResult.status).to.eql(200);\n    });\n}\nfor (let i=0; i<total; i++) {\n    const started=Date.now();\n    pm.sendRequest({url:base+\"/users/slow?delay=\"+holdMs+\"ms\",method:\"GET\"},function(err,res) {\n        let body={};\n        if (res) {try {body=res.json();} catch (_) {}}\n        results.push({status:err ? 0 : res.code,body:body,elapsed:Date.now()-started});\n        finished();\n    });\n}\npm.sendRequest(base+\"/catalog/hello\",function(err,res) {\n    otherResult={status:err ? 0 : res.code};finished();\n});\npm.sendRequest(base+\"/healthz\",function(err,res) {\n    healthResult={status:err ? 0 : res.code};finished();\n});\n"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "users capacity is reusable after the burst",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{gatewise_url}}/users/hello"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Service accepts work after burst completion\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Saturate catalog; reject excess and keep users available",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{gatewise_url}}/healthz"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\nconst limit=Number(pm.environment.get(\"catalog_limit\"));\nconst holdMs=Number(pm.environment.get(\"saturation_delay_ms\"));\nif (!Number.isInteger(limit) || limit < 1 || limit > 16 || !Number.isInteger(holdMs) || holdMs < 200) {\n    throw new Error(\"Set catalog_limit to the configured limit (1-16) and saturation_delay_ms >= 200, below the proxy header timeout.\");\n}\nconst base=pm.environment.get(\"gatewise_url\");\nconst total=limit+4;\nconst results=[];\nlet otherResult=null, healthResult=null, completed=0;\nfunction finished() {\n    completed++;\n    if (completed !== total+2) return;\n    const accepted=results.filter(r => r.status===200);\n    const rejected=results.filter(r => r.status===503);\n    pm.test(\"Burst has exactly the configured number of accepted requests\", function () {\n        pm.expect(accepted.length).to.eql(limit);\n        pm.expect(rejected.length).to.eql(total-limit);\n        pm.expect(accepted.length+rejected.length).to.eql(total);\n    });\n    pm.test(\"Overload responses identify the service and are not queued\", function () {\n        rejected.forEach(r => {\n            pm.expect(r.body.error).to.eql(\"service_overloaded\");\n            pm.expect(r.body.service).to.eql(\"catalog\");\n            pm.expect(r.elapsed).to.be.below(holdMs);\n        });\n    });\n    pm.test(\"Other service stays available during the burst\", function () {\n        pm.expect(otherResult.status).to.eql(200);\n    });\n    pm.test(\"Gatewise health bypasses service limits\", function () {\n        pm.expect(healthResult.status).to.eql(200);\n    });\n}\nfor (let i=0; i<total; i++) {\n    const started=Date.now();\n    pm.sendRequest({url:base+\"/catalog/slow?delay=\"+holdMs+\"ms\",method:\"GET\"},function(err,res) {\n        let body={};\n        if (res) {try {body=res.json();} catch (_) {}}\n        results.push({status:err ? 0 : res.code,body:body,elapsed:Date.now()-started});\n        finished();\n    });\n}\npm.sendRequest(base+\"/users/hello\",function(err,res) {\n    otherResult={status:err ? 0 : res.code};finished();\n});\npm.sendRequest(base+\"/healthz\",function(err,res) {\n    healthResult={status:err ? 0 : res.code};finished();\n});\n"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "catalog capacity is reusable after the burst",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{gatewise_url}}/catalog/hello"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Service accepts work after burst completion\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Proxy priorities (both running)",
+      "description": "Default local configuration: total 2, reserved_critical 1 for users/catalog. Base routes are critical; /users/background and /catalog/background are background. Requires idle services and 0 < reservation < total. Run M2 concurrency first to verify critical work can borrow all shared capacity.",
+      "item": [
+        {
+          "name": "users priority reservation and shared total limit",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{gatewise_url}}/healthz"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\nconst base=pm.environment.get(\"gatewise_url\");\nconst total=Number(pm.environment.get(\"users_limit\"));\nconst reserved=Number(pm.environment.get(\"users_reserved_critical\"));\nconst holdMs=Number(pm.environment.get(\"saturation_delay_ms\"));\nif (!Number.isInteger(total) || !Number.isInteger(reserved) || total>16 || reserved<1 || reserved>=total || !Number.isInteger(holdMs) || holdMs<500) {\n    throw new Error(\"M3 demo requires 0 < users_reserved_critical < users_limit <= 16, and saturation_delay_ms >= 500 below the header timeout.\");\n}\nfunction send(path,headers) {\n    return new Promise(resolve => pm.sendRequest({url:base+path,method:\"GET\",header:headers || {}},function(err,res) {\n        let body={}; if (res) {try {body=res.json();} catch (_) {}}\n        resolve({status:err ? 0 : res.code,body:body});\n    }));\n}\nasync function waitForRejection(path,reason,headers) {\n    for (let i=0;i<20;i++) {\n        const result=await send(path,headers);\n        if (result.status===503 && result.body.reason===reason) return result;\n        await new Promise(resolve=>setTimeout(resolve,20));\n    }\n    throw new Error(\"Did not observe \"+reason+\". Check configured limits/reservations, delay and unrelated traffic.\");\n}\n(async function () {\n    const background=[];\n    for (let i=0;i<total-reserved;i++) background.push(send(\"/users/background/slow?delay=\"+holdMs+\"ms\"));\n    const bgRejected=await waitForRejection(\"/users/background/hello\",\"critical_capacity_reserved\",{\"X-Priority\":\"critical\"});\n    pm.test(\"Background cannot occupy reserved critical capacity\",function(){\n        pm.expect(bgRejected.status).to.eql(503);\n        pm.expect(bgRejected.body.error).to.eql(\"service_overloaded\");\n        pm.expect(bgRejected.body.service).to.eql(\"users\");\n    });\n    pm.test(\"Caller header cannot elevate a background route\",function(){pm.expect(bgRejected.body.priority).to.eql(\"background\");});\n    const criticalQuick=await send(\"/users/hello\");\n    pm.test(\"Critical work can use the reserved capacity\",function(){pm.expect(criticalQuick.status).to.eql(200);});\n    const critical=[];\n    for (let i=0;i<reserved;i++) critical.push(send(\"/users/slow?delay=\"+holdMs+\"ms\"));\n    const full=await waitForRejection(\"/users/hello\",\"concurrency_limit\");\n    pm.test(\"Critical work still respects the total service limit\",function(){\n        pm.expect(full.status).to.eql(503);pm.expect(full.body.priority).to.eql(\"critical\");\n    });\n    const other=await send(\"/catalog/hello\");\n    pm.test(\"Other service remains available\",function(){pm.expect(other.status).to.eql(200);});\n    const health=await send(\"/healthz\");\n    pm.test(\"Health bypasses priority admission\",function(){pm.expect(health.status).to.eql(200);});\n    const bgResults=await Promise.all(background);\n    const criticalResults=await Promise.all(critical);\n    pm.test(\"Admitted background work finishes without preemption\",function(){bgResults.forEach(r=>pm.expect(r.status).to.eql(200));});\n    pm.test(\"Admitted critical work finishes\",function(){criticalResults.forEach(r=>pm.expect(r.status).to.eql(200));});\n})().catch(function(err){pm.test(\"Priority scenario completes\",function(){throw err;});});\n"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "users background and critical capacity recover",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{gatewise_url}}/users/background/hello"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Background capacity is reusable\",function(){pm.response.to.have.status(200);});",
+                  "pm.sendRequest(pm.environment.get(\"gatewise_url\")+\"/users/hello\",function(err,res){pm.test(\"Critical capacity is reusable\",function(){pm.expect(err).to.not.exist;pm.expect(res.code).to.eql(200);});});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "catalog priority reservation and shared total limit",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{gatewise_url}}/healthz"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\nconst base=pm.environment.get(\"gatewise_url\");\nconst total=Number(pm.environment.get(\"catalog_limit\"));\nconst reserved=Number(pm.environment.get(\"catalog_reserved_critical\"));\nconst holdMs=Number(pm.environment.get(\"saturation_delay_ms\"));\nif (!Number.isInteger(total) || !Number.isInteger(reserved) || total>16 || reserved<1 || reserved>=total || !Number.isInteger(holdMs) || holdMs<500) {\n    throw new Error(\"M3 demo requires 0 < catalog_reserved_critical < catalog_limit <= 16, and saturation_delay_ms >= 500 below the header timeout.\");\n}\nfunction send(path,headers) {\n    return new Promise(resolve => pm.sendRequest({url:base+path,method:\"GET\",header:headers || {}},function(err,res) {\n        let body={}; if (res) {try {body=res.json();} catch (_) {}}\n        resolve({status:err ? 0 : res.code,body:body});\n    }));\n}\nasync function waitForRejection(path,reason,headers) {\n    for (let i=0;i<20;i++) {\n        const result=await send(path,headers);\n        if (result.status===503 && result.body.reason===reason) return result;\n        await new Promise(resolve=>setTimeout(resolve,20));\n    }\n    throw new Error(\"Did not observe \"+reason+\". Check configured limits/reservations, delay and unrelated traffic.\");\n}\n(async function () {\n    const background=[];\n    for (let i=0;i<total-reserved;i++) background.push(send(\"/catalog/background/slow?delay=\"+holdMs+\"ms\"));\n    const bgRejected=await waitForRejection(\"/catalog/background/hello\",\"critical_capacity_reserved\",{\"X-Priority\":\"critical\"});\n    pm.test(\"Background cannot occupy reserved critical capacity\",function(){\n        pm.expect(bgRejected.status).to.eql(503);\n        pm.expect(bgRejected.body.error).to.eql(\"service_overloaded\");\n        pm.expect(bgRejected.body.service).to.eql(\"catalog\");\n    });\n    pm.test(\"Caller header cannot elevate a background route\",function(){pm.expect(bgRejected.body.priority).to.eql(\"background\");});\n    const criticalQuick=await send(\"/catalog/hello\");\n    pm.test(\"Critical work can use the reserved capacity\",function(){pm.expect(criticalQuick.status).to.eql(200);});\n    const critical=[];\n    for (let i=0;i<reserved;i++) critical.push(send(\"/catalog/slow?delay=\"+holdMs+\"ms\"));\n    const full=await waitForRejection(\"/catalog/hello\",\"concurrency_limit\");\n    pm.test(\"Critical work still respects the total service limit\",function(){\n        pm.expect(full.status).to.eql(503);pm.expect(full.body.priority).to.eql(\"critical\");\n    });\n    const other=await send(\"/users/hello\");\n    pm.test(\"Other service remains available\",function(){pm.expect(other.status).to.eql(200);});\n    const health=await send(\"/healthz\");\n    pm.test(\"Health bypasses priority admission\",function(){pm.expect(health.status).to.eql(200);});\n    const bgResults=await Promise.all(background);\n    const criticalResults=await Promise.all(critical);\n    pm.test(\"Admitted background work finishes without preemption\",function(){bgResults.forEach(r=>pm.expect(r.status).to.eql(200));});\n    pm.test(\"Admitted critical work finishes\",function(){criticalResults.forEach(r=>pm.expect(r.status).to.eql(200));});\n})().catch(function(err){pm.test(\"Priority scenario completes\",function(){throw err;});});\n"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "catalog background and critical capacity recover",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{gatewise_url}}/catalog/background/hello"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Background capacity is reusable\",function(){pm.response.to.have.status(200);});",
+                  "pm.sendRequest(pm.environment.get(\"gatewise_url\")+\"/catalog/hello\",function(err,res){pm.test(\"Critical capacity is reusable\",function(){pm.expect(err).to.not.exist;pm.expect(res.code).to.eql(200);});});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Middleware basic (no proxy required)",
+      "item": [
+        {
+          "name": "Middleware health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{middleware_url}}/healthz"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\",function(){pm.response.to.have.status(200);});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Critical handler",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{middleware_url}}/critical/hello"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\",function(){pm.response.to.have.status(200);});",
+                  "pm.test(\"Expected response\",function(){pm.expect(pm.response.json().service).to.eql(\"middleware-demo\");});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Background handler",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{middleware_url}}/background/hello"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\",function(){pm.response.to.have.status(200);});",
+                  "pm.test(\"Expected response\",function(){pm.expect(pm.response.json().service).to.eql(\"middleware-demo\");});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Middleware POST forwarding to application handler",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{middleware_url}}/critical/echo?tag=a&tag=b",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"message\":\"direct\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\",function(){pm.response.to.have.status(200);});",
+                  "pm.test(\"Expected response\",function(){const b=pm.response.json();pm.expect(b.method).to.eql(\"POST\");pm.expect(b.query.tag).to.eql([\"a\",\"b\"]);pm.expect(JSON.parse(b.body)).to.deep.eql({message:\"direct\"});});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Unknown application route",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{middleware_url}}/critical/missing"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\",function(){pm.response.to.have.status(404);});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Middleware concurrency (no proxy required)",
+      "item": [
+        {
+          "name": "Direct middleware critical saturation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{middleware_url}}/healthz"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\nconst limit=Number(pm.environment.get(\"middleware_limit\"));\nconst holdMs=Number(pm.environment.get(\"saturation_delay_ms\"));\nif (!Number.isInteger(limit) || limit < 1 || limit > 16 || !Number.isInteger(holdMs) || holdMs < 200) {\n    throw new Error(\"Set middleware_limit to the configured limit (1-16) and saturation_delay_ms >= 200, below the proxy header timeout.\");\n}\nconst base=pm.environment.get(\"middleware_url\");\nconst total=limit+4;\nconst results=[];\nlet otherResult=null, healthResult=null, completed=0;\nfunction finished() {\n    completed++;\n    if (completed !== total+2) return;\n    const accepted=results.filter(r => r.status===200);\n    const rejected=results.filter(r => r.status===503);\n    pm.test(\"Burst has exactly the configured number of accepted requests\", function () {\n        pm.expect(accepted.length).to.eql(limit);\n        pm.expect(rejected.length).to.eql(total-limit);\n        pm.expect(accepted.length+rejected.length).to.eql(total);\n    });\n    pm.test(\"Overload responses identify the service and are not queued\", function () {\n        rejected.forEach(r => {\n            pm.expect(r.body.error).to.eql(\"service_overloaded\");\n            pm.expect(r.body.service).to.eql(\"middleware-demo\");\n            pm.expect(r.elapsed).to.be.below(holdMs);\n        });\n    });\n    pm.test(\"Unwrapped health stays available during the burst\", function () {\n        pm.expect(otherResult.status).to.eql(200);\n    });\n    pm.test(\"Gatewise health bypasses service limits\", function () {\n        pm.expect(healthResult.status).to.eql(200);\n    });\n}\nfor (let i=0; i<total; i++) {\n    const started=Date.now();\n    pm.sendRequest({url:base+\"/critical/slow?delay=\"+holdMs+\"ms\",method:\"GET\"},function(err,res) {\n        let body={};\n        if (res) {try {body=res.json();} catch (_) {}}\n        results.push({status:err ? 0 : res.code,body:body,elapsed:Date.now()-started});\n        finished();\n    });\n}\npm.sendRequest(base+\"/healthz\",function(err,res) {\n    otherResult={status:err ? 0 : res.code};finished();\n});\npm.sendRequest(base+\"/healthz\",function(err,res) {\n    healthResult={status:err ? 0 : res.code};finished();\n});\n"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Direct middleware critical capacity recovers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{middleware_url}}/critical/hello"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\",function(){pm.response.to.have.status(200);});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Middleware priorities (no proxy required)",
+      "item": [
+        {
+          "name": "Direct middleware background reservation and shared total",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{middleware_url}}/healthz"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\nconst base=pm.environment.get(\"middleware_url\");\nconst total=Number(pm.environment.get(\"middleware_limit\"));\nconst reserved=Number(pm.environment.get(\"middleware_reserved_critical\"));\nconst holdMs=Number(pm.environment.get(\"saturation_delay_ms\"));\nif (!Number.isInteger(total) || !Number.isInteger(reserved) || total>16 || reserved<1 || reserved>=total || !Number.isInteger(holdMs) || holdMs<500) {\n    throw new Error(\"M3 demo requires 0 < middleware_reserved_critical < middleware_limit <= 16, and saturation_delay_ms >= 500 below the header timeout.\");\n}\nfunction send(path,headers) {\n    return new Promise(resolve => pm.sendRequest({url:base+path,method:\"GET\",header:headers || {}},function(err,res) {\n        let body={}; if (res) {try {body=res.json();} catch (_) {}}\n        resolve({status:err ? 0 : res.code,body:body});\n    }));\n}\nasync function waitForRejection(path,reason,headers) {\n    for (let i=0;i<20;i++) {\n        const result=await send(path,headers);\n        if (result.status===503 && result.body.reason===reason) return result;\n        await new Promise(resolve=>setTimeout(resolve,20));\n    }\n    throw new Error(\"Did not observe \"+reason+\". Check configured limits/reservations, delay and unrelated traffic.\");\n}\n(async function () {\n    const background=[];\n    for (let i=0;i<total-reserved;i++) background.push(send(\"/background/slow?delay=\"+holdMs+\"ms\"));\n    const bgRejected=await waitForRejection(\"/background/hello\",\"critical_capacity_reserved\",{\"X-Priority\":\"critical\"});\n    pm.test(\"Background cannot occupy reserved critical capacity\",function(){\n        pm.expect(bgRejected.status).to.eql(503);\n        pm.expect(bgRejected.body.error).to.eql(\"service_overloaded\");\n        pm.expect(bgRejected.body.service).to.eql(\"middleware-demo\");\n    });\n    pm.test(\"Caller header cannot elevate a background route\",function(){pm.expect(bgRejected.body.priority).to.eql(\"background\");});\n    const criticalQuick=await send(\"/critical/hello\");\n    pm.test(\"Critical work can use the reserved capacity\",function(){pm.expect(criticalQuick.status).to.eql(200);});\n    const critical=[];\n    for (let i=0;i<reserved;i++) critical.push(send(\"/critical/slow?delay=\"+holdMs+\"ms\"));\n    const full=await waitForRejection(\"/critical/hello\",\"concurrency_limit\");\n    pm.test(\"Critical work still respects the total service limit\",function(){\n        pm.expect(full.status).to.eql(503);pm.expect(full.body.priority).to.eql(\"critical\");\n    });\n    const other=await send(\"/healthz\");\n    pm.test(\"Unwrapped application health remains available\",function(){pm.expect(other.status).to.eql(200);});\n    const health=await send(\"/healthz\");\n    pm.test(\"Health bypasses priority admission\",function(){pm.expect(health.status).to.eql(200);});\n    const bgResults=await Promise.all(background);\n    const criticalResults=await Promise.all(critical);\n    pm.test(\"Admitted background work finishes without preemption\",function(){bgResults.forEach(r=>pm.expect(r.status).to.eql(200));});\n    pm.test(\"Admitted critical work finishes\",function(){criticalResults.forEach(r=>pm.expect(r.status).to.eql(200));});\n})().catch(function(err){pm.test(\"Priority scenario completes\",function(){throw err;});});\n"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Direct middleware both priority classes recover",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{middleware_url}}/background/hello"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Background capacity is reusable\",function(){pm.response.to.have.status(200);});",
+                  "pm.sendRequest(pm.environment.get(\"middleware_url\")+\"/critical/hello\",function(err,res){pm.test(\"Critical capacity is reusable\",function(){pm.expect(err).to.not.exist;pm.expect(res.code).to.eql(200);});});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Proxy metrics (fixed)",
+      "item": [
+        {
+          "name": "proxy metrics exposition",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{gatewise_url}}/metrics"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\nfunction value(text,name,labels) {\n const lines=text.split(\"\\n\");\n for(const line of lines) {\n  if(!line.startsWith(name+\"{\") && !line.startsWith(name+\" \")) continue;\n  const match=line.match(/^([^ {]+)(?:\\{(.*)\\})?\\s+([^ ]+)/);\n  if(!match || match[1]!==name) continue;\n  if(Object.keys(labels).every(key=>(match[2]||\"\").includes(key+'=\"'+labels[key]+'\"'))) return Number(match[3]);\n }\n throw new Error(\"Missing metric \"+name+\" \"+JSON.stringify(labels));\n}\nfunction send(path) {\n return new Promise(resolve=>pm.sendRequest(base+path,function(err,res){\n  if(err) resolve({status:0,text:\"\"}); else resolve({status:res.code,text:res.text()});\n }));\n}\n\npm.test(\"Prometheus exposition is available\",function(){pm.response.to.have.status(200);pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/plain\");});\nconst text=pm.response.text();\npm.test(\"Capacity and mode identify the configured service\",function(){\n pm.expect(value(text,\"gatewise_concurrency_limit\",{service:\"users\"})).to.eql(2);\n pm.expect(value(text,\"gatewise_service_info\",{service:\"users\",mode:\"fixed\"})).to.eql(1);\n});\npm.test(\"Histogram, admission and rejection families exist\",function(){\n value(text,\"gatewise_requests_admitted_total\",{service:\"users\",priority:\"critical\"});\n value(text,\"gatewise_requests_rejected_total\",{service:\"users\",priority:\"background\",reason:\"critical_capacity_reserved\"});\n value(text,\"gatewise_request_duration_seconds_count\",{service:\"users\",priority:\"critical\",outcome:\"completed\"});\n});\npm.test(\"No automatic raw URL, customer or request-ID labels\",function(){pm.expect(text).not.to.match(/\b(?:url|path|customer_id|user_id|request_id)=/);});\n"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "proxy metric accounting and saturation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{gatewise_url}}/metrics"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const base=pm.environment.get(\"gatewise_url\");\n\nfunction value(text,name,labels) {\n const lines=text.split(\"\\n\");\n for(const line of lines) {\n  if(!line.startsWith(name+\"{\") && !line.startsWith(name+\" \")) continue;\n  const match=line.match(/^([^ {]+)(?:\\{(.*)\\})?\\s+([^ ]+)/);\n  if(!match || match[1]!==name) continue;\n  if(Object.keys(labels).every(key=>(match[2]||\"\").includes(key+'=\"'+labels[key]+'\"'))) return Number(match[3]);\n }\n throw new Error(\"Missing metric \"+name+\" \"+JSON.stringify(labels));\n}\nfunction send(path) {\n return new Promise(resolve=>pm.sendRequest(base+path,function(err,res){\n  if(err) resolve({status:0,text:\"\"}); else resolve({status:res.code,text:res.text()});\n }));\n}\n\n(async function(){\n const labels={service:\"users\",priority:\"critical\"};\n const completed={service:\"users\",priority:\"critical\",outcome:\"completed\"};\n const before=pm.response.text();\n const hello=await send(\"/users/hello\");\n const after=(await send(\"/metrics\")).text;\n pm.test(\"Successful handler increments admissions and latency count once\",function(){\n  pm.expect(hello.status).to.eql(200);\n  pm.expect(value(after,\"gatewise_requests_admitted_total\",labels)).to.eql(value(before,\"gatewise_requests_admitted_total\",labels)+1);\n  pm.expect(value(after,\"gatewise_request_duration_seconds_count\",completed)).to.eql(value(before,\"gatewise_request_duration_seconds_count\",completed)+1);\n });\n const again=(await send(\"/metrics\")).text;\n pm.test(\"Scraping does not count as application traffic\",function(){pm.expect(value(again,\"gatewise_requests_admitted_total\",labels)).to.eql(value(after,\"gatewise_requests_admitted_total\",labels));});\n const held=send(\"/users/background/slow?delay=750ms\");\n const bg={service:\"users\",priority:\"background\"};\n let busy=null;\n for(let i=0;i<20;i++) {\n  const scrape=await send(\"/metrics\");\n  if(value(scrape.text,\"gatewise_requests_in_flight\",bg)===1){busy=scrape.text;break;}\n  await new Promise(resolve=>setTimeout(resolve,10));\n }\n if(busy===null) throw new Error(\"Did not observe background work in flight\");\n const rejected=await send(\"/users/background/hello\");\n const blocked=(await send(\"/metrics\")).text;\n const reason={service:\"users\",priority:\"background\",reason:\"critical_capacity_reserved\"};\n const bgCompleted={service:\"users\",priority:\"background\",outcome:\"completed\"};\n pm.test(\"In-flight gauge exposes admitted work during saturation\",function(){pm.expect(value(busy,\"gatewise_requests_in_flight\",bg)).to.eql(1);});\n pm.test(\"Rejection increments its reason counter without becoming a latency sample\",function(){\n  pm.expect(rejected.status).to.eql(503);\n  pm.expect(value(blocked,\"gatewise_requests_rejected_total\",reason)).to.eql(value(busy,\"gatewise_requests_rejected_total\",reason)+1);\n  pm.expect(value(blocked,\"gatewise_request_duration_seconds_count\",bgCompleted)).to.eql(value(busy,\"gatewise_request_duration_seconds_count\",bgCompleted));\n });\n pm.test(\"Metrics remain available while background capacity is full\",function(){pm.expect(blocked).to.include(\"gatewise_concurrency_limit\");});\n await held;\n const ended=(await send(\"/metrics\")).text;\n pm.test(\"Completion clears active work and adds one handler-duration sample\",function(){\n  pm.expect(value(ended,\"gatewise_requests_in_flight\",bg)).to.eql(0);\n  pm.expect(value(ended,\"gatewise_request_duration_seconds_count\",bgCompleted)).to.eql(value(busy,\"gatewise_request_duration_seconds_count\",bgCompleted)+1);\n });\n})().catch(function(err){pm.test(\"Metrics accounting scenario completes\",function(){throw err;});});\n"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Middleware metrics (fixed)",
+      "item": [
+        {
+          "name": "middleware metrics exposition",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{middleware_url}}/metrics"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\nfunction value(text,name,labels) {\n const lines=text.split(\"\\n\");\n for(const line of lines) {\n  if(!line.startsWith(name+\"{\") && !line.startsWith(name+\" \")) continue;\n  const match=line.match(/^([^ {]+)(?:\\{(.*)\\})?\\s+([^ ]+)/);\n  if(!match || match[1]!==name) continue;\n  if(Object.keys(labels).every(key=>(match[2]||\"\").includes(key+'=\"'+labels[key]+'\"'))) return Number(match[3]);\n }\n throw new Error(\"Missing metric \"+name+\" \"+JSON.stringify(labels));\n}\nfunction send(path) {\n return new Promise(resolve=>pm.sendRequest(base+path,function(err,res){\n  if(err) resolve({status:0,text:\"\"}); else resolve({status:res.code,text:res.text()});\n }));\n}\n\npm.test(\"Prometheus exposition is available\",function(){pm.response.to.have.status(200);pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/plain\");});\nconst text=pm.response.text();\npm.test(\"Capacity and mode identify the configured service\",function(){\n pm.expect(value(text,\"gatewise_concurrency_limit\",{service:\"middleware-demo\"})).to.eql(2);\n pm.expect(value(text,\"gatewise_service_info\",{service:\"middleware-demo\",mode:\"fixed\"})).to.eql(1);\n});\npm.test(\"Histogram, admission and rejection families exist\",function(){\n value(text,\"gatewise_requests_admitted_total\",{service:\"middleware-demo\",priority:\"critical\"});\n value(text,\"gatewise_requests_rejected_total\",{service:\"middleware-demo\",priority:\"background\",reason:\"critical_capacity_reserved\"});\n value(text,\"gatewise_request_duration_seconds_count\",{service:\"middleware-demo\",priority:\"critical\",outcome:\"completed\"});\n});\npm.test(\"No automatic raw URL, customer or request-ID labels\",function(){pm.expect(text).not.to.match(/\b(?:url|path|customer_id|user_id|request_id)=/);});\n"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "middleware metric accounting and saturation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{middleware_url}}/metrics"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const base=pm.environment.get(\"middleware_url\");\n\nfunction value(text,name,labels) {\n const lines=text.split(\"\\n\");\n for(const line of lines) {\n  if(!line.startsWith(name+\"{\") && !line.startsWith(name+\" \")) continue;\n  const match=line.match(/^([^ {]+)(?:\\{(.*)\\})?\\s+([^ ]+)/);\n  if(!match || match[1]!==name) continue;\n  if(Object.keys(labels).every(key=>(match[2]||\"\").includes(key+'=\"'+labels[key]+'\"'))) return Number(match[3]);\n }\n throw new Error(\"Missing metric \"+name+\" \"+JSON.stringify(labels));\n}\nfunction send(path) {\n return new Promise(resolve=>pm.sendRequest(base+path,function(err,res){\n  if(err) resolve({status:0,text:\"\"}); else resolve({status:res.code,text:res.text()});\n }));\n}\n\n(async function(){\n const labels={service:\"middleware-demo\",priority:\"critical\"};\n const completed={service:\"middleware-demo\",priority:\"critical\",outcome:\"completed\"};\n const before=pm.response.text();\n const hello=await send(\"/critical/hello\");\n const after=(await send(\"/metrics\")).text;\n pm.test(\"Successful handler increments admissions and latency count once\",function(){\n  pm.expect(hello.status).to.eql(200);\n  pm.expect(value(after,\"gatewise_requests_admitted_total\",labels)).to.eql(value(before,\"gatewise_requests_admitted_total\",labels)+1);\n  pm.expect(value(after,\"gatewise_request_duration_seconds_count\",completed)).to.eql(value(before,\"gatewise_request_duration_seconds_count\",completed)+1);\n });\n const again=(await send(\"/metrics\")).text;\n pm.test(\"Scraping does not count as application traffic\",function(){pm.expect(value(again,\"gatewise_requests_admitted_total\",labels)).to.eql(value(after,\"gatewise_requests_admitted_total\",labels));});\n const held=send(\"/background/slow?delay=750ms\");\n const bg={service:\"middleware-demo\",priority:\"background\"};\n let busy=null;\n for(let i=0;i<20;i++) {\n  const scrape=await send(\"/metrics\");\n  if(value(scrape.text,\"gatewise_requests_in_flight\",bg)===1){busy=scrape.text;break;}\n  await new Promise(resolve=>setTimeout(resolve,10));\n }\n if(busy===null) throw new Error(\"Did not observe background work in flight\");\n const rejected=await send(\"/background/hello\");\n const blocked=(await send(\"/metrics\")).text;\n const reason={service:\"middleware-demo\",priority:\"background\",reason:\"critical_capacity_reserved\"};\n const bgCompleted={service:\"middleware-demo\",priority:\"background\",outcome:\"completed\"};\n pm.test(\"In-flight gauge exposes admitted work during saturation\",function(){pm.expect(value(busy,\"gatewise_requests_in_flight\",bg)).to.eql(1);});\n pm.test(\"Rejection increments its reason counter without becoming a latency sample\",function(){\n  pm.expect(rejected.status).to.eql(503);\n  pm.expect(value(blocked,\"gatewise_requests_rejected_total\",reason)).to.eql(value(busy,\"gatewise_requests_rejected_total\",reason)+1);\n  pm.expect(value(blocked,\"gatewise_request_duration_seconds_count\",bgCompleted)).to.eql(value(busy,\"gatewise_request_duration_seconds_count\",bgCompleted));\n });\n pm.test(\"Metrics remain available while background capacity is full\",function(){pm.expect(blocked).to.include(\"gatewise_concurrency_limit\");});\n await held;\n const ended=(await send(\"/metrics\")).text;\n pm.test(\"Completion clears active work and adds one handler-duration sample\",function(){\n  pm.expect(value(ended,\"gatewise_requests_in_flight\",bg)).to.eql(0);\n  pm.expect(value(ended,\"gatewise_request_duration_seconds_count\",bgCompleted)).to.eql(value(busy,\"gatewise_request_duration_seconds_count\",bgCompleted)+1);\n });\n})().catch(function(err){pm.test(\"Metrics accounting scenario completes\",function(){throw err;});});\n"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Adaptive proxy (separate instance)",
+      "description": "Requires configs/adaptive.json with users adaptive max6/min2/initial4, 500ms interval, min4 samples, 100ms target; catalog stays fixed. Use 60s script timeout.",
+      "item": [
+        {
+          "name": "proxy adaptive slowdown, recovery and workload budgets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{adaptive_proxy_url}}/healthz"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\nconst minimum=Number(pm.environment.get(\"adaptive_min\"));\nconst maximum=Number(pm.environment.get(\"adaptive_max\"));\nconst healthy=Number(pm.environment.get(\"adaptive_healthy_delay_ms\"));\nconst slow=Number(pm.environment.get(\"adaptive_slow_delay_ms\"));\nconst base=pm.environment.get(\"adaptive_proxy_url\");\nconst fixedURL=base+\"/catalog/hello\";\nif (!Number.isInteger(minimum) || !Number.isInteger(maximum) || minimum<2 || maximum<=minimum || maximum>16) throw new Error(\"M4 demo requires 2 <= adaptive_min < adaptive_max <= 16, matching server configuration.\");\nfunction send(url) {\n return new Promise(resolve=>pm.sendRequest(url,function(err,res){\n  let body={};if(res){try{body=res.json();}catch(_){}}\n  resolve({body:body,status:err ? 0 : res.code,limit:res ? Number(res.headers.get(\"X-Gatewise-Limit\")) : 0,mode:res ? res.headers.get(\"X-Gatewise-Mode\") : \"\"});\n }));\n}\nconst observed=[];\nasync function batch(path) {\n const results=await Promise.all(Array.from({length:maximum+2},()=>send(base+path)));\n const probe=await send(base+\"/users/hello\");\n for(const r of results.concat([probe])) {\n  if (![200,503].includes(r.status) || r.mode!==\"adaptive\" || r.limit<minimum || r.limit>maximum) throw new Error(\"Unexpected status/mode/limit: \"+JSON.stringify(r));\n  observed.push(r.limit);\n }\n return probe.limit;\n}\nasync function drive(path,wanted) {\n const deadline=Date.now()+15000;\n while(Date.now()<deadline) {\n  const limit=await batch(path);\n  if (limit===wanted) return limit;\n  await new Promise(resolve=>setTimeout(resolve,25));\n }\n throw new Error(\"Controller did not reach \"+wanted+\"; observed \"+JSON.stringify(observed));\n}\n(async function(){\n const before=await send(fixedURL);\n pm.test(\"Reference service stays in fixed mode\",function(){pm.expect(before.status).to.eql(200);pm.expect(before.mode).to.eql(\"fixed\");});\n const warm=await drive(\"/users/slow?delay=\"+healthy+\"ms\",maximum);\n pm.test(\"Healthy saturated work grows to the configured ceiling\",function(){pm.expect(warm).to.eql(maximum);});\n const reportLimits=[];\n for(let i=0;i<4;i++) reportLimits.push(await batch(\"/users/reports/slow?delay=\"+slow+\"ms\"));\n pm.test(\"Slow handler within its own latency budget does not reduce shared capacity\",function(){reportLimits.forEach(n=>pm.expect(n).to.eql(maximum));});\n const reduced=await drive(\"/users/slow?delay=\"+slow+\"ms\",minimum);\n pm.test(\"Latency pressure reduces admission to the bounded minimum\",function(){pm.expect(reduced).to.eql(minimum);pm.expect(reduced).to.be.below(warm);});\n const heldBackground=send(base+\"/users/background/slow?delay=\"+slow+\"ms\");\n let rejectedBackground=null;\n for(let i=0;i<20;i++) {\n  const r=await send(base+\"/users/background/hello\");\n  if(r.status===503 && r.body.reason===\"critical_capacity_reserved\") {rejectedBackground=r;break;}\n  await new Promise(resolve=>setTimeout(resolve,10));\n }\n pm.test(\"Critical reservation still holds at the adaptive minimum\",function(){pm.expect(rejectedBackground).to.not.eql(null);});\n const criticalAtMin=await send(base+\"/users/hello\");\n pm.test(\"Reserved critical work remains available at the adaptive minimum\",function(){pm.expect(criticalAtMin.status).to.eql(200);});\n await heldBackground;\n const recovered=await drive(\"/users/slow?delay=\"+healthy+\"ms\",maximum);\n pm.test(\"Healthy sustained traffic recovers capacity\",function(){pm.expect(recovered).to.eql(maximum);pm.expect(recovered).to.be.above(reduced);});\n pm.test(\"All observed limits stay within bounds\",function(){observed.forEach(n=>pm.expect(n).to.be.within(minimum,maximum));});\n const after=await send(fixedURL);\n pm.test(\"Adaptive changes do not alter the fixed reference\",function(){pm.expect(after.status).to.eql(200);pm.expect(after.limit).to.eql(before.limit);pm.expect(after.mode).to.eql(\"fixed\");});\n console.log(\"M4 phases: \"+JSON.stringify({warm:warm,reduced:reduced,recovered:recovered}));\n console.log(\"M4 observed limits: \"+JSON.stringify(observed));\n})().catch(function(err){pm.test(\"Adaptive scenario completes\",function(){throw err;});});\n"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Adaptive middleware (separate instance)",
+      "description": "Requires adaptive middleware on adaptive_middleware_url and fixed middleware on middleware_url. Use 60s script timeout.",
+      "item": [
+        {
+          "name": "middleware adaptive slowdown, recovery and workload budgets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{adaptive_middleware_url}}/healthz"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\nconst minimum=Number(pm.environment.get(\"adaptive_min\"));\nconst maximum=Number(pm.environment.get(\"adaptive_max\"));\nconst healthy=Number(pm.environment.get(\"adaptive_healthy_delay_ms\"));\nconst slow=Number(pm.environment.get(\"adaptive_slow_delay_ms\"));\nconst base=pm.environment.get(\"adaptive_middleware_url\");\nconst fixedURL=pm.environment.get(\"middleware_url\")+\"/critical/hello\";\nif (!Number.isInteger(minimum) || !Number.isInteger(maximum) || minimum<2 || maximum<=minimum || maximum>16) throw new Error(\"M4 demo requires 2 <= adaptive_min < adaptive_max <= 16, matching server configuration.\");\nfunction send(url) {\n return new Promise(resolve=>pm.sendRequest(url,function(err,res){\n  let body={};if(res){try{body=res.json();}catch(_){}}\n  resolve({body:body,status:err ? 0 : res.code,limit:res ? Number(res.headers.get(\"X-Gatewise-Limit\")) : 0,mode:res ? res.headers.get(\"X-Gatewise-Mode\") : \"\"});\n }));\n}\nconst observed=[];\nasync function batch(path) {\n const results=await Promise.all(Array.from({length:maximum+2},()=>send(base+path)));\n const probe=await send(base+\"/critical/hello\");\n for(const r of results.concat([probe])) {\n  if (![200,503].includes(r.status) || r.mode!==\"adaptive\" || r.limit<minimum || r.limit>maximum) throw new Error(\"Unexpected status/mode/limit: \"+JSON.stringify(r));\n  observed.push(r.limit);\n }\n return probe.limit;\n}\nasync function drive(path,wanted) {\n const deadline=Date.now()+15000;\n while(Date.now()<deadline) {\n  const limit=await batch(path);\n  if (limit===wanted) return limit;\n  await new Promise(resolve=>setTimeout(resolve,25));\n }\n throw new Error(\"Controller did not reach \"+wanted+\"; observed \"+JSON.stringify(observed));\n}\n(async function(){\n const before=await send(fixedURL);\n pm.test(\"Reference service stays in fixed mode\",function(){pm.expect(before.status).to.eql(200);pm.expect(before.mode).to.eql(\"fixed\");});\n const warm=await drive(\"/critical/slow?delay=\"+healthy+\"ms\",maximum);\n pm.test(\"Healthy saturated work grows to the configured ceiling\",function(){pm.expect(warm).to.eql(maximum);});\n const reportLimits=[];\n for(let i=0;i<4;i++) reportLimits.push(await batch(\"/reports/slow?delay=\"+slow+\"ms\"));\n pm.test(\"Slow handler within its own latency budget does not reduce shared capacity\",function(){reportLimits.forEach(n=>pm.expect(n).to.eql(maximum));});\n const reduced=await drive(\"/critical/slow?delay=\"+slow+\"ms\",minimum);\n pm.test(\"Latency pressure reduces admission to the bounded minimum\",function(){pm.expect(reduced).to.eql(minimum);pm.expect(reduced).to.be.below(warm);});\n const heldBackground=send(base+\"/background/slow?delay=\"+slow+\"ms\");\n let rejectedBackground=null;\n for(let i=0;i<20;i++) {\n  const r=await send(base+\"/background/hello\");\n  if(r.status===503 && r.body.reason===\"critical_capacity_reserved\") {rejectedBackground=r;break;}\n  await new Promise(resolve=>setTimeout(resolve,10));\n }\n pm.test(\"Critical reservation still holds at the adaptive minimum\",function(){pm.expect(rejectedBackground).to.not.eql(null);});\n const criticalAtMin=await send(base+\"/critical/hello\");\n pm.test(\"Reserved critical work remains available at the adaptive minimum\",function(){pm.expect(criticalAtMin.status).to.eql(200);});\n await heldBackground;\n const recovered=await drive(\"/critical/slow?delay=\"+healthy+\"ms\",maximum);\n pm.test(\"Healthy sustained traffic recovers capacity\",function(){pm.expect(recovered).to.eql(maximum);pm.expect(recovered).to.be.above(reduced);});\n pm.test(\"All observed limits stay within bounds\",function(){observed.forEach(n=>pm.expect(n).to.be.within(minimum,maximum));});\n const after=await send(fixedURL);\n pm.test(\"Adaptive changes do not alter the fixed reference\",function(){pm.expect(after.status).to.eql(200);pm.expect(after.limit).to.eql(before.limit);pm.expect(after.mode).to.eql(\"fixed\");});\n console.log(\"M4 phases: \"+JSON.stringify({warm:warm,reduced:reduced,recovered:recovered}));\n console.log(\"M4 observed limits: \"+JSON.stringify(observed));\n})().catch(function(err){pm.test(\"Adaptive scenario completes\",function(){throw err;});});\n"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Adaptive metrics (after adaptive scenarios)",
+      "description": "Run each M4 scenario first; both adaptive instances must remain running for this folder.",
+      "item": [
+        {
+          "name": "proxy adaptive adjustment metrics (after M4)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{adaptive_proxy_url}}/metrics"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\nfunction value(text,name,labels) {\n const lines=text.split(\"\\n\");\n for(const line of lines) {\n  if(!line.startsWith(name+\"{\") && !line.startsWith(name+\" \")) continue;\n  const match=line.match(/^([^ {]+)(?:\\{(.*)\\})?\\s+([^ ]+)/);\n  if(!match || match[1]!==name) continue;\n  if(Object.keys(labels).every(key=>(match[2]||\"\").includes(key+'=\"'+labels[key]+'\"'))) return Number(match[3]);\n }\n throw new Error(\"Missing metric \"+name+\" \"+JSON.stringify(labels));\n}\nfunction send(path) {\n return new Promise(resolve=>pm.sendRequest(base+path,function(err,res){\n  if(err) resolve({status:0,text:\"\"}); else resolve({status:res.code,text:res.text()});\n }));\n}\n\npm.test(\"Adaptive metrics are available\",function(){pm.response.to.have.status(200);});\nconst text=pm.response.text();\npm.test(\"Adaptive limit and reservation remain bounded\",function(){\n pm.expect(value(text,\"gatewise_service_info\",{service:\"users\",mode:\"adaptive\"})).to.eql(1);\n pm.expect(value(text,\"gatewise_concurrency_limit\",{service:\"users\"})).to.be.within(2,6);\n pm.expect(value(text,\"gatewise_concurrency_reserved_critical\",{service:\"users\"})).to.eql(1);\n});\npm.test(\"Slowdown and recovery are recorded as adjustments\",function(){\n pm.expect(value(text,\"gatewise_limit_adjustments_total\",{service:\"users\",direction:\"decrease\",reason:\"latency_pressure\"})).to.be.above(0);\n pm.expect(value(text,\"gatewise_limit_adjustments_total\",{service:\"users\",direction:\"increase\",reason:\"healthy_saturation\"})).to.be.above(0);\n});\n"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "middleware adaptive adjustment metrics (after M4)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{adaptive_middleware_url}}/metrics"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\nfunction value(text,name,labels) {\n const lines=text.split(\"\\n\");\n for(const line of lines) {\n  if(!line.startsWith(name+\"{\") && !line.startsWith(name+\" \")) continue;\n  const match=line.match(/^([^ {]+)(?:\\{(.*)\\})?\\s+([^ ]+)/);\n  if(!match || match[1]!==name) continue;\n  if(Object.keys(labels).every(key=>(match[2]||\"\").includes(key+'=\"'+labels[key]+'\"'))) return Number(match[3]);\n }\n throw new Error(\"Missing metric \"+name+\" \"+JSON.stringify(labels));\n}\nfunction send(path) {\n return new Promise(resolve=>pm.sendRequest(base+path,function(err,res){\n  if(err) resolve({status:0,text:\"\"}); else resolve({status:res.code,text:res.text()});\n }));\n}\n\npm.test(\"Adaptive metrics are available\",function(){pm.response.to.have.status(200);});\nconst text=pm.response.text();\npm.test(\"Adaptive limit and reservation remain bounded\",function(){\n pm.expect(value(text,\"gatewise_service_info\",{service:\"middleware-demo\",mode:\"adaptive\"})).to.eql(1);\n pm.expect(value(text,\"gatewise_concurrency_limit\",{service:\"middleware-demo\"})).to.be.within(2,6);\n pm.expect(value(text,\"gatewise_concurrency_reserved_critical\",{service:\"middleware-demo\"})).to.eql(1);\n});\npm.test(\"Slowdown and recovery are recorded as adjustments\",function(){\n pm.expect(value(text,\"gatewise_limit_adjustments_total\",{service:\"middleware-demo\",direction:\"decrease\",reason:\"latency_pressure\"})).to.be.above(0);\n pm.expect(value(text,\"gatewise_limit_adjustments_total\",{service:\"middleware-demo\",direction:\"increase\",reason:\"healthy_saturation\"})).to.be.above(0);\n});\n"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Catalog stopped (manual stage)",
+      "item": [
+        {
+          "name": "Catalog unavailable",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{gatewise_url}}/catalog/products"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", function () { pm.response.to.have.status(502); });",
+                  "pm.test(\"Expected response\", function () { pm.expect(pm.response.json().error).to.eql(\"upstream_unavailable\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Users still available",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{gatewise_url}}/users/hello"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Expected response\", function () { pm.expect(pm.response.json().message).to.eql(\"Hello from the demo backend\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Gatewise stays healthy",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{gatewise_url}}/healthz"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Expected response\", function () { pm.expect(pm.response.json().status).to.eql(\"ok\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users stopped (manual stage)",
+      "item": [
+        {
+          "name": "Users unavailable",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{gatewise_url}}/users/hello"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", function () { pm.response.to.have.status(502); });",
+                  "pm.test(\"Expected response\", function () { pm.expect(pm.response.json().error).to.eql(\"upstream_unavailable\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Catalog still available",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{gatewise_url}}/catalog/products"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Expected response\", function () { pm.expect(pm.response.json().service).to.eql(\"catalog\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Benchmark fixture (guarded, idle)",
+      "item": [
+        {
+          "name": "Fixture health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{benchmarkBaseUrl}}/healthz"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Fixture is ready\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Restore healthy capacity",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{benchmarkBaseUrl}}/control",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"capacity\": 12}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Capacity restored\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Critical work",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{benchmarkBaseUrl}}/critical/work"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Critical work completes\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Work response is valid\", () => pm.expect(pm.response.json().status).to.eql(\"ok\"));",
+                  "pm.test(\"Configured guard mode is exposed\", () => pm.expect(pm.response.headers.get(\"X-Gatewise-Mode\")).to.be.oneOf([\"fixed\", \"adaptive\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Background work",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{benchmarkBaseUrl}}/background/work"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Background work completes\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Guard metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{benchmarkBaseUrl}}/metrics"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Metrics available\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Guard metrics exported\", () => pm.expect(pm.response.text()).to.include(\"gatewise_requests_admitted_total\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Fixture drained",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{benchmarkBaseUrl}}/state"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Fixture state available\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"All work drained and capacity restored\", () => { const s = pm.response.json(); pm.expect(s.active).to.eql(0); pm.expect(s.capacity).to.eql(12); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

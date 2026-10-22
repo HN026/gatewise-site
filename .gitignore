@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
+
+examples/demo/**/bin/
+examples/demo/logs/
+examples/demo/**/benchmarks/results/
+examples/demo/postman/Gatewise-Demo.postman_environment.json
+__pycache__/
+*.pyc

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 275" role="img" aria-label="proxy-architecture">
+<defs><marker id="arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0L7 3.5L0 7" fill="#91ab9a"/></marker></defs>
+<rect width="800" height="275" fill="#101a13"/>
+<path d="M140 137.0 H160.0 V137.0 H177" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M330 137.0 H362.5 V62.0 H392" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M330 137.0 H362.5 V212.0 H392" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M555 62.0 H590.0 V62.0 H622" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M555 212.0 H590.0 V212.0 H622" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="20" y="105" width="120" height="64" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="80.0" y="130" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">HTTP clients</text>
+<text x="80.0" y="151" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Any language</text>
+<rect x="180" y="105" width="150" height="64" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="255.0" y="130" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Route selection</text>
+<text x="255.0" y="151" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Longest segment prefix</text>
+<rect x="395" y="30" width="160" height="64" rx="2" fill="#142019" stroke="#6faf91"/>
+<text x="475.0" y="55" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Users guard + pool</text>
+<text x="475.0" y="76" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Per-service budget</text>
+<rect x="395" y="180" width="160" height="64" rx="2" fill="#142019" stroke="#6faf91"/>
+<text x="475.0" y="205" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Catalog guard + pool</text>
+<text x="475.0" y="226" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Independent budget</text>
+<rect x="625" y="30" width="150" height="64" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="700.0" y="55" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Users backend</text>
+<text x="700.0" y="76" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">HTTP upstream</text>
+<rect x="625" y="180" width="150" height="64" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="700.0" y="205" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Catalog backend</text>
+<text x="700.0" y="226" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">HTTP upstream</text>
+</svg>

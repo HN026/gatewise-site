@@ -1,0 +1,56 @@
+{
+  "services": {
+    "users": {
+      "upstream_url": "${GATEWISE_SERVICE_USERS_URL}",
+      "max_concurrent": 6,
+      "reserved_critical": 1,
+      "mode": "adaptive",
+      "adaptive": {
+        "min_concurrent": 2,
+        "initial_concurrent": 4,
+        "interval": "500ms",
+        "min_samples": 4,
+        "target_latency": "100ms"
+      }
+    },
+    "catalog": {
+      "upstream_url": "${GATEWISE_SERVICE_CATALOG_URL}",
+      "max_concurrent": 2,
+      "reserved_critical": 1
+    }
+  },
+  "routes": [
+    {
+      "path_prefix": "/users",
+      "service": "users",
+      "strip_prefix": true,
+      "priority": "critical"
+    },
+    {
+      "path_prefix": "/catalog",
+      "service": "catalog",
+      "strip_prefix": true,
+      "priority": "critical"
+    },
+    {
+      "path_prefix": "/users/background",
+      "service": "users",
+      "strip_prefix": true,
+      "priority": "background"
+    },
+    {
+      "path_prefix": "/catalog/background",
+      "service": "catalog",
+      "strip_prefix": true,
+      "priority": "background"
+    },
+    {
+      "path_prefix": "/users/reports",
+      "service": "users",
+      "strip_prefix": true,
+      "priority": "critical",
+      "latency_target": "1s"
+    }
+  ],
+  "listen_addr": "127.0.0.1:8088"
+}
