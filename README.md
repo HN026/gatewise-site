@@ -66,3 +66,7 @@ The installation guide targets Gatewise v0.1.0 at github.com/HN026/gatewise. The
 - Library: https://github.com/HN026/gatewise
 - Website: https://hn026.github.io/gatewise-site/
 - License: MIT (font license notices are retained separately).
+
+## Maintain release history
+
+Add published releases to `src/data/releases.ts`, newest first. Record the GitHub publication timestamp, local publication date (IST), requirements, changes, upgrade notes and tag-specific download links. The Versions page and sidebar version link use this shared data. Verify the GitHub tag and assets exist before publishing the site.

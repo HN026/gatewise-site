@@ -6,6 +6,7 @@ export const navigation = [
   { id: 'benchmarks', label: 'Benchmarks', number: '04', description: 'Measured latency, throughput and resource costs.' },
   { id: 'metrics', label: 'Metrics', number: '05', description: 'Prometheus integration and Grafana dashboard.' },
   { id: 'reference', label: 'Reference', number: '06', description: 'Configuration and public Go API.' },
+  { id: 'versions', label: 'Versions', number: '07', description: 'Release notes, version requirements, downloads and upgrade guidance.' },
 ] as const;
 export type PageId = typeof navigation[number]['id'];
 
@@ -134,5 +135,6 @@ export const pageSections: Record<PageId, readonly (readonly [string, string])[]
   examples: [['bundle-contents', 'Bundle contents'], ['run-the-demo', 'Run the demo'], ['postman-scenarios', 'Postman scenarios'], ['reproduce-benchmarks', 'Reproduce benchmarks']],
   benchmarks: [['recorded-benchmark-figures', 'Benchmark images'], ['results', 'Results'], ['methodology', 'Methodology'], ['overhead-and-resource-accounting', 'Overhead and resources'], ['reproduction', 'Reproduction']],
   metrics: [['benchmark-metrics', 'Benchmark metrics'], ['prometheus-integration', 'Prometheus integration'], ['grafana-dashboard', 'Grafana dashboard'], ['metric-families', 'Metric families']],
+  versions: [['latest', 'Latest release'], ['install-version', 'Install a version'], ['release-history', 'Release history'], ['upgrading', 'Upgrading']],
   reference: [['proxy-configuration', 'Proxy configuration'], ['environment-overrides', 'Environment overrides'], ['public-go-api', 'Public Go API'], ['http-responses', 'HTTP responses'], ['scope', 'Scope']],
 };
