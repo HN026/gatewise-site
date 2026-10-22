@@ -130,7 +130,7 @@ export const metricFamilies = [
 
 export const pageSections: Record<PageId, readonly (readonly [string, string])[]> = {
   overview: [],
-  problem: [['basics', 'Request basics'], ['overload', 'Overload problem'], ['evolution', 'Design progression'], ['architecture', 'Architecture'], ['admission', 'Admission rules'], ['lifecycle', 'Request lifetime'], ['adaptive', 'Adaptive controller'], ['operations', 'Deployment constraints'], ['references', 'References']],
+  problem: [['basics', 'Request basics'], ['overload', 'Overload problem'], ['alternatives', 'Alternative approaches'], ['uber-design', 'Uber’s progression'], ['design-decisions', 'Gatewise decisions'], ['evolution', 'Implementation layers'], ['architecture', 'Architecture'], ['admission', 'Admission rules'], ['lifecycle', 'Request lifetime'], ['adaptive', 'Adaptive controller'], ['operations', 'Deployment constraints'], ['references', 'References']],
   installation: [['source', 'Download source'], ['configure', 'Configure'], ['run', 'Run'], ['verify', 'Verify'], ['deployment', 'Deployment'], ['library-deployment', 'Go application'], ['proxy-deployment', 'Proxy service']],
   examples: [['bundle-contents', 'Bundle contents'], ['run-the-demo', 'Run the demo'], ['postman-scenarios', 'Postman scenarios'], ['reproduce-benchmarks', 'Reproduce benchmarks']],
   benchmarks: [['recorded-benchmark-figures', 'Benchmark images'], ['results', 'Results'], ['methodology', 'Methodology'], ['overhead-and-resource-accounting', 'Overhead and resources'], ['reproduction', 'Reproduction']],

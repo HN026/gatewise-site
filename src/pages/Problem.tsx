@@ -3,7 +3,7 @@ import { sources } from '../data/content';
 
 export default function Problem() {
   return <div className="container problem-doc">
-    <header className="page-title"><span className="doc-category">Problem &amp; design</span><h1>From request concurrency to adaptive admission</h1><p>How overload develops, why request rate is insufficient, and how Gatewise bounds work before adding priorities, feedback and observability.</p></header>
+    <header className="page-title"><span className="doc-category">Problem &amp; design</span><h1>From request concurrency to adaptive admission</h1><p>How overload develops, where common protection mechanisms help, and why Gatewise combines concurrency limits, priority reservation and optional feedback.</p></header>
     <Section id="basics" title="Requests, latency and concurrency">
       <p>An HTTP client sends a request and the server runs a handler. That handler may read a database, call another service, or wait for a response to be written. Waiting does not necessarily use much CPU, but the request still retains a goroutine, buffers, connections or application state.</p>
       <Table headers={['Term', 'Meaning']} rows={[
@@ -19,9 +19,59 @@ export default function Problem() {
       <h3>Rate limiting and concurrency limiting</h3><p>A rate limit bounds arrivals per unit time. It does not directly bound active work when request duration changes. Gatewise bounds admitted synchronous requests instead. It adds no waiting queue: when capacity is unavailable, the caller receives 503 and decides whether to retry.</p>
       <h3>Priority-aware admission</h3><p>A shared ceiling can be filled by background work before a critical request arrives. Gatewise therefore limits background concurrency within the total budget. Priority is assigned by server route configuration or a middleware wrapper; an incoming header cannot promote a request.</p>
     </Section>
-    <Section id="evolution" title="From fixed thresholds to feedback">
-      <p>Static request-rate quotas are useful for API policy and caller fairness. They become a weak overload signal when requests have different costs or a dependency changes speed. A fixed concurrency limit directly bounds active work, but still needs tuning as workload and service conditions change.</p>
-      <p>Gatewise was built in the following order. Each layer solves a separate limitation; the proxy and Go middleware now share the same admission implementation.</p>
+    <Section id="alternatives" title="Alternative approaches and their limits">
+      <p>Consider a service with checkout requests and background reindex requests sharing a slow dependency. We want to bound active work, leave room for checkout, and respond when that dependency changes speed. The approaches below solve different parts of this problem. These are design comparisons, not claims that Gatewise was benchmarked against every alternative.</p>
+      <h3>1. Fixed request-rate limits and token buckets</h3>
+      <p>A request-rate limit caps arrivals over time. A token bucket also permits a configured burst. Both are useful for API quotas and controlling how frequently a caller sends work. A fixed arrival budget does not measure how much accepted work is still running.</p>
+      <p>In the example above, 120 RPS corresponds to about 6 active requests at 50ms, but about 60 at 500ms. The rate limit can continue allowing the same traffic while the service accumulates work. Lowering the rate manually can help, but the safe value changes with latency and request cost.</p>
+      <p><strong>Gatewise’s choice:</strong> count admitted handlers until they return. A configured concurrency ceiling bounds active synchronous work even when requests slow down. Keep a separate rate limiter when the application also needs caller quotas.</p>
+      <Diagram name="rate-versus-concurrency" caption="Illustrative values: the same arrival-rate cap can allow more active work after a slowdown. A concurrency ceiling bounds active handlers and rejects excess arrivals." />
+      <h3>2. Shared quotas backed by Redis or another coordinator</h3>
+      <p>A shared counter can coordinate a quota across replicas. That is useful when a customer must have one global allowance. Coordination adds a request dependency and requires a policy for coordinator failures. Counting requests or charging a fixed cost also needs a cost model: two operations counted equally can put very different pressure on a backend.</p>
+      <p><strong>Gatewise’s choice:</strong> make admission decisions locally, without a remote quota lookup. This avoids a coordination dependency on the admission path, but deliberately gives up global quotas and tenant fairness. Three processes with a limit of 20 can admit 60 requests in total. Gatewise cannot replace a distributed quota service.</p>
+      <h3>3. Waiting queues, FIFO scheduling and queue-delay control</h3>
+      <p>A bounded queue can absorb a short burst when the work may wait. If overload persists, waiting adds latency and retains request state. For example, 40 queued requests behind a service completing 20 per second represent roughly two seconds of waiting before their own execution, assuming a steady drain. An unbounded queue provides no backlog bound.</p>
+      <p>Queue-delay control can discard stale work instead of allowing waiting time to grow indefinitely. <a href="https://www.rfc-editor.org/rfc/rfc8289.html" target="_blank" rel="noreferrer">CoDel</a> is a queue-management design based on experienced delay; its original setting is network packet queues. An application implementation still needs deadlines, queue bounds and a scheduling policy. Queue order and priority handling are separate from delay control. Gatewise implements neither CoDel nor FIFO/LIFO scheduling.</p>
+      <p><strong>Gatewise’s choice:</strong> add no admission queue. A full guard returns 503 before invoking the handler. This avoids an additional waiting layer, but rejects bursts that a well-designed queue might absorb. Durable jobs and workloads that should wait belong in an application queue; callers must not retry rejected requests indefinitely.</p>
+      <h3>4. A fixed semaphore or concurrency ceiling</h3>
+      <p>A nonblocking semaphore is a good starting point: acquire a slot, run the handler and release it. It directly bounds active work. A single shared budget, however, can already be full of reindex requests when checkout arrives. A ceiling chosen for a healthy dependency can also be too high during degradation, or unnecessarily low after recovery.</p>
+      <p><strong>Gatewise’s choice:</strong> retain a fixed mode, add a separate background quota within the total limit, and offer optional feedback-driven adjustment. Reservation leaves some capacity unavailable to background work; it does not interrupt running requests or guarantee critical admission when total capacity is full.</p>
+      <h3>5. Timeouts, retries and circuit breakers</h3>
+      <p>Timeouts bound how long a caller is willing to wait, but the work may continue if a handler or dependency ignores cancellation. Retrying adds another attempt; without a budget and backoff, attempts can increase load during an outage. A failure-triggered circuit breaker can stop calls to an unhealthy dependency, but failure counts alone do not specify a safe amount of simultaneous work.</p>
+      <p>These mechanisms overlap in some implementations: <a href="https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/circuit_breaking" target="_blank" rel="noreferrer">Envoy’s circuit breakers</a>, for example, include outstanding-request and retry limits. It would be incorrect to claim all circuit breakers lack concurrency protection.</p>
+      <p><strong>Gatewise’s choice:</strong> control admission at the HTTP boundary and leave dependency timeouts, cancellation, retry budgets and downstream breakers to the application. Configure them together. Gatewise does not retry 503 responses or stop asynchronous work that outlives its handler.</p>
+      <h3>6. Scaling replicas and resource thresholds</h3>
+      <p>More application replicas can help when application capacity is the bottleneck. They do not necessarily increase the capacity of a shared database. Scaling callers can increase pressure on that dependency. A CPU threshold can also miss requests blocked on I/O while they retain connections and memory.</p>
+      <p><a href="https://kubernetes.io/docs/concepts/workloads/autoscaling/horizontal-pod-autoscale/" target="_blank" rel="noreferrer">Kubernetes horizontal autoscaling</a> changes replica count using observed metrics through a periodic control loop. That is a different timescale and control boundary from deciding whether to admit the next request.</p>
+      <p><strong>Gatewise’s choice:</strong> enforce a local bound immediately and optionally adjust it using completed-request latency and errors. Scaling and resource monitoring remain complementary controls. Replica budgets must still be sized together; Gatewise has no direct CPU, memory or database-health detector.</p>
+    </Section>
+    <Section id="uber-design" title="How Uber’s design evolved">
+      <p><a href="https://www.uber.com/us/en/blog/from-static-rate-limiting-to-intelligent-load-management/" target="_blank" rel="noreferrer">Uber’s engineering article</a> describes database overload protection for Docstore and Schemaless. Its progression provides context for the design questions above:</p>
+      <Table headers={['Approach in the article', 'Limitation or next step']} rows={[
+        ['Redis-backed read/write quotas', 'Remote lookups, partition-health tracking and an imperfect cost model complicated protection.'],
+        ['CoDel-based queues', 'Controlled waiting and stale work, but their implementation did not distinguish request importance.'],
+        ['Scorecard and regulators', 'Added tenant boundaries and checks for resource pressure and hot partitions.'],
+        ['Cinnamon with adaptive control', 'Added priority-aware shedding and adjustments using latency and errors.'],
+        ['Unified overload signals', 'Combined local signals with remote state such as replication lag.'],
+      ]} />
+      <p>This is Uber’s implementation history, not Gatewise’s development or benchmark history. Gatewise does not reproduce that platform, and Uber’s reported performance improvements are not Gatewise results.</p>
+    </Section>
+    <Section id="design-decisions" title="What Gatewise implements and why">
+      <p>Gatewise chooses a smaller HTTP-level design with explicit boundaries. The guard runs before a protected handler in a Go application, or before forwarding a request in the standalone proxy.</p>
+      <Table headers={['Requirement', 'Implemented decision', 'Tradeoff']} rows={[
+        ['Bound active work', 'Track synchronous requests under one shared guard; reject when the total ceiling is reached.', 'Does not bound every resource or database operation issued by a handler.'],
+        ['Protect important traffic', 'Assign priority on the server and reserve part of the total budget from background work.', 'Reserved capacity may sit idle; no preemption or tenant fairness.'],
+        ['Respond to changing conditions', 'Optionally reduce or grow the current limit using normalized latency, errors and saturation.', 'Needs meaningful latency targets and sufficient completions; feedback is delayed and can oscillate.'],
+        ['Avoid adding waiting', 'Return structured 503 responses immediately when capacity is unavailable.', 'Burst absorption and bounded caller retries are application concerns.'],
+        ['Keep integration local', 'Share the admission implementation between Go middleware and an HTTP proxy.', 'Each guard and replica has its own independent budget.'],
+        ['Make decisions inspectable', 'Export admission outcomes, active work, latency and limit adjustments to Prometheus.', 'Monitoring alone does not establish safe production settings.'],
+      ]} />
+      <p>The request path is: classify priority → check total and background capacity → admit or return 503 → release the slot when the handler finishes → record feedback. Adaptive mode changes the limit used by future admissions; it does not terminate active work.</p>
+      <h3>What the measurements establish</h3>
+      <p>The <a href="#/benchmarks">published benchmark</a> compares an unprotected service with fixed and adaptive Gatewise in proxy and middleware deployments, across baseline, pressure and recovery. It measures useful completed work, successful-request latency, rejections and active concurrency. It does not compare Gatewise with Redis quotas, CoDel, Envoy or Kubernetes autoscaling. Those alternatives require separate experiments before any performance claim is justified.</p>
+    </Section>
+    <Section id="evolution" title="Implementation layers">
+      <p>Each implemented layer addresses a separate limitation. The proxy and Go middleware share the same admission implementation.</p>
       <Table headers={['Layer', 'Implemented behavior', 'Remaining limitation']} rows={[
         ['HTTP proxy', 'Named upstreams, segment-prefix routing, configurable timeouts, error mapping and graceful shutdown.', 'Forwarding alone does not bound active work.'],
         ['Fixed concurrency', 'Independent service budgets; immediate 503 when full.', 'Background work can occupy the whole budget.'],
