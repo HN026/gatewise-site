@@ -1,4 +1,4 @@
-"""Export PNG figures from the recorded M6 report. Requires Matplotlib."""
+"""Export PNG figures from the recorded overload benchmark report. Requires Matplotlib."""
 import hashlib
 import json
 import pathlib
@@ -105,7 +105,7 @@ def main():
     fig.text(.07,.065,'RSS is sampled every 250ms and is an observed lower bound. It is not heap size or evidence of a leak.',fontsize=10,color='#a6beaf')
     fig.savefig(output/'benchmark-resources.png',dpi=160)
     plt.close(fig)
-    metadata={'source':'Original M6 experiment report','source_sha256':hashlib.sha256(SOURCE.read_bytes()).hexdigest(),'runs':15,'repetitions_per_deployment':3,'matplotlib':matplotlib.__version__,'images':['benchmark-overload.png','benchmark-concurrency.png','benchmark-resources.png'],'aggregation':'Median of run-level values; no pooled percentile calculation'}
+    metadata={'source':'15-run overload benchmark report','source_sha256':hashlib.sha256(SOURCE.read_bytes()).hexdigest(),'runs':15,'repetitions_per_deployment':3,'matplotlib':matplotlib.__version__,'images':['benchmark-overload.png','benchmark-concurrency.png','benchmark-resources.png'],'aggregation':'Median of run-level values; no pooled percentile calculation'}
     (ROOT/'public/data/chart-provenance.json').write_text(json.dumps(metadata,indent=2)+'\n')
     print('Exported measured benchmark PNGs with source provenance')
 

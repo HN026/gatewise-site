@@ -1,4 +1,4 @@
-// gatewise-bench runs local, isolated M6 overload experiments.
+// gatewise-bench runs local, isolated overload experiments.
 package main
 
 import (

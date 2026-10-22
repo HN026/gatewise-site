@@ -1,5 +1,5 @@
 {
-  "source": "Fresh local screenshot workload; separate from the original M6 experiment",
+  "source": "Local monitoring workload; separate from the 15-run overload benchmark",
   "phases": [
     {
       "name": "baseline",
