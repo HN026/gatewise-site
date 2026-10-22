@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 810 325" role="img" aria-label="scaling-shared-dependency">
+<defs><marker id="arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0L7 3.5L0 7" fill="#91ab9a"/></marker></defs>
+<rect width="810" height="325" fill="#101a13"/>
+<path d="M240 55.0 H395.0 V160.0 H547" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M240 160.0 H395.0 V160.0 H547" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M240 265.0 H395.0 V160.0 H547" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="20" y="20" width="220" height="70" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="130.0" y="45" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Replica A: limit 20</text>
+<text x="130.0" y="66" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Local request budget</text>
+<rect x="20" y="125" width="220" height="70" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="130.0" y="150" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Replica B: limit 20</text>
+<text x="130.0" y="171" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Local request budget</text>
+<rect x="20" y="230" width="220" height="70" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="130.0" y="255" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Replica C: limit 20</text>
+<text x="130.0" y="276" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Local request budget</text>
+<rect x="550" y="125" width="240" height="70" rx="2" fill="#142019" stroke="#6faf91"/>
+<text x="670.0" y="150" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">One shared dependency</text>
+<text x="670.0" y="171" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Capacity is unchanged</text>
+</svg>
