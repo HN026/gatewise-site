@@ -1,3 +1,5 @@
+<p><img src="public/logo.svg" alt="Gatewise logo" width="80" height="80" /></p>
+
 # Gatewise documentation site
 
 A separate React + TypeScript + Vite site for the Gatewise HTTP admission library and proxy. The library repository does not depend on this project.
