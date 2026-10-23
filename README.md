@@ -2,71 +2,57 @@
 
 # Gatewise documentation site
 
-A separate React + TypeScript + Vite site for the Gatewise HTTP admission library and proxy. The library repository does not depend on this project.
+Technical documentation and measured evidence for [Gatewise](https://github.com/HN026/gatewise). The Go library has no dependency on this React/TypeScript/Vite project.
 
-## Develop
+## Development
 
 ```sh
 npm ci
 npm run dev
+npm run build
+npm run preview -- --port 4173
 ```
 
-Vite prints the local development URL. `npm run build` type-checks and writes a static site to `dist/`; `npm run preview -- --port 4173` serves that build. Hash-based navigation works on static hosting without server rewrites. GitHub Pages deployment is managed by `.github/workflows/pages.yml`; public assets use relative URLs to support the project subpath.
+Only the home request-flow illustration animates; documentation pages support deep links through hash navigation. Assets use relative URLs for GitHub Pages. Fonts are self-hosted with retained licenses. The original palette takes inspiration from C&E Growth Partners; explanations, logo and diagrams are original. Engineering articles are referenced without copying their text or figures.
 
 ## Structure
 
-- `src/pages/`: compact animated home, problem/design, installation/deployment, examples, benchmarks, metrics and reference.
-- `src/components/`: documentation sidebar/search, code copying, charts and diagrams.
-- `src/data/`: documentation content and measured benchmark summaries.
-- `public/`: the original SVG logo, editable diagrams, downloadable charts, measured results and source-only demo ZIP.
-- `examples/demo/`: self-contained demo source snapshots, launcher, Postman files and its own README.
-- `tools/`: regenerate diagrams/charts or package the example download.
+- `src/pages/`: home, problem/design, installation/deployment, examples, benchmarks, metrics, reference and versions.
+- `src/data/`: technical content, release history and summaries derived from measured reports.
+- `examples/commerce/`: self-contained source snapshots, three PostgreSQL-backed service roles, launcher, open-loop benchmark, controller validation and Postman contract.
+- `public/`: logo, editable diagrams, report data, recorded figures and source-only demo download.
+- `tools/`: source packaging, diagram generation, measured-data export and native monitoring captures.
 
-## Refresh examples
+## Refresh the example
 
 ```sh
-# Repackage the checked-in demo sources:
 npm run package:demo
-# Explicitly refresh source snapshots from the sibling Go projects first:
+# Explicitly replace managed source snapshots from sibling projects:
 python3 tools/package_demo.py --sync-sources --projects ..
 ```
 
-The sync option replaces only the managed example module snapshots. Make changes in the actual library/backend projects before syncing. Postman source is owned by `examples/demo/postman/`. Neither operation copies binaries, personal dotenv files, old logs or historical benchmark results. The ZIP includes SHA-256 source manifests and preserves executable shell scripts.
+Canonical modules are `../gatewise` and `../commerce-backend`. Make code changes there before syncing. The example launcher, workload and portable Postman contract are owned by `examples/commerce/`. Packaging excludes compiled binaries, local dotenv files, logs and result directories; its ZIP includes a SHA-256 source manifest. The replacement demo starts at most four HTTP application processes: three service roles and, in proxy mode, Gatewise. PostgreSQL and optional monitoring are infrastructure.
 
-## Refresh diagrams and charts
+## Reproduce current measurements
 
-```sh
-npm run assets -- --results public/data/benchmark-results.json
-```
-
-One canonical model generates each SVG and editable `.drawio` file. Open `.drawio` files in diagrams.net to edit them; change the generator model to make future regeneration preserve those edits.
-
-The measured benchmark JSON retains all 15 runs and their original values; hostnames, PIDs and local filesystem paths have been removed from the public export. Do not replace measured values with illustrative data. Benchmark phase-summary lines connect measured endpoints, not continuous scrape series. PNG benchmark figures are exported from that same report. The Metrics page instead uses native Grafana captures from a separate 50-second local run, with source time series and workload outcomes in `public/data/metrics-capture.json`. Only the home request-flow illustration animates; it supports pause and reduced-motion preferences. All technical pages use the documentation layout.
-
-## Regenerate measured images
+Extract the demo and follow its README. It requires Go 1.25+, Python 3.10+ and running Podman or Docker. Default runs take about 32 minutes plus startup/drain; controller validation is separate. Stop competing load before measurement.
 
 ```sh
-python3 -m venv /tmp/gatewise-charts
-/tmp/gatewise-charts/bin/pip install matplotlib==3.11.2
-/tmp/gatewise-charts/bin/python tools/export_benchmark_images.py
-# Native Grafana PNG captures require Podman and built Go demo binaries:
-python3 tools/capture_metrics.py --help
+python3 examples/commerce/benchmark.py --output /tmp/commerce-results.json
+python3 examples/commerce/validate_controller.py --output /tmp/controller-validation.json
+# Plot measured results in an environment containing Matplotlib:
+python3 tools/export_commerce_benchmark.py --report /tmp/commerce-results.json --controller-report /tmp/controller-validation.json
+# Separate native Grafana captures; requires the official image renderer:
+python3 tools/capture_commerce_metrics.py --projects examples/commerce
+python3 tools/generate_commerce_diagram.py
 ```
 
-The capture tool starts an isolated local workload and monitoring stack, exports the dashboard panels, then cleans up its processes and containers. Its workload is distinct from the 15-run overload benchmark. Deployment instructions are examples; the systemd unit has not been exercised on a Linux host.
+The exporter requires all fifteen measured runs and their checks to pass. Figures preserve run-level percentiles, rejection/error counts and data provenance. Controller traces are sampled observations. The full report includes generator delivery, pool waits, backend heap/goroutines, runtime versions and binary hashes. Captured dashboard PNGs come from a separate monitoring run against the same real services, not the repeated performance experiment. Historical v0.1.0 synthetic data remains available in Git history and its tagged release; current documentation and default demo focus on commerce.
 
-## Content and release status
+Measurements were made on macOS with Podman. They are local production-style workloads, not production capacity or long-duration soak evidence. Optional monitoring requires containers to reach host listeners; adapt scrape networking for your deployment. The library itself is independent of PostgreSQL and example APIs. Production operations, authentication, TLS and replica budgets remain application concerns.
 
-Engineering references are linked on the Problem & design page. Explanations and figures describe Gatewise and are original; Uber's article text and figures are not copied. The color palette is inspired by C&E Growth Partners. Fonts are self-hosted; their licenses are in `public/fonts/`.
+## Releases and deployment
 
-The installation guide targets Gatewise v0.1.0 at github.com/HN026/gatewise. The self-contained demo retains local module replacements for its included snapshots. Production operations guidance is separate from the locally measured evidence; production adoption or multi-host capacity is not claimed.
+The site targets Gatewise v0.2.0. Add published versions to `src/data/releases.ts`, newest first, with verified GitHub timestamps, IST dates, requirements, upgrade notes and tag-specific downloads. The Versions page and sidebar use this shared source. Never change an existing release tag to update the site.
 
-## Published projects
-
-- Library: https://github.com/HN026/gatewise
-- Website: https://hn026.github.io/gatewise-site/
-- License: MIT (font license notices are retained separately).
-
-## Maintain release history
-
-Add published releases to `src/data/releases.ts`, newest first. Record the GitHub publication timestamp, local publication date (IST), requirements, changes, upgrade notes and tag-specific download links. The Versions page and sidebar version link use this shared data. Verify the GitHub tag and assets exist before publishing the site.
+The Pages workflow type-checks/builds and deploys `main`. Library: https://github.com/HN026/gatewise · Site: https://hn026.github.io/gatewise-site/ · License: MIT.

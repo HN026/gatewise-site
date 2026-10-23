@@ -1,0 +1,43 @@
+{
+  "target": "Freshly extracted source-only commerce demo; real PostgreSQL",
+  "archive_sha256": "de1325651ddbb361ceb1cec9b2185e75abd35870bf39aa95f28445a377c516c3",
+  "collection_sha256": "b8bdf0bfba8d25768eef61da3279e6a769a5abb89d5202ce8c307e7ae5c1e4e1",
+  "profiles": [
+    {
+      "profile": "direct",
+      "exit_code": 0,
+      "assertions": 74,
+      "failed_assertions": 0,
+      "pool_connections_drained": true
+    },
+    {
+      "profile": "proxy-fixed",
+      "exit_code": 0,
+      "assertions": 74,
+      "failed_assertions": 0,
+      "pool_connections_drained": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "exit_code": 0,
+      "assertions": 74,
+      "failed_assertions": 0,
+      "pool_connections_drained": true
+    },
+    {
+      "profile": "middleware-fixed",
+      "exit_code": 0,
+      "assertions": 74,
+      "failed_assertions": 0,
+      "pool_connections_drained": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "exit_code": 0,
+      "assertions": 74,
+      "failed_assertions": 0,
+      "pool_connections_drained": true
+    }
+  ],
+  "passed": true
+}

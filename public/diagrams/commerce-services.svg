@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 950 355" role="img" aria-label="commerce-services">
+<defs><marker id="arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0L7 3.5L0 7" fill="#91ab9a"/></marker></defs>
+<rect width="950" height="355" fill="#101a13"/>
+<path d="M185 165.0 H215.0 V165.0 H242" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M430 165.0 H462.5 V50.0 H492" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M680 50.0 H712.5 V50.0 H742" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M430 165.0 H462.5 V165.0 H492" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M680 165.0 H712.5 V165.0 H742" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M430 165.0 H462.5 V280.0 H492" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M680 280.0 H712.5 V280.0 H742" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="15" y="130" width="170" height="70" rx="2" fill="#142019" stroke="#6faf91"/>
+<text x="100.0" y="155" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">HTTP traffic</text>
+<text x="100.0" y="176" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Business + background</text>
+<rect x="245" y="130" width="185" height="70" rx="2" fill="#142019" stroke="#6faf91"/>
+<text x="337.5" y="155" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Gatewise proxy</text>
+<text x="337.5" y="176" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">3 independent budgets</text>
+<rect x="495" y="15" width="185" height="70" rx="2" fill="#142019" stroke="#6faf91"/>
+<text x="587.5" y="40" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Orders service</text>
+<text x="587.5" y="61" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Checkout writes</text>
+<rect x="745" y="15" width="185" height="70" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="837.5" y="40" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Orders database</text>
+<text x="837.5" y="61" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">SQL pool: 4 connections</text>
+<rect x="495" y="130" width="185" height="70" rx="2" fill="#142019" stroke="#6faf91"/>
+<text x="587.5" y="155" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Catalog service</text>
+<text x="587.5" y="176" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Product reads</text>
+<rect x="745" y="130" width="185" height="70" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="837.5" y="155" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Catalog database</text>
+<text x="837.5" y="176" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">SQL pool: 4 connections</text>
+<rect x="495" y="245" width="185" height="70" rx="2" fill="#142019" stroke="#6faf91"/>
+<text x="587.5" y="270" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Inventory service</text>
+<text x="587.5" y="291" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Stock reservations</text>
+<rect x="745" y="245" width="185" height="70" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="837.5" y="270" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Inventory database</text>
+<text x="837.5" y="291" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">SQL pool: 4 connections</text>
+</svg>
