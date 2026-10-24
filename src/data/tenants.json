@@ -1,0 +1,172 @@
+{
+  "source_sha256": "20506a0ba56ac371129adbf73de8ef981e2405579dae9991336db42c62e89ea8",
+  "started_at": "2026-11-07T11:25:59.809181+00:00",
+  "finished_at": "2026-11-07T11:38:33.274707+00:00",
+  "runs": 30,
+  "checks": 264,
+  "sent": 239040,
+  "missed": 0,
+  "transport_errors": 0,
+  "comparisons": [
+    {
+      "adapter": "direct",
+      "label": "Direct",
+      "ordinary_timely_rps": 2.1666666666666665,
+      "ordinary_p95_range_ms": [
+        807.288125,
+        969.100208
+      ],
+      "ordinary_rejected_percent": 0.0,
+      "ordinary_other_5xx_percent": 43.86574074074074,
+      "noisy_success_rps": 266.0833333333333,
+      "noisy_rejected_percent": 0.0,
+      "total_success_rps": 279.4166666666667,
+      "max_tracked": null,
+      "median_peak_heap_mib": 9.930419921875
+    },
+    {
+      "adapter": "semaphore",
+      "label": "Semaphore",
+      "ordinary_timely_rps": 6.583333333333332,
+      "ordinary_p95_range_ms": [
+        211.537333,
+        344.46825
+      ],
+      "ordinary_rejected_percent": 52.43055555555556,
+      "ordinary_other_5xx_percent": 0.0,
+      "noisy_success_rps": 240.83333333333334,
+      "noisy_rejected_percent": 49.398148148148145,
+      "total_success_rps": 252.0,
+      "max_tracked": null,
+      "median_peak_heap_mib": 3.3385009765625
+    },
+    {
+      "adapter": "proxy-fixed",
+      "label": "Proxy fixed",
+      "ordinary_timely_rps": 6.416666666666664,
+      "ordinary_p95_range_ms": [
+        195.302875,
+        307.013625
+      ],
+      "ordinary_rejected_percent": 48.611111111111114,
+      "ordinary_other_5xx_percent": 0.0,
+      "noisy_success_rps": 246.0,
+      "noisy_rejected_percent": 48.66898148148148,
+      "total_success_rps": 259.0833333333333,
+      "max_tracked": null,
+      "median_peak_heap_mib": 3.199920654296875
+    },
+    {
+      "adapter": "proxy-fixed-tenants",
+      "label": "Proxy fixed + tenants",
+      "ordinary_timely_rps": 23.999999999999964,
+      "ordinary_p95_range_ms": [
+        45.934875,
+        47.643125
+      ],
+      "ordinary_rejected_percent": 0.0,
+      "ordinary_other_5xx_percent": 0.0,
+      "noisy_success_rps": 121.08333333333333,
+      "noisy_rejected_percent": 74.76851851851852,
+      "total_success_rps": 145.08333333333334,
+      "max_tracked": 32.0,
+      "median_peak_heap_mib": 3.0371780395507812
+    },
+    {
+      "adapter": "proxy-adaptive",
+      "label": "Proxy adaptive",
+      "ordinary_timely_rps": 12.083333333333341,
+      "ordinary_p95_range_ms": [
+        89.204916,
+        118.794291
+      ],
+      "ordinary_rejected_percent": 45.717592592592595,
+      "ordinary_other_5xx_percent": 0.0,
+      "noisy_success_rps": 259.3333333333333,
+      "noisy_rejected_percent": 46.36574074074074,
+      "total_success_rps": 272.1666666666667,
+      "max_tracked": null,
+      "median_peak_heap_mib": 3.2450714111328125
+    },
+    {
+      "adapter": "proxy-adaptive-tenants",
+      "label": "Proxy adaptive + tenants",
+      "ordinary_timely_rps": 23.999999999999964,
+      "ordinary_p95_range_ms": [
+        45.727042,
+        47.453541
+      ],
+      "ordinary_rejected_percent": 0.0,
+      "ordinary_other_5xx_percent": 0.0,
+      "noisy_success_rps": 121.08333333333333,
+      "noisy_rejected_percent": 74.76851851851852,
+      "total_success_rps": 145.08333333333334,
+      "max_tracked": 32.0,
+      "median_peak_heap_mib": 3.0675735473632812
+    },
+    {
+      "adapter": "middleware-fixed",
+      "label": "Middleware fixed",
+      "ordinary_timely_rps": 6.749999999999998,
+      "ordinary_p95_range_ms": [
+        209.784125,
+        383.34275
+      ],
+      "ordinary_rejected_percent": 48.842592592592595,
+      "ordinary_other_5xx_percent": 0.0,
+      "noisy_success_rps": 249.08333333333334,
+      "noisy_rejected_percent": 48.425925925925924,
+      "total_success_rps": 261.5833333333333,
+      "max_tracked": null,
+      "median_peak_heap_mib": 3.1923065185546875
+    },
+    {
+      "adapter": "middleware-fixed-tenants",
+      "label": "Middleware fixed + tenants",
+      "ordinary_timely_rps": 23.999999999999964,
+      "ordinary_p95_range_ms": [
+        45.164583,
+        47.325209
+      ],
+      "ordinary_rejected_percent": 0.0,
+      "ordinary_other_5xx_percent": 0.0,
+      "noisy_success_rps": 121.16666666666667,
+      "noisy_rejected_percent": 74.76273148148148,
+      "total_success_rps": 145.16666666666666,
+      "max_tracked": 32.0,
+      "median_peak_heap_mib": 3.2912673950195312
+    },
+    {
+      "adapter": "middleware-adaptive",
+      "label": "Middleware adaptive",
+      "ordinary_timely_rps": 12.500000000000007,
+      "ordinary_p95_range_ms": [
+        86.916708,
+        117.726792
+      ],
+      "ordinary_rejected_percent": 44.3287037037037,
+      "ordinary_other_5xx_percent": 0.0,
+      "noisy_success_rps": 256.4166666666667,
+      "noisy_rejected_percent": 46.620370370370374,
+      "total_success_rps": 269.75,
+      "max_tracked": null,
+      "median_peak_heap_mib": 3.2325210571289062
+    },
+    {
+      "adapter": "middleware-adaptive-tenants",
+      "label": "Middleware adaptive + tenants",
+      "ordinary_timely_rps": 23.999999999999964,
+      "ordinary_p95_range_ms": [
+        45.223542,
+        47.658583
+      ],
+      "ordinary_rejected_percent": 0.0,
+      "ordinary_other_5xx_percent": 0.0,
+      "noisy_success_rps": 121.08333333333333,
+      "noisy_rejected_percent": 74.77430555555556,
+      "total_success_rps": 145.08333333333334,
+      "max_tracked": 32.0,
+      "median_peak_heap_mib": 3.232421875
+    }
+  ]
+}

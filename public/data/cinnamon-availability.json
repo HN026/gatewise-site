@@ -1,0 +1,14 @@
+{
+  "checked_at": "2026-11-07T11:28:25.708226+00:00",
+  "status": "official_public_implementation_not_identified",
+  "scope": "Read-only repository search in the official uber GitHub organization for cinnamon; official architecture articles used as references. This does not prove no usable implementation exists elsewhere.",
+  "repository_query": "https://api.github.com/search/repositories?q=cinnamon+org:uber&per_page=100",
+  "repository_matches": 0,
+  "sources": [
+    "https://www.uber.com/us/en/blog/cinnamon-using-century-old-tech-to-build-a-mean-load-shedder/",
+    "https://www.uber.com/us/en/blog/pid-controller-for-cinnamon/",
+    "https://www.uber.com/us/en/blog/cinnamon-auto-tuner-adaptive-concurrency-in-the-wild/"
+  ],
+  "direct_comparison": "pending access to an actual implementation and permission to run/publish it",
+  "reference_policy": "No independent reimplementation is presented as Uber Cinnamon."
+}

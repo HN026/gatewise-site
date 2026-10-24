@@ -1,0 +1,10 @@
+{
+  "source_sha256": "20506a0ba56ac371129adbf73de8ef981e2405579dae9991336db42c62e89ea8",
+  "runs": 30,
+  "aggregation": "Median run-level ordinary goodput; pooled rejection/error counts; p95 range retains per-actor/per-run percentiles; trace proxy-adaptive-tenants repeat 1",
+  "images": [
+    "tenant-isolation.png",
+    "tenant-tracking.png"
+  ],
+  "matplotlib": "3.11.2"
+}

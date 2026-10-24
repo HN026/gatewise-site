@@ -24,6 +24,7 @@ type Service struct {
 	MaxConcurrent    int
 	ReservedCritical int
 	Adaptive         *middleware.AdaptiveConfig
+	Tenants          *middleware.TenantConfig
 }
 
 type Route struct {
@@ -50,6 +51,7 @@ type rawConfig struct {
 		UpstreamURL      string       `json:"upstream_url"`
 		Mode             string       `json:"mode"`
 		Adaptive         *rawAdaptive `json:"adaptive"`
+		Tenants          *rawTenant   `json:"tenants"`
 		MaxConcurrent    *int         `json:"max_concurrent"`
 		ReservedCritical int          `json:"reserved_critical"`
 	} `json:"services"`
@@ -166,7 +168,11 @@ func LoadWithEnv(filename, envFile string) (Config, error) {
 		if err != nil {
 			return Config{}, err
 		}
-		c.Services[name] = Service{Upstream: target, MaxConcurrent: limit, ReservedCritical: reserved, Adaptive: a}
+		t, err := parseTenant(name, service.Tenants, lookup, limit)
+		if err != nil {
+			return Config{}, err
+		}
+		c.Services[name] = Service{Upstream: target, MaxConcurrent: limit, ReservedCritical: reserved, Adaptive: a, Tenants: t}
 	}
 	prefixes := map[string]bool{}
 	for _, r := range raw.Routes {

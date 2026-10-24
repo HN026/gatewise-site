@@ -14,6 +14,11 @@ type Decision string
 
 const (
 	Admitted                 Decision = ""
+	TenantConcurrencyLimit   Decision = "tenant_concurrency_limit"
+	TenantRegistryFull       Decision = "tenant_registry_full"
+	TenantMissing            Decision = "tenant_identity_missing"
+	TenantInvalid            Decision = "tenant_identity_invalid"
+	TenantUntrusted          Decision = "tenant_identity_untrusted"
 	ConcurrencyLimit         Decision = "concurrency_limit"
 	CriticalCapacityReserved Decision = "critical_capacity_reserved"
 	InvalidPriority          Decision = "invalid_priority"

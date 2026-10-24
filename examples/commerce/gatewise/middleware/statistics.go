@@ -12,15 +12,17 @@ type Statistics struct {
 	Name           string
 	State          ServiceState
 	Controller     ControllerState
+	Tenants        TenantState
 	Priorities     [2]PriorityStatistics
 	DurationBounds [11]float64
 	Adjustments    [2][3]uint64 // decrease/increase; latency_pressure/server_errors/healthy_saturation
 }
 
 type PriorityStatistics struct {
-	Priority                                           Priority
-	Admitted, RejectedConcurrency, RejectedReservation uint64
-	Outcomes                                           [3]OutcomeStatistics // completed, canceled, panicked
+	Priority                                                                                                      Priority
+	Admitted, RejectedConcurrency, RejectedReservation                                                            uint64
+	RejectedTenant, RejectedTenantRegistry, RejectedTenantMissing, RejectedTenantInvalid, RejectedTenantUntrusted uint64
+	Outcomes                                                                                                      [3]OutcomeStatistics // completed, canceled, panicked
 }
 
 type OutcomeStatistics struct {
@@ -64,6 +66,16 @@ func (s *statistics) admission(p Priority, decision admission.Decision) {
 	switch decision {
 	case admission.Admitted:
 		v.Admitted++
+	case admission.TenantConcurrencyLimit:
+		v.RejectedTenant++
+	case admission.TenantRegistryFull:
+		v.RejectedTenantRegistry++
+	case admission.TenantMissing:
+		v.RejectedTenantMissing++
+	case admission.TenantInvalid:
+		v.RejectedTenantInvalid++
+	case admission.TenantUntrusted:
+		v.RejectedTenantUntrusted++
 	case admission.ConcurrencyLimit:
 		v.RejectedConcurrency++
 	case admission.CriticalCapacityReserved:
@@ -121,7 +133,8 @@ func (s *statistics) adjustment(previous, current int, reason string) {
 func (s *Service) Statistics() Statistics {
 	state := s.Snapshot()
 	controller := s.ControllerSnapshot()
+	tenants := s.TenantSnapshot()
 	s.statistics.mu.Lock()
 	defer s.statistics.mu.Unlock()
-	return Statistics{Name: s.name, State: state, Controller: controller, Priorities: s.statistics.priorities, DurationBounds: durationBounds, Adjustments: s.statistics.adjustments}
+	return Statistics{Name: s.name, State: state, Controller: controller, Tenants: tenants, Priorities: s.statistics.priorities, DurationBounds: durationBounds, Adjustments: s.statistics.adjustments}
 }

@@ -59,15 +59,17 @@ class Stack:
             except Exception:pass
             time.sleep(.05)
         raise RuntimeError('Service readiness timed out; logs: '+str(self.temp))
-    def start_app(self,profile):
+    def start_app(self,profile,tenants=False):
+        self.tenants_enabled=tenants
         self.stop_app();self.databases=[];self.backends={};self.admins={};self.urls={}
-        mode=profile.removeprefix('middleware-') if profile.startswith('middleware-') else 'direct'
+        mode=profile.removeprefix('middleware-') if profile.startswith('middleware-') else ('semaphore' if profile=='semaphore' else 'direct')
         env={k:v for k,v in os.environ.items() if not k.startswith(('GATEWISE_','COMMERCE_'))}
         for role in ['orders','catalog','inventory']:
             database='gw_'+uuid.uuid4().hex;self.sql('CREATE DATABASE '+database);self.databases.append(database)
             business,admin=port(),port();self.backends[role]=f'http://127.0.0.1:{business}';self.admins[role]=f'http://127.0.0.1:{admin}'
             service_env={**env,'DATABASE_URL':f'postgres://gatewise:gatewise-local@127.0.0.1:{self.dbport}/{database}?sslmode=disable'}
             args=[str(self.projects/'commerce-backend/bin/commerce-backend'),'-role',role,'-listen',f'127.0.0.1:{business}','-admin-listen',f'127.0.0.1:{admin}','-mode',mode]
+            if tenants and mode!='direct':args += ['-tenant-limit','2','-tenant-max-tracked','32','-tenant-idle-ttl','2s']
             process=self.start_process(role+'-'+profile,args,service_env);self.ready(self.backends[role],process)
         self.urls=dict(self.backends);self.metrics_urls=list(self.backends.values())
         if profile.startswith('proxy-'):
@@ -75,6 +77,7 @@ class Stack:
             for role in self.backends:
                 service={'upstream_url':self.backends[role],'max_concurrent':12,'reserved_critical':4}
                 if profile=='proxy-adaptive':service.update(mode='adaptive',adaptive={'min_concurrent':5,'initial_concurrent':12,'interval':'500ms','min_samples':10,'target_latency':'100ms'})
+                if tenants:service['tenants']={'max_concurrent':2,'max_tracked':32,'idle_ttl':'2s','header':'X-Demo-Tenant','trusted_proxies':['127.0.0.1/32','::1/128']}
                 cfg['services'][role]=service
                 cfg['routes'] += [{'path_prefix':'/'+role+'/reports','service':role,'priority':'background'},{'path_prefix':'/'+role,'service':role,'priority':'critical'}]
             config=self.temp/'proxy.json';config.write_text(json.dumps(cfg));process=self.start_process(profile,[str(self.projects/'gatewise/bin/gatewise'),'-config',str(config),'-env-file',''],env)
@@ -83,7 +86,7 @@ class Stack:
     def control(self,multiplier=1,delay=0,failures=0):
         return {role:api(url,'/control',{'work_multiplier':multiplier,'sql_delay_ms':delay,'failure_every':failures},'PUT') for role,url in self.admins.items()}
     def environment(self):
-        values=[{'key':role+'_url','value':url,'enabled':True} for role,url in self.urls.items()]+[{'key':role+'_admin','value':url,'enabled':True} for role,url in self.admins.items()]+[{'key':role+'_backend','value':url,'enabled':True} for role,url in self.backends.items()]+[{'key':'expected_mode','value':self.profile.removeprefix('proxy-').removeprefix('middleware-'),'enabled':True}]
+        values=[{'key':role+'_url','value':url,'enabled':True} for role,url in self.urls.items()]+[{'key':role+'_admin','value':url,'enabled':True} for role,url in self.admins.items()]+[{'key':role+'_backend','value':url,'enabled':True} for role,url in self.backends.items()]+[{'key':'tenant_header','value':'X-Demo-Tenant','enabled':True},{'key':'tenant_max_tracked','value':'32','enabled':True},{'key':'expected_mode','value':self.profile.removeprefix('proxy-').removeprefix('middleware-'),'enabled':True}]
         path=self.temp/'Commerce.postman_environment.json';path.write_text(json.dumps({'name':'Gatewise commerce example','values':values,'_postman_variable_scope':'environment'},indent=2));return path
     def stop_app(self):
         for p in self.children:
@@ -106,9 +109,10 @@ class Stack:
     def __exit__(self,*_):self.close()
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--projects',type=pathlib.Path,default=ROOT);p.add_argument('--engine',default=os.environ.get('CONTAINER_ENGINE','podman'));p.add_argument('--profile',choices=['direct','proxy-fixed','proxy-adaptive','middleware-fixed','middleware-adaptive'],default='middleware-adaptive');p.add_argument('--monitor',action='store_true',help='start optional local Prometheus and Grafana');p.add_argument('--verify',action='store_true',help='run the Postman contract and clean up');a=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--projects',type=pathlib.Path,default=ROOT);p.add_argument('--engine',default=os.environ.get('CONTAINER_ENGINE','podman'));p.add_argument('--profile',choices=['direct','proxy-fixed','proxy-adaptive','middleware-fixed','middleware-adaptive'],default='middleware-adaptive');p.add_argument('--tenants',action='store_true',help='enable example tenant limits: 2 per tenant, 32 identities, 2s idle TTL');p.add_argument('--monitor',action='store_true',help='start optional local Prometheus and Grafana');p.add_argument('--verify',action='store_true',help='run the Postman contract and clean up');a=p.parse_args()
+    if a.tenants and a.profile=='direct':p.error('--tenants needs proxy or middleware admission')
     with Stack(a.projects,a.engine) as stack:
-        stack.build();stack.start_db();stack.start_app(a.profile);environment=stack.environment()
+        stack.build();stack.start_db();stack.start_app(a.profile,a.tenants);environment=stack.environment()
         print(json.dumps({'services':stack.urls,'backends':stack.backends,'metrics':[url+'/metrics' for url in stack.metrics_urls],'controls':stack.admins,'postman_environment':str(environment),'profile':a.profile}),flush=True)
         monitoring=None
         try:
@@ -116,7 +120,7 @@ def main():
                 from monitor import Monitoring
                 monitoring=Monitoring(stack);monitoring.start();print(json.dumps({'grafana':monitoring.grafana+'/d/gatewise-commerce','prometheus':monitoring.prometheus}),flush=True)
             if a.verify:
-                subprocess.run(['postman','collection','run',str(ROOT/'postman/Commerce.postman_collection.json'),'-e',str(environment),'--no-report-events','--timeout-request','5000','--timeout-script','15000'],check=True)
+                subprocess.run(['postman','collection','run',str(ROOT/'postman'/('Tenants.postman_collection.json' if a.tenants else 'Commerce.postman_collection.json')),'-e',str(environment),'--no-report-events','--timeout-request','5000','--timeout-script','15000'],check=True)
                 subprocess.run(['postman','status'],cwd=ROOT,check=False)
             else:
                 print('Ctrl+C stops this example and removes its PostgreSQL volume.',flush=True)
