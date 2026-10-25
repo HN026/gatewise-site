@@ -1,0 +1,282 @@
+{
+  "info": {
+    "name": "Gatewise priority propagation",
+    "description": "Real orders-to-catalog database-backed flows. Loopback peers are trusted only for this isolated demo. It does not authenticate users. Forged remote peers are covered by Go trust-boundary tests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Default urgent",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{orders_url}}/orders/flows/urgent"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"flow succeeds\",()=>pm.response.to.have.status(200));",
+              "const b=pm.response.json();",
+              "pm.test(\"importance survives downstream\",()=>{pm.expect(b.upstream.Tier).eq(\"urgent\");pm.expect(b.downstream.priority.Tier).eq(\"urgent\");});",
+              "pm.test(\"downstream source is trusted HTTP\",()=>pm.expect(b.downstream.priority.Source).eq(\"trusted_http\"));",
+              "pm.test(\"cohort is consistent within one epoch\",()=>{if(b.upstream.Epoch===b.downstream.priority.Epoch)pm.expect(b.upstream.Bucket).eq(b.downstream.priority.Bucket);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Default normal",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{orders_url}}/orders/flows/normal"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"flow succeeds\",()=>pm.response.to.have.status(200));",
+              "const b=pm.response.json();",
+              "pm.test(\"importance survives downstream\",()=>{pm.expect(b.upstream.Tier).eq(\"normal\");pm.expect(b.downstream.priority.Tier).eq(\"normal\");});",
+              "pm.test(\"downstream source is trusted HTTP\",()=>pm.expect(b.downstream.priority.Source).eq(\"trusted_http\"));",
+              "pm.test(\"cohort is consistent within one epoch\",()=>{if(b.upstream.Epoch===b.downstream.priority.Epoch)pm.expect(b.upstream.Bucket).eq(b.downstream.priority.Bucket);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Default batch",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{orders_url}}/orders/flows/batch"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"flow succeeds\",()=>pm.response.to.have.status(200));",
+              "const b=pm.response.json();",
+              "pm.test(\"importance survives downstream\",()=>{pm.expect(b.upstream.Tier).eq(\"batch\");pm.expect(b.downstream.priority.Tier).eq(\"batch\");});",
+              "pm.test(\"downstream source is trusted HTTP\",()=>pm.expect(b.downstream.priority.Source).eq(\"trusted_http\"));",
+              "pm.test(\"cohort is consistent within one epoch\",()=>{if(b.upstream.Epoch===b.downstream.priority.Epoch)pm.expect(b.upstream.Bucket).eq(b.downstream.priority.Bucket);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Trusted incoming priority overrides route default",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Gatewise-Priority",
+            "value": "v1;urgent;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        ],
+        "url": "{{orders_url}}/orders/flows/batch"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"trusted priority accepted\",()=>pm.response.to.have.status(200));const b=pm.response.json();pm.test(\"urgent survives both hops\",()=>{pm.expect(b.upstream.Tier).eq(\"urgent\");pm.expect(b.downstream.priority.Tier).eq(\"urgent\");pm.expect(b.upstream.Source).eq(\"trusted_http\");});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Malformed",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Gatewise-Priority",
+            "value": "urgent"
+          }
+        ],
+        "url": "{{orders_url}}/orders/flows/batch"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"invalid metadata rejected\",()=>pm.response.to.have.status(400));pm.test(\"explicit reason\",()=>pm.expect(pm.response.json().reason).eq(\"priority_metadata_invalid\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Unknown tier",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Gatewise-Priority",
+            "value": "v1;admin;-"
+          }
+        ],
+        "url": "{{orders_url}}/orders/flows/batch"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"invalid metadata rejected\",()=>pm.response.to.have.status(400));pm.test(\"explicit reason\",()=>pm.expect(pm.response.json().reason).eq(\"priority_metadata_invalid\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Malformed cohort",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Gatewise-Priority",
+            "value": "v1;urgent;bad"
+          }
+        ],
+        "url": "{{orders_url}}/orders/flows/batch"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"invalid metadata rejected\",()=>pm.response.to.have.status(400));pm.test(\"explicit reason\",()=>pm.expect(pm.response.json().reason).eq(\"priority_metadata_invalid\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Legacy critical maps to highest tier",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Idempotency-Key",
+            "value": "{{$guid}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{orders_url}}/orders/checkout",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"amount_cents\": 1000}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"checkout accepted\",()=>pm.response.to.have.status(201));pm.test(\"critical compatibility\",()=>pm.expect(pm.response.headers.get(\"X-Gatewise-Resolved-Priority\")).eq(\"urgent\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Legacy background maps to lowest tier",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{orders_url}}/orders/reports/rebuild",
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"report accepted\",()=>pm.response.to.have.status(200));pm.test(\"background compatibility\",()=>pm.expect(pm.response.headers.get(\"X-Gatewise-Resolved-Priority\")).eq(\"batch\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Downstream default is batch",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{catalog_url}}/catalog/products"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"products accepted\",()=>pm.response.to.have.status(200));pm.test(\"server-side default\",()=>pm.expect(pm.response.json().priority.Tier).eq(\"batch\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bounded priority metrics",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{catalog_url}}/metrics"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"metrics available\",()=>pm.response.to.have.status(200));const t=pm.response.text();pm.test(\"resolved source is observable\",()=>{pm.expect(t).includes('gatewise_priority_resolutions_total');pm.expect(t).includes('source=\"trusted_http\"');});pm.test(\"cohort keys are not metric labels\",()=>{pm.expect(t).not.includes('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');pm.expect(t).not.includes('cohort_key=');});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"github.com/HN026/gatewise/internal/adaptive"
 	"github.com/HN026/gatewise/internal/tenancy"
+	prioritypkg "github.com/HN026/gatewise/priority"
 	"github.com/felixge/httpsnoop"
 	"log/slog"
 	"net/http"
@@ -37,7 +38,8 @@ type ServiceConfig struct {
 	// Adaptive nil retains fixed mode.
 	Adaptive *AdaptiveConfig
 	// Tenants nil preserves service-only admission.
-	Tenants *TenantConfig
+	Tenants    *TenantConfig
+	Priorities *prioritypkg.Config
 }
 
 // Service must be constructed with NewService; its zero value is not usable.
@@ -53,6 +55,7 @@ type Service struct {
 	statistics     *statistics
 	tenants        *tenancy.Limiter
 	tenantResolver TenantResolver
+	priorities     *prioritypkg.Policy
 }
 
 func NewService(c ServiceConfig) (*Service, error) {
@@ -71,6 +74,19 @@ func NewService(c ServiceConfig) (*Service, error) {
 	if err != nil {
 		return nil, err
 	}
+	if c.Priorities != nil {
+		if c.ReservedCritical != 0 {
+			return nil, fmt.Errorf("gatewise: use tier reservations instead of ReservedCritical with Priorities")
+		}
+		s.priorities, err = prioritypkg.New(*c.Priorities, c.MaxConcurrent)
+		if err != nil {
+			return nil, err
+		}
+		for _, tier := range s.priorities.Tiers() {
+			c.ReservedCritical += tier.Reserved
+		}
+		s.statistics = newTierStatistics(s.priorities.Tiers())
+	}
 	initial := c.MaxConcurrent
 	if c.Adaptive != nil {
 		a, err := normalizeAdaptive(c)
@@ -81,6 +97,13 @@ func NewService(c ServiceConfig) (*Service, error) {
 		initial = a.InitialConcurrent
 	}
 	s.limiter = admission.New(initial, c.ReservedCritical)
+	if s.priorities != nil {
+		tiers := []admission.Tier{}
+		for _, t := range s.priorities.Tiers() {
+			tiers = append(tiers, admission.Tier{Name: admission.Priority(t.Name), Reserved: t.Reserved})
+		}
+		s.limiter = admission.NewTiers(initial, tiers)
+	}
 	if c.Adaptive != nil {
 		s.controller = adaptive.New(s.limiter, adaptive.Config{Min: s.adaptive.MinConcurrent, Max: c.MaxConcurrent, Interval: s.adaptive.Interval, MinSamples: s.adaptive.MinSamples})
 	}
@@ -88,13 +111,14 @@ func NewService(c ServiceConfig) (*Service, error) {
 }
 
 // Middleware wraps next with a route-configured priority. Invalid priorities or
-// nil handlers panic at registration time. Caller headers cannot change priority.
+// nil handlers panic at registration time. Without Priorities, caller headers
+// cannot change priority. Explicit tier policies resolve trusted metadata first.
 // The slot is held until next returns (or panics); work outliving the handler is
 // outside that lifetime. Cancellation is forwarded through the request context.
 // There is no waiting queue, preemption, automatic retry, or process-wide budget.
 func (s *Service) Middleware(priority Priority, next http.Handler, options ...HandlerOption) http.Handler {
-	if priority != Critical && priority != Background {
-		panic("gatewise: priority must be Critical or Background")
+	if s.priorities == nil && priority != Critical && priority != Background || s.priorities != nil && !s.priorities.Valid(string(priority)) {
+		panic("gatewise: priority must be a configured tier or compatibility priority")
 	}
 	if next == nil {
 		panic("gatewise: handler must not be nil")
@@ -106,11 +130,34 @@ func (s *Service) Middleware(priority Priority, next http.Handler, options ...Ha
 		}
 		option(&o)
 	}
-	p := admission.Priority(priority)
+	routePriority := priority
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Context().Err() != nil {
 			return
 		}
+		priority := routePriority
+		bucket, buckets := -1, 0
+		if s.priorities != nil {
+			resolved, m, err := s.priorities.Resolve(r, string(routePriority), time.Now())
+			priority = Priority(s.priorities.Map(string(routePriority)))
+			if err != nil {
+				status, decision := 400, admission.PriorityInvalid
+				if errors.Is(err, prioritypkg.ErrUntrusted) {
+					status, decision = 403, admission.PriorityUntrusted
+				}
+				s.statistics.resolution(priority, "invalid")
+				s.reject(w, priority, decision, status)
+				return
+			}
+			r = resolved
+			priority = Priority(m.Tier)
+			bucket = m.Bucket
+			buckets = s.priorities.Buckets()
+			s.statistics.resolution(priority, m.Source)
+			w.Header().Set("X-Gatewise-Resolved-Priority", m.Tier)
+			w.Header().Set("X-Gatewise-Priority-Source", m.Source)
+		}
+		p := admission.Priority(priority)
 		var tenantLease *tenancy.Lease
 		if s.tenants != nil {
 			id, err := s.tenantResolver(r)
@@ -143,9 +190,9 @@ func (s *Service) Middleware(priority Priority, next http.Handler, options ...Ha
 		var decision admission.Decision
 		var generation uint64
 		if s.controller != nil {
-			decision, generation = s.controller.Begin(p, start)
+			decision, generation = s.controller.BeginCohort(p, start, bucket, buckets)
 		} else {
-			decision = s.limiter.TryAcquire(p)
+			decision = s.limiter.TryAcquireCohort(p, bucket, buckets)
 		}
 		if decision != admission.Admitted {
 			s.reject(w, priority, decision, 503)

@@ -3,7 +3,7 @@ import { Arrow, Button, CodeBlock, Diagram, Note, PageTitle, Section, Table } fr
 
 export default function Examples() {
   return <div className="container"><PageTitle title="Examples and demo">Three PostgreSQL-backed services. Run them directly, behind Gatewise, or with Gatewise middleware.</PageTitle>
-    <div className="download-panel"><div className="download-mark"><img src="logo.svg" alt="Gatewise" /></div><div><span className="mono">Demo example · v0.3.0</span><h2>gatewise-demo.zip</h2><p>{demo.files} source files · {(demo.bytes / 1024).toFixed(0)} KB · Go 1.25+ · Python 3.10+ · Podman or Docker</p></div><Button href="downloads/gatewise-demo.zip" download>Download demo example</Button></div>
+    <div className="download-panel"><div className="download-mark"><img src="logo.svg" alt="Gatewise" /></div><div><span className="mono">Demo example · v0.4.0</span><h2>gatewise-demo.zip</h2><p>{demo.files} source files · {(demo.bytes / 1024).toFixed(0)} KB · Go 1.25+ · Python 3.10+ · Podman or Docker</p></div><Button href="downloads/gatewise-demo.zip" download>Download demo example</Button></div>
     <div className="download-links"><a href="downloads/gatewise-demo.sha256" download>SHA-256 <Arrow /></a><a href="downloads/postman.zip" download>Postman collection <Arrow /></a></div>
     <Section title="Application model"><Diagram name="commerce-services" caption="Each service owns a database, a four-connection pool and its admission budget. The proxy is the fourth HTTP application; middleware runs inside the three services." />
       <Table headers={['Service', 'Critical business operation', 'Background operation']} rows={[
@@ -12,6 +12,19 @@ export default function Examples() {
         ['Inventory', 'Idempotent reservation with atomic stock decrement', 'Aggregate available stock and update report'],
       ]} /><p>Each database starts with 20,000 rows. Business requests and reports share that service’s SQL connection pool. Services run as independent processes; checkout does not orchestrate a distributed transaction across all three. PostgreSQL and optional monitoring are infrastructure, separate from the four application processes.</p>
       <Note label="Example settings">Each guard has a ceiling of 12 requests and reserves 4 slots for critical work. Adaptive mode starts at 12 and stays between 5 and 12. The database pool allows 4 connections. HTTP concurrency and SQL connections are different limits; these experimental values require tuning for your application.</Note>
+    </Section>
+    <Section id="priority-chain" title="Priority through a real service chain">
+      <p>Enable the optional v0.4.0 scenario. Orders calls the catalog API, which performs a real PostgreSQL read. The flow reads catalog data; checkout remains a separate operation. Middleware uses three business processes; proxy mode adds one shared proxy for both hops.</p>
+      <CodeBlock filename="terminal · extracted demo" language="shell" code={`python3 run.py --profile middleware-fixed --priorities
+# Or exercise both hops through one Gatewise proxy:
+python3 run.py --profile proxy-adaptive --priorities
+# Run the focused Postman contract and clean up:
+python3 run.py --profile proxy-fixed --priorities --verify`} />
+      <p>The launcher prints the environment and dynamic addresses. Import <code>postman/Priorities.postman_collection.json</code> for this scenario. Routes <code>/orders/flows/urgent</code>, <code>/orders/flows/normal</code> and <code>/orders/flows/batch</code> select server defaults. Catalog defaults to batch, so the returned upstream/downstream diagnostics show whether importance survived. Loopback is intentionally trusted in this isolated demo; this is not an authentication mechanism.</p>
+      <p>Orders allows 12 concurrent requests, catalog 6, and each reserves 2 for urgent plus 1 for normal. SQL pools remain 4. Cohorts use 128 buckets and 2s rotations with a public demo-only seed. Run tenant and priority contract modes separately. Production deployments need their own authenticated identities, ingress trust policy, seed and measured limits.</p>
+      <CodeBlock filename="Reproduce per-tier measurements" language="shell" code={`python3 priority_benchmark.py --output results/priority-results.json
+python3 validate_priority.py --output results/priority-validation.json`} />
+      <p>The repeated experiment measures both hops at baseline, two catalog-pressure levels and recovery. It retains outcomes for every tier, successful-flow propagation checks, same-epoch cohort comparisons and stable-key rotation probes.</p>
     </Section>
     <Section title="Run the demo"><CodeBlock filename="terminal" language="shell" code={`unzip gatewise-demo.zip
 cd gatewise-demo

@@ -1,0 +1,7 @@
+{
+  "source_sha256": "31067f61bc24cbacca4fb7de2083e7a5ca62e3ee29dd9fe9fb563843db63dafc",
+  "runs": 12,
+  "aggregation": "Median run-level timely percent; pooled 503 counts; per-tier successful p95 is median of run percentiles, not a pooled percentile",
+  "matplotlib": "3.11.2",
+  "image": "priority-chain.png"
+}

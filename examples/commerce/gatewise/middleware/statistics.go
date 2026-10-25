@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"github.com/HN026/gatewise/internal/admission"
+	"github.com/HN026/gatewise/priority"
 	"sync"
 	"time"
 )
@@ -9,16 +10,27 @@ import (
 // Statistics is a bounded snapshot independent of any metrics backend. Histograms
 // contain admitted work only. Rejected requests do not pollute handler latency.
 type Statistics struct {
-	Name           string
-	State          ServiceState
-	Controller     ControllerState
-	Tenants        TenantState
-	Priorities     [2]PriorityStatistics
-	DurationBounds [11]float64
-	Adjustments    [2][3]uint64 // decrease/increase; latency_pressure/server_errors/healthy_saturation
+	Name            string
+	State           ServiceState
+	Controller      ControllerState
+	Tenants         TenantState
+	Priorities      [2]PriorityStatistics
+	Tiers           []PriorityStatistics
+	Resolutions     []ResolutionStatistics
+	TierActive      map[Priority]int
+	PriorityEnabled bool
+	DurationBounds  [11]float64
+	Adjustments     [2][3]uint64 // decrease/increase; latency_pressure/server_errors/healthy_saturation
+}
+
+type ResolutionStatistics struct {
+	Priority Priority
+	Source   string
+	Count    uint64
 }
 
 type PriorityStatistics struct {
+	RejectedTier, RejectedCohort, RejectedPriorityInvalid, RejectedPriorityUntrusted                              uint64
 	Priority                                                                                                      Priority
 	Admitted, RejectedConcurrency, RejectedReservation                                                            uint64
 	RejectedTenant, RejectedTenantRegistry, RejectedTenantMissing, RejectedTenantInvalid, RejectedTenantUntrusted uint64
@@ -37,13 +49,21 @@ var durationBounds = [11]float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 1
 
 type statistics struct {
 	mu          sync.Mutex
-	priorities  [2]PriorityStatistics
+	priorities  []PriorityStatistics
+	indices     map[Priority]int
+	resolutions map[Priority]map[string]uint64
 	adjustments [2][3]uint64
 }
 
 func newStatistics() *statistics {
-	s := &statistics{}
-	for i, p := range []Priority{Critical, Background} {
+	return newTierStatistics([]priority.Tier{{Name: "critical"}, {Name: "background"}})
+}
+func newTierStatistics(tiers []priority.Tier) *statistics {
+	s := &statistics{priorities: make([]PriorityStatistics, len(tiers)), indices: map[Priority]int{}, resolutions: map[Priority]map[string]uint64{}}
+	for i, tier := range tiers {
+		p := Priority(tier.Name)
+		s.indices[p] = i
+		s.resolutions[p] = map[string]uint64{}
 		s.priorities[i].Priority = p
 		for j, o := range []string{"completed", "canceled", "panicked"} {
 			s.priorities[i].Outcomes[j].Outcome = o
@@ -52,18 +72,19 @@ func newStatistics() *statistics {
 	return s
 }
 
-func priorityIndex(p Priority) int {
-	if p == Background {
-		return 1
-	}
-	return 0
-}
-
 func (s *statistics) admission(p Priority, decision admission.Decision) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	v := &s.priorities[priorityIndex(p)]
+	v := &s.priorities[s.indices[p]]
 	switch decision {
+	case admission.TierCapacityReserved:
+		v.RejectedTier++
+	case admission.CohortLimited:
+		v.RejectedCohort++
+	case admission.PriorityInvalid:
+		v.RejectedPriorityInvalid++
+	case admission.PriorityUntrusted:
+		v.RejectedPriorityUntrusted++
 	case admission.Admitted:
 		v.Admitted++
 	case admission.TenantConcurrencyLimit:
@@ -100,7 +121,7 @@ func (s *statistics) complete(p Priority, code int, completed, canceled bool, el
 	seconds := elapsed.Seconds()
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	o := &s.priorities[priorityIndex(p)].Outcomes[outcome]
+	o := &s.priorities[s.indices[p]].Outcomes[outcome]
 	o.Count++
 	o.StatusClasses[class]++
 	o.DurationSum += seconds
@@ -136,5 +157,25 @@ func (s *Service) Statistics() Statistics {
 	tenants := s.TenantSnapshot()
 	s.statistics.mu.Lock()
 	defer s.statistics.mu.Unlock()
-	return Statistics{Name: s.name, State: state, Controller: controller, Tenants: tenants, Priorities: s.statistics.priorities, DurationBounds: durationBounds, Adjustments: s.statistics.adjustments}
+	var legacy [2]PriorityStatistics
+	if s.priorities == nil {
+		copy(legacy[:], s.statistics.priorities)
+	}
+	resolutions := []ResolutionStatistics{}
+	for _, p := range s.statistics.priorities {
+		for _, source := range []string{"route_default", "context", "trusted_http", "invalid"} {
+			resolutions = append(resolutions, ResolutionStatistics{p.Priority, source, s.statistics.resolutions[p.Priority][source]})
+		}
+	}
+	active := make(map[Priority]int)
+	for p, n := range s.limiter.TierCounts() {
+		active[Priority(p)] = n
+	}
+	return Statistics{Tiers: append([]PriorityStatistics(nil), s.statistics.priorities...), Resolutions: resolutions, TierActive: active, PriorityEnabled: s.priorities != nil, Name: s.name, State: state, Controller: controller, Tenants: tenants, Priorities: legacy, DurationBounds: durationBounds, Adjustments: s.statistics.adjustments}
+}
+
+func (s *statistics) resolution(p Priority, source string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.resolutions[p][source]++
 }

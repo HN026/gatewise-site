@@ -1,0 +1,493 @@
+{
+  "sha256": "31067f61bc24cbacca4fb7de2083e7a5ca62e3ee29dd9fe9fb563843db63dafc",
+  "runs": 12,
+  "checks": 120,
+  "sent": 102960,
+  "missed": 0,
+  "transport_errors": 0,
+  "verified_successful_flows": 16221,
+  "same_epoch_cohort_comparisons": 16220,
+  "cohort_mismatches": 0,
+  "rows": [
+    {
+      "profile": "middleware-fixed",
+      "phase": "baseline",
+      "tier": "urgent",
+      "timely_rps": 12.000000000000004,
+      "timely_percent": 100.00000000000004,
+      "p95_ms": 5.920708,
+      "rejected_percent": 0.0,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "middleware-fixed",
+      "phase": "baseline",
+      "tier": "normal",
+      "timely_rps": 12.000000000000004,
+      "timely_percent": 100.00000000000004,
+      "p95_ms": 5.959708,
+      "rejected_percent": 0.0,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "middleware-fixed",
+      "phase": "baseline",
+      "tier": "batch",
+      "timely_rps": 35.99999999999998,
+      "timely_percent": 99.99999999999994,
+      "p95_ms": 5.883917,
+      "rejected_percent": 0.0,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "middleware-fixed",
+      "phase": "downstream-pressure",
+      "tier": "urgent",
+      "timely_rps": 26.125,
+      "timely_percent": 27.213541666666668,
+      "p95_ms": 82.377334,
+      "rejected_percent": 72.91666666666666,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "middleware-fixed",
+      "phase": "downstream-pressure",
+      "tier": "normal",
+      "timely_rps": 18.125,
+      "timely_percent": 18.880208333333336,
+      "p95_ms": 80.544291,
+      "rejected_percent": 81.07638888888889,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "middleware-fixed",
+      "phase": "downstream-pressure",
+      "tier": "batch",
+      "timely_rps": 40.125,
+      "timely_percent": 13.932291666666666,
+      "p95_ms": 84.124583,
+      "rejected_percent": 86.02430555555556,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "middleware-fixed",
+      "phase": "deeper-pressure",
+      "tier": "urgent",
+      "timely_rps": 5.833333333333335,
+      "timely_percent": 4.0509259259259265,
+      "p95_ms": 173.613167,
+      "rejected_percent": 89.35185185185185,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "middleware-fixed",
+      "phase": "deeper-pressure",
+      "tier": "normal",
+      "timely_rps": 4.333333333333332,
+      "timely_percent": 3.009259259259258,
+      "p95_ms": 175.470625,
+      "rejected_percent": 93.82716049382715,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "middleware-fixed",
+      "phase": "deeper-pressure",
+      "tier": "batch",
+      "timely_rps": 13.166666666666654,
+      "timely_percent": 3.0478395061728363,
+      "p95_ms": 173.062917,
+      "rejected_percent": 95.07458847736625,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "middleware-fixed",
+      "phase": "recovery",
+      "tier": "urgent",
+      "timely_rps": 12,
+      "timely_percent": 100.0,
+      "p95_ms": 6.203875,
+      "rejected_percent": 0.0,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "middleware-fixed",
+      "phase": "recovery",
+      "tier": "normal",
+      "timely_rps": 12,
+      "timely_percent": 100.0,
+      "p95_ms": 6.014833,
+      "rejected_percent": 0.0,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "middleware-fixed",
+      "phase": "recovery",
+      "tier": "batch",
+      "timely_rps": 36,
+      "timely_percent": 100.0,
+      "p95_ms": 6.147084,
+      "rejected_percent": 0.0,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "proxy-fixed",
+      "phase": "baseline",
+      "tier": "urgent",
+      "timely_rps": 12.000000000000004,
+      "timely_percent": 100.00000000000004,
+      "p95_ms": 6.63775,
+      "rejected_percent": 0.0,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "proxy-fixed",
+      "phase": "baseline",
+      "tier": "normal",
+      "timely_rps": 12.000000000000004,
+      "timely_percent": 100.00000000000004,
+      "p95_ms": 6.788875,
+      "rejected_percent": 0.0,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "proxy-fixed",
+      "phase": "baseline",
+      "tier": "batch",
+      "timely_rps": 35.99999999999998,
+      "timely_percent": 99.99999999999994,
+      "p95_ms": 6.595417,
+      "rejected_percent": 0.0,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "proxy-fixed",
+      "phase": "downstream-pressure",
+      "tier": "urgent",
+      "timely_rps": 25.125,
+      "timely_percent": 26.171875,
+      "p95_ms": 81.570666,
+      "rejected_percent": 73.39409722222221,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "proxy-fixed",
+      "phase": "downstream-pressure",
+      "tier": "normal",
+      "timely_rps": 18.625,
+      "timely_percent": 19.401041666666664,
+      "p95_ms": 82.012625,
+      "rejected_percent": 80.98958333333334,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "proxy-fixed",
+      "phase": "downstream-pressure",
+      "tier": "batch",
+      "timely_rps": 39.75,
+      "timely_percent": 13.802083333333334,
+      "p95_ms": 81.793667,
+      "rejected_percent": 85.96643518518519,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "proxy-fixed",
+      "phase": "deeper-pressure",
+      "tier": "urgent",
+      "timely_rps": 6.66666666666667,
+      "timely_percent": 4.6296296296296315,
+      "p95_ms": 174.012875,
+      "rejected_percent": 89.0817901234568,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "proxy-fixed",
+      "phase": "deeper-pressure",
+      "tier": "normal",
+      "timely_rps": 4.833333333333333,
+      "timely_percent": 3.356481481481482,
+      "p95_ms": 174.996458,
+      "rejected_percent": 93.82716049382715,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "proxy-fixed",
+      "phase": "deeper-pressure",
+      "tier": "batch",
+      "timely_rps": 12.333333333333323,
+      "timely_percent": 2.854938271604936,
+      "p95_ms": 175.706708,
+      "rejected_percent": 95.25462962962963,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "proxy-fixed",
+      "phase": "recovery",
+      "tier": "urgent",
+      "timely_rps": 12,
+      "timely_percent": 100.0,
+      "p95_ms": 6.314917,
+      "rejected_percent": 0.0,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "proxy-fixed",
+      "phase": "recovery",
+      "tier": "normal",
+      "timely_rps": 12,
+      "timely_percent": 100.0,
+      "p95_ms": 6.496792,
+      "rejected_percent": 0.0,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "proxy-fixed",
+      "phase": "recovery",
+      "tier": "batch",
+      "timely_rps": 36,
+      "timely_percent": 100.0,
+      "p95_ms": 6.580125,
+      "rejected_percent": 0.0,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "middleware-adaptive",
+      "phase": "baseline",
+      "tier": "urgent",
+      "timely_rps": 12.000000000000004,
+      "timely_percent": 100.00000000000004,
+      "p95_ms": 5.853291,
+      "rejected_percent": 0.0,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "middleware-adaptive",
+      "phase": "baseline",
+      "tier": "normal",
+      "timely_rps": 12.000000000000004,
+      "timely_percent": 100.00000000000004,
+      "p95_ms": 6.048417,
+      "rejected_percent": 0.0,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "middleware-adaptive",
+      "phase": "baseline",
+      "tier": "batch",
+      "timely_rps": 35.99999999999998,
+      "timely_percent": 99.99999999999994,
+      "p95_ms": 5.906291,
+      "rejected_percent": 0.0,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "middleware-adaptive",
+      "phase": "downstream-pressure",
+      "tier": "urgent",
+      "timely_rps": 25.75,
+      "timely_percent": 26.822916666666668,
+      "p95_ms": 75.310708,
+      "rejected_percent": 73.00347222222221,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "middleware-adaptive",
+      "phase": "downstream-pressure",
+      "tier": "normal",
+      "timely_rps": 17.125,
+      "timely_percent": 17.838541666666664,
+      "p95_ms": 77.024584,
+      "rejected_percent": 82.421875,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "middleware-adaptive",
+      "phase": "downstream-pressure",
+      "tier": "batch",
+      "timely_rps": 38.5,
+      "timely_percent": 13.368055555555555,
+      "p95_ms": 74.945875,
+      "rejected_percent": 86.60300925925925,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "middleware-adaptive",
+      "phase": "deeper-pressure",
+      "tier": "urgent",
+      "timely_rps": 10.666666666666663,
+      "timely_percent": 7.407407407407404,
+      "p95_ms": 155.64475,
+      "rejected_percent": 87.53858024691358,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "middleware-adaptive",
+      "phase": "deeper-pressure",
+      "tier": "normal",
+      "timely_rps": 6.166666666666669,
+      "timely_percent": 4.282407407407409,
+      "p95_ms": 163.356917,
+      "rejected_percent": 93.47993827160494,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "middleware-adaptive",
+      "phase": "deeper-pressure",
+      "tier": "batch",
+      "timely_rps": 13.499999999999986,
+      "timely_percent": 3.124999999999997,
+      "p95_ms": 154.299375,
+      "rejected_percent": 95.9619341563786,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "middleware-adaptive",
+      "phase": "recovery",
+      "tier": "urgent",
+      "timely_rps": 12,
+      "timely_percent": 100.0,
+      "p95_ms": 5.850583,
+      "rejected_percent": 0.0,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "middleware-adaptive",
+      "phase": "recovery",
+      "tier": "normal",
+      "timely_rps": 12,
+      "timely_percent": 100.0,
+      "p95_ms": 5.390333,
+      "rejected_percent": 0.0,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "middleware-adaptive",
+      "phase": "recovery",
+      "tier": "batch",
+      "timely_rps": 36,
+      "timely_percent": 100.0,
+      "p95_ms": 5.747458,
+      "rejected_percent": 0.0,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "proxy-adaptive",
+      "phase": "baseline",
+      "tier": "urgent",
+      "timely_rps": 12.000000000000004,
+      "timely_percent": 100.00000000000004,
+      "p95_ms": 7.178666,
+      "rejected_percent": 0.0,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "proxy-adaptive",
+      "phase": "baseline",
+      "tier": "normal",
+      "timely_rps": 12.000000000000004,
+      "timely_percent": 100.00000000000004,
+      "p95_ms": 6.983334,
+      "rejected_percent": 0.0,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "proxy-adaptive",
+      "phase": "baseline",
+      "tier": "batch",
+      "timely_rps": 35.99999999999998,
+      "timely_percent": 99.99999999999994,
+      "p95_ms": 6.91425,
+      "rejected_percent": 0.0,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "proxy-adaptive",
+      "phase": "downstream-pressure",
+      "tier": "urgent",
+      "timely_rps": 26.25,
+      "timely_percent": 27.34375,
+      "p95_ms": 76.407833,
+      "rejected_percent": 72.78645833333334,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "proxy-adaptive",
+      "phase": "downstream-pressure",
+      "tier": "normal",
+      "timely_rps": 17.125,
+      "timely_percent": 17.838541666666664,
+      "p95_ms": 81.0115,
+      "rejected_percent": 82.11805555555556,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "proxy-adaptive",
+      "phase": "downstream-pressure",
+      "tier": "batch",
+      "timely_rps": 37.625,
+      "timely_percent": 13.06423611111111,
+      "p95_ms": 79.135667,
+      "rejected_percent": 86.84895833333334,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "proxy-adaptive",
+      "phase": "deeper-pressure",
+      "tier": "urgent",
+      "timely_rps": 10.999999999999995,
+      "timely_percent": 7.638888888888886,
+      "p95_ms": 162.767584,
+      "rejected_percent": 87.84722222222221,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "proxy-adaptive",
+      "phase": "deeper-pressure",
+      "tier": "normal",
+      "timely_rps": 7.833333333333338,
+      "timely_percent": 5.439814814814818,
+      "p95_ms": 155.636292,
+      "rejected_percent": 93.44135802469135,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "proxy-adaptive",
+      "phase": "deeper-pressure",
+      "tier": "batch",
+      "timely_rps": 14.499999999999982,
+      "timely_percent": 3.356481481481477,
+      "p95_ms": 160.406,
+      "rejected_percent": 95.98765432098766,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "proxy-adaptive",
+      "phase": "recovery",
+      "tier": "urgent",
+      "timely_rps": 12,
+      "timely_percent": 100.0,
+      "p95_ms": 6.9685,
+      "rejected_percent": 0.0,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "proxy-adaptive",
+      "phase": "recovery",
+      "tier": "normal",
+      "timely_rps": 12,
+      "timely_percent": 100.0,
+      "p95_ms": 7.0255,
+      "rejected_percent": 0.0,
+      "other_5xx_percent": 0.0
+    },
+    {
+      "profile": "proxy-adaptive",
+      "phase": "recovery",
+      "tier": "batch",
+      "timely_rps": 36,
+      "timely_percent": 100.0,
+      "p95_ms": 6.953458,
+      "rejected_percent": 0.23148148148148145,
+      "other_5xx_percent": 0.0
+    }
+  ]
+}

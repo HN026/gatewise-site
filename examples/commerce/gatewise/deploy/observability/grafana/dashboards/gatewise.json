@@ -8,7 +8,7 @@
   ],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 3,
+  "version": 4,
   "refresh": "5s",
   "time": {
     "from": "now-15m",
@@ -1174,6 +1174,82 @@
           "refId": "A",
           "expr": "rate(gatewise_tenant_entries_expired_total{service=~\"$service\",instance=~\"$instance\"}[$__rate_interval])",
           "legendFormat": "{{service}} {{__name__}} {{bucket}} {{reason}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 24,
+      "title": "Resolved priority by source",
+      "type": "timeseries",
+      "description": "Optional priority policy; bounded tier/source labels, no cohort keys or actor identities.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 96,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by(service,priority,source) (rate(gatewise_priority_resolutions_total{service=~\"$service\"}[$__rate_interval]))",
+          "legendFormat": "{{service}} {{priority}} {{source}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 25,
+      "title": "Cohort and tier rejection rate",
+      "type": "timeseries",
+      "description": "Optional priority policy; bounded tier/source labels, no cohort keys or actor identities.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 96,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by(service,priority,reason) (rate(gatewise_requests_rejected_total{service=~\"$service\",reason=~\"cohort_limited|tier_capacity_reserved|priority_metadata_.*\"}[$__rate_interval]))",
+          "legendFormat": "{{service}} {{priority}} {{reason}}"
         }
       ],
       "fieldConfig": {

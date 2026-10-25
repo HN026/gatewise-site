@@ -1,6 +1,59 @@
 // Newest published release first. Keep notes and downloads tied to its Git tag.
 export const releases = [
 {
+  "version": "v0.4.0",
+  "publishedAt": "2026-11-08T07:45:26Z",
+  "date": "8 November 2026",
+  "summary": "Ordered priority tiers, trusted context/HTTP propagation and rotating cohorts through a real downstream service chain.",
+  "requirements": "Library: Go 1.22+; commerce example: Go 1.25+",
+  "changes": [
+    "Optional 2\u20138 ordered tiers and cumulative reservations, with explicit Critical/Background compatibility mappings.",
+    "Authenticated application-context integration, immediate-peer trust checks and an outbound transport restricted to configured destination hosts.",
+    "Optional deterministic cohort ordering with UTC rotation, local-headroom admission and bounded tier/source diagnostics.",
+    "A database-backed orders-to-catalog flow, editable architecture diagram, per-tier benchmark charts and updated Postman/demo bundles.",
+    "Measured 102,960 requests across 12 runs: 120 checks passed, 16,221 successful flows preserved importance, and 16,220 same-epoch cohort comparisons matched. A separate trust-boundary experiment passed 56 checks; 614 Postman assertions passed across 13 profiles."
+  ],
+  "upgrade": "Tier policy is opt-in. Without it, existing service admission retains two-class rules. With tiers, set ReservedCritical/reserved_critical to zero and use tier reservations; adaptive minimum must exceed their sum. Authenticate context values and configure inbound peers/outbound hosts explicitly. X-Gatewise-Priority is reserved and unresolved values are stripped by the proxy, including legacy routes. Cohort consistency depends on settings and clocks; no identical-rejection, starvation-freedom or latency guarantee is made.",
+  "downloads": [
+    {
+      "name": "Source ZIP",
+      "path": "archive/refs/tags/v0.4.0.zip"
+    },
+    {
+      "name": "Source tar.gz",
+      "path": "archive/refs/tags/v0.4.0.tar.gz"
+    },
+    {
+      "name": "Demo example",
+      "path": "releases/download/v0.4.0/gatewise-demo.zip"
+    },
+    {
+      "name": "Demo SHA-256",
+      "path": "releases/download/v0.4.0/gatewise-demo.sha256"
+    },
+    {
+      "name": "Postman bundle",
+      "path": "releases/download/v0.4.0/postman.zip"
+    },
+    {
+      "name": "Priority report \u00b7 gzip",
+      "path": "releases/download/v0.4.0/priority-results.json.gz"
+    },
+    {
+      "name": "Trust-boundary validation",
+      "path": "releases/download/v0.4.0/priority-validation.json"
+    },
+    {
+      "name": "Chart provenance",
+      "path": "releases/download/v0.4.0/priority-chart-provenance.json"
+    },
+    {
+      "name": "Postman results",
+      "path": "releases/download/v0.4.0/commerce-contract-results.json"
+    }
+  ]
+},
+{
   "version": "v0.3.0",
   "publishedAt": "2026-11-07T11:46:17Z",
   "date": "7 November 2026",

@@ -9,6 +9,7 @@ import (
 )
 
 type collector struct {
+	resolutions                                                                                                     *prometheus.Desc
 	tenantLimit, tenantTracked, tenantTrackingLimit, tenantActive, tenantExpired                                    *prometheus.Desc
 	controllerSamples, controllerRatio, controllerFailures, controllerTime, controllerDecision, controllerSaturated *prometheus.Desc
 	service                                                                                                         *middleware.Service
@@ -26,6 +27,7 @@ func Register(registry prometheus.Registerer, service *middleware.Service) error
 		return prometheus.NewDesc("gatewise_"+name, help, labels, prometheus.Labels{"service": serviceName})
 	}
 	c := &collector{service: service,
+		resolutions:         desc("priority_resolutions_total", "Resolved configured priority and bounded source.", "priority", "source"),
 		tenantLimit:         desc("tenant_concurrency_limit", "Default per-tenant concurrency limit."),
 		tenantTracked:       desc("tenants_tracked", "Identified tenants currently retained in the bounded registry."),
 		tenantTrackingLimit: desc("tenants_tracking_limit", "Maximum identified tenant entries."),
@@ -53,7 +55,7 @@ func Register(registry prometheus.Registerer, service *middleware.Service) error
 }
 
 func (c *collector) Describe(out chan<- *prometheus.Desc) {
-	for _, desc := range []*prometheus.Desc{c.limit, c.minimum, c.maximum, c.reserved, c.active, c.info, c.admitted, c.rejected, c.completed, c.duration, c.adjustments, c.controllerSamples, c.controllerRatio, c.controllerFailures, c.controllerTime, c.controllerDecision, c.controllerSaturated, c.tenantLimit, c.tenantTracked, c.tenantTrackingLimit, c.tenantActive, c.tenantExpired} {
+	for _, desc := range []*prometheus.Desc{c.resolutions, c.limit, c.minimum, c.maximum, c.reserved, c.active, c.info, c.admitted, c.rejected, c.completed, c.duration, c.adjustments, c.controllerSamples, c.controllerRatio, c.controllerFailures, c.controllerTime, c.controllerDecision, c.controllerSaturated, c.tenantLimit, c.tenantTracked, c.tenantTrackingLimit, c.tenantActive, c.tenantExpired} {
 		out <- desc
 	}
 }
@@ -98,12 +100,26 @@ func (c *collector) Collect(out chan<- prometheus.Metric) {
 	gauge(c.maximum, float64(s.State.MaxConcurrent))
 	gauge(c.reserved, float64(s.State.ReservedCritical))
 	gauge(c.info, 1, s.State.Mode)
-	gauge(c.active, float64(s.State.Active-s.State.Background), "critical")
-	gauge(c.active, float64(s.State.Background), "background")
+	for p, n := range s.TierActive {
+		gauge(c.active, float64(n), string(p))
+	}
+	if s.PriorityEnabled {
+		for _, v := range s.Resolutions {
+			counter(c.resolutions, v.Count, string(v.Priority), v.Source)
+		}
+	}
 	classes := [7]string{"1xx", "2xx", "3xx", "4xx", "5xx", "other", "none"}
-	for _, p := range s.Priorities {
+	for _, p := range s.Tiers {
 		priority := string(p.Priority)
 		counter(c.admitted, p.Admitted, priority)
+		if s.PriorityEnabled {
+			for _, v := range []struct {
+				reason string
+				n      uint64
+			}{{"tier_capacity_reserved", p.RejectedTier}, {"cohort_limited", p.RejectedCohort}, {"priority_metadata_invalid", p.RejectedPriorityInvalid}, {"priority_metadata_untrusted", p.RejectedPriorityUntrusted}} {
+				counter(c.rejected, v.n, priority, v.reason)
+			}
+		}
 		counter(c.rejected, p.RejectedConcurrency, priority, "concurrency_limit")
 		counter(c.rejected, p.RejectedReservation, priority, "critical_capacity_reserved")
 		if s.Tenants.Enabled {

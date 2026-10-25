@@ -13,6 +13,7 @@ import (
 	"github.com/HN026/gatewise/internal/config"
 	"github.com/HN026/gatewise/metrics"
 	"github.com/HN026/gatewise/middleware"
+	"github.com/HN026/gatewise/priority"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -29,6 +30,7 @@ func newUpstream(c config.Config, target *url.URL, logger *slog.Logger) (http.Ha
 		Transport: transport,
 		Rewrite: func(r *httputil.ProxyRequest) {
 			r.SetURL(target)
+			priority.Inject(r.Out)
 			// SetXForwarded builds fresh forwarding headers; incoming values are not trusted.
 			r.Out.Header.Del("Forwarded")
 			r.SetXForwarded()
@@ -58,7 +60,7 @@ func New(c config.Config, logger *slog.Logger) (http.Handler, func()) {
 	for name, service := range c.Services {
 		h, closeIdle := newUpstream(c, service.Upstream, logger.With("service", name))
 		guard, err := middleware.NewService(middleware.ServiceConfig{
-			Name: name, MaxConcurrent: service.MaxConcurrent, ReservedCritical: service.ReservedCritical, Logger: logger, Adaptive: service.Adaptive, Tenants: service.Tenants,
+			Name: name, MaxConcurrent: service.MaxConcurrent, ReservedCritical: service.ReservedCritical, Logger: logger, Adaptive: service.Adaptive, Tenants: service.Tenants, Priorities: service.Priorities,
 		})
 		if err != nil {
 			panic("proxy: invalid validated service configuration: " + err.Error())

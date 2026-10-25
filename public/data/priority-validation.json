@@ -1,0 +1,496 @@
+{
+  "recorded_at": "2026-11-08T07:41:38.151435+00:00",
+  "scope": "Real localhost HTTP; orders entry explicitly trusts loopback or nobody; catalog still trusts its upstream. 8 concurrent background flow clients during 40ms SQL delay. Forwarded headers never establish peer trust.",
+  "runs": [
+    {
+      "profile": "middleware-fixed",
+      "entry_trust": "loopback",
+      "results": [
+        {
+          "case": "valid urgent promotion",
+          "status": 200,
+          "reason": null
+        },
+        {
+          "case": "malformed",
+          "status": 400,
+          "reason": "priority_metadata_invalid"
+        },
+        {
+          "case": "unknown tier",
+          "status": 400,
+          "reason": "priority_metadata_invalid"
+        },
+        {
+          "case": "invalid cohort",
+          "status": 400,
+          "reason": "priority_metadata_invalid"
+        }
+      ],
+      "background_statuses": {
+        "200": 21,
+        "503": 343
+      },
+      "checks": [
+        {
+          "name": "missing metadata uses server priority through chain",
+          "pass": true
+        },
+        {
+          "name": "valid urgent promotion under pressure",
+          "pass": true
+        },
+        {
+          "name": "malformed under pressure",
+          "pass": true
+        },
+        {
+          "name": "unknown tier under pressure",
+          "pass": true
+        },
+        {
+          "name": "invalid cohort under pressure",
+          "pass": true
+        },
+        {
+          "name": "real background load reached service",
+          "pass": true
+        },
+        {
+          "name": "background made useful progress",
+          "pass": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "profile": "middleware-fixed",
+      "entry_trust": "none",
+      "results": [
+        {
+          "case": "valid urgent promotion",
+          "status": 403,
+          "reason": "priority_metadata_untrusted"
+        },
+        {
+          "case": "malformed",
+          "status": 403,
+          "reason": "priority_metadata_untrusted"
+        },
+        {
+          "case": "unknown tier",
+          "status": 403,
+          "reason": "priority_metadata_untrusted"
+        },
+        {
+          "case": "invalid cohort",
+          "status": 403,
+          "reason": "priority_metadata_untrusted"
+        }
+      ],
+      "background_statuses": {
+        "200": 18,
+        "503": 273
+      },
+      "checks": [
+        {
+          "name": "missing metadata uses server priority through chain",
+          "pass": true
+        },
+        {
+          "name": "valid urgent promotion under pressure",
+          "pass": true
+        },
+        {
+          "name": "malformed under pressure",
+          "pass": true
+        },
+        {
+          "name": "unknown tier under pressure",
+          "pass": true
+        },
+        {
+          "name": "invalid cohort under pressure",
+          "pass": true
+        },
+        {
+          "name": "real background load reached service",
+          "pass": true
+        },
+        {
+          "name": "background made useful progress",
+          "pass": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "profile": "proxy-fixed",
+      "entry_trust": "loopback",
+      "results": [
+        {
+          "case": "valid urgent promotion",
+          "status": 503,
+          "reason": "cohort_limited"
+        },
+        {
+          "case": "malformed",
+          "status": 400,
+          "reason": "priority_metadata_invalid"
+        },
+        {
+          "case": "unknown tier",
+          "status": 400,
+          "reason": "priority_metadata_invalid"
+        },
+        {
+          "case": "invalid cohort",
+          "status": 400,
+          "reason": "priority_metadata_invalid"
+        }
+      ],
+      "background_statuses": {
+        "200": 18,
+        "503": 271
+      },
+      "checks": [
+        {
+          "name": "missing metadata uses server priority through chain",
+          "pass": true
+        },
+        {
+          "name": "valid urgent promotion under pressure",
+          "pass": true
+        },
+        {
+          "name": "malformed under pressure",
+          "pass": true
+        },
+        {
+          "name": "unknown tier under pressure",
+          "pass": true
+        },
+        {
+          "name": "invalid cohort under pressure",
+          "pass": true
+        },
+        {
+          "name": "real background load reached service",
+          "pass": true
+        },
+        {
+          "name": "background made useful progress",
+          "pass": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "profile": "proxy-fixed",
+      "entry_trust": "none",
+      "results": [
+        {
+          "case": "valid urgent promotion",
+          "status": 403,
+          "reason": "priority_metadata_untrusted"
+        },
+        {
+          "case": "malformed",
+          "status": 403,
+          "reason": "priority_metadata_untrusted"
+        },
+        {
+          "case": "unknown tier",
+          "status": 403,
+          "reason": "priority_metadata_untrusted"
+        },
+        {
+          "case": "invalid cohort",
+          "status": 403,
+          "reason": "priority_metadata_untrusted"
+        }
+      ],
+      "background_statuses": {
+        "200": 18,
+        "503": 263
+      },
+      "checks": [
+        {
+          "name": "missing metadata uses server priority through chain",
+          "pass": true
+        },
+        {
+          "name": "valid urgent promotion under pressure",
+          "pass": true
+        },
+        {
+          "name": "malformed under pressure",
+          "pass": true
+        },
+        {
+          "name": "unknown tier under pressure",
+          "pass": true
+        },
+        {
+          "name": "invalid cohort under pressure",
+          "pass": true
+        },
+        {
+          "name": "real background load reached service",
+          "pass": true
+        },
+        {
+          "name": "background made useful progress",
+          "pass": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "entry_trust": "loopback",
+      "results": [
+        {
+          "case": "valid urgent promotion",
+          "status": 200,
+          "reason": null
+        },
+        {
+          "case": "malformed",
+          "status": 400,
+          "reason": "priority_metadata_invalid"
+        },
+        {
+          "case": "unknown tier",
+          "status": 400,
+          "reason": "priority_metadata_invalid"
+        },
+        {
+          "case": "invalid cohort",
+          "status": 400,
+          "reason": "priority_metadata_invalid"
+        }
+      ],
+      "background_statuses": {
+        "200": 20,
+        "503": 325
+      },
+      "checks": [
+        {
+          "name": "missing metadata uses server priority through chain",
+          "pass": true
+        },
+        {
+          "name": "valid urgent promotion under pressure",
+          "pass": true
+        },
+        {
+          "name": "malformed under pressure",
+          "pass": true
+        },
+        {
+          "name": "unknown tier under pressure",
+          "pass": true
+        },
+        {
+          "name": "invalid cohort under pressure",
+          "pass": true
+        },
+        {
+          "name": "real background load reached service",
+          "pass": true
+        },
+        {
+          "name": "background made useful progress",
+          "pass": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "entry_trust": "none",
+      "results": [
+        {
+          "case": "valid urgent promotion",
+          "status": 403,
+          "reason": "priority_metadata_untrusted"
+        },
+        {
+          "case": "malformed",
+          "status": 403,
+          "reason": "priority_metadata_untrusted"
+        },
+        {
+          "case": "unknown tier",
+          "status": 403,
+          "reason": "priority_metadata_untrusted"
+        },
+        {
+          "case": "invalid cohort",
+          "status": 403,
+          "reason": "priority_metadata_untrusted"
+        }
+      ],
+      "background_statuses": {
+        "200": 18,
+        "503": 277
+      },
+      "checks": [
+        {
+          "name": "missing metadata uses server priority through chain",
+          "pass": true
+        },
+        {
+          "name": "valid urgent promotion under pressure",
+          "pass": true
+        },
+        {
+          "name": "malformed under pressure",
+          "pass": true
+        },
+        {
+          "name": "unknown tier under pressure",
+          "pass": true
+        },
+        {
+          "name": "invalid cohort under pressure",
+          "pass": true
+        },
+        {
+          "name": "real background load reached service",
+          "pass": true
+        },
+        {
+          "name": "background made useful progress",
+          "pass": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "entry_trust": "loopback",
+      "results": [
+        {
+          "case": "valid urgent promotion",
+          "status": 200,
+          "reason": null
+        },
+        {
+          "case": "malformed",
+          "status": 400,
+          "reason": "priority_metadata_invalid"
+        },
+        {
+          "case": "unknown tier",
+          "status": 400,
+          "reason": "priority_metadata_invalid"
+        },
+        {
+          "case": "invalid cohort",
+          "status": 400,
+          "reason": "priority_metadata_invalid"
+        }
+      ],
+      "background_statuses": {
+        "200": 21,
+        "503": 340
+      },
+      "checks": [
+        {
+          "name": "missing metadata uses server priority through chain",
+          "pass": true
+        },
+        {
+          "name": "valid urgent promotion under pressure",
+          "pass": true
+        },
+        {
+          "name": "malformed under pressure",
+          "pass": true
+        },
+        {
+          "name": "unknown tier under pressure",
+          "pass": true
+        },
+        {
+          "name": "invalid cohort under pressure",
+          "pass": true
+        },
+        {
+          "name": "real background load reached service",
+          "pass": true
+        },
+        {
+          "name": "background made useful progress",
+          "pass": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "entry_trust": "none",
+      "results": [
+        {
+          "case": "valid urgent promotion",
+          "status": 403,
+          "reason": "priority_metadata_untrusted"
+        },
+        {
+          "case": "malformed",
+          "status": 403,
+          "reason": "priority_metadata_untrusted"
+        },
+        {
+          "case": "unknown tier",
+          "status": 403,
+          "reason": "priority_metadata_untrusted"
+        },
+        {
+          "case": "invalid cohort",
+          "status": 403,
+          "reason": "priority_metadata_untrusted"
+        }
+      ],
+      "background_statuses": {
+        "200": 18,
+        "503": 260
+      },
+      "checks": [
+        {
+          "name": "missing metadata uses server priority through chain",
+          "pass": true
+        },
+        {
+          "name": "valid urgent promotion under pressure",
+          "pass": true
+        },
+        {
+          "name": "malformed under pressure",
+          "pass": true
+        },
+        {
+          "name": "unknown tier under pressure",
+          "pass": true
+        },
+        {
+          "name": "invalid cohort under pressure",
+          "pass": true
+        },
+        {
+          "name": "real background load reached service",
+          "pass": true
+        },
+        {
+          "name": "background made useful progress",
+          "pass": true
+        }
+      ],
+      "passed": true
+    }
+  ],
+  "checks": 56,
+  "passed": true
+}

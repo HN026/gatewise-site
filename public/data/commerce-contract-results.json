@@ -1,11 +1,12 @@
 {
-  "release": "v0.3.0",
+  "release": "v0.4.0",
   "target": "Freshly extracted source-only commerce example with real PostgreSQL",
-  "archive_sha256": "bf695ba775fd00d0abb300ed1bfed7651f63031a29627dd119ed5b1d2fc784bc",
+  "archive_sha256": "f452fe586751970eaff5501ff002a1e9ee47d88725f3c713253fa711a79d6d01",
   "profiles": [
     {
       "profile": "direct",
       "tenants_enabled": false,
+      "priorities_enabled": false,
       "assertions": 74,
       "failed_assertions": 0,
       "exit_code": 0,
@@ -15,6 +16,7 @@
     {
       "profile": "proxy-fixed",
       "tenants_enabled": false,
+      "priorities_enabled": false,
       "assertions": 74,
       "failed_assertions": 0,
       "exit_code": 0,
@@ -24,6 +26,7 @@
     {
       "profile": "proxy-adaptive",
       "tenants_enabled": false,
+      "priorities_enabled": false,
       "assertions": 74,
       "failed_assertions": 0,
       "exit_code": 0,
@@ -33,6 +36,7 @@
     {
       "profile": "middleware-fixed",
       "tenants_enabled": false,
+      "priorities_enabled": false,
       "assertions": 74,
       "failed_assertions": 0,
       "exit_code": 0,
@@ -42,6 +46,7 @@
     {
       "profile": "middleware-adaptive",
       "tenants_enabled": false,
+      "priorities_enabled": false,
       "assertions": 74,
       "failed_assertions": 0,
       "exit_code": 0,
@@ -51,6 +56,7 @@
     {
       "profile": "proxy-fixed",
       "tenants_enabled": true,
+      "priorities_enabled": false,
       "assertions": 32,
       "failed_assertions": 0,
       "exit_code": 0,
@@ -60,6 +66,7 @@
     {
       "profile": "proxy-adaptive",
       "tenants_enabled": true,
+      "priorities_enabled": false,
       "assertions": 32,
       "failed_assertions": 0,
       "exit_code": 0,
@@ -69,6 +76,7 @@
     {
       "profile": "middleware-fixed",
       "tenants_enabled": true,
+      "priorities_enabled": false,
       "assertions": 32,
       "failed_assertions": 0,
       "exit_code": 0,
@@ -78,11 +86,52 @@
     {
       "profile": "middleware-adaptive",
       "tenants_enabled": true,
+      "priorities_enabled": false,
       "assertions": 32,
       "failed_assertions": 0,
       "exit_code": 0,
       "pool_connections_drained": true,
       "collection_sha256": "1dc95eb62da649b94953f5c19d6a0e7325894beb883b7e2eb099d84071dbdec9"
+    },
+    {
+      "profile": "proxy-fixed",
+      "tenants_enabled": false,
+      "priorities_enabled": true,
+      "assertions": 29,
+      "failed_assertions": 0,
+      "exit_code": 0,
+      "pool_connections_drained": true,
+      "collection_sha256": "a1f22de53e2c98d65fda920b807d65193eb59171858a297f3528534066e84570"
+    },
+    {
+      "profile": "proxy-adaptive",
+      "tenants_enabled": false,
+      "priorities_enabled": true,
+      "assertions": 29,
+      "failed_assertions": 0,
+      "exit_code": 0,
+      "pool_connections_drained": true,
+      "collection_sha256": "a1f22de53e2c98d65fda920b807d65193eb59171858a297f3528534066e84570"
+    },
+    {
+      "profile": "middleware-fixed",
+      "tenants_enabled": false,
+      "priorities_enabled": true,
+      "assertions": 29,
+      "failed_assertions": 0,
+      "exit_code": 0,
+      "pool_connections_drained": true,
+      "collection_sha256": "a1f22de53e2c98d65fda920b807d65193eb59171858a297f3528534066e84570"
+    },
+    {
+      "profile": "middleware-adaptive",
+      "tenants_enabled": false,
+      "priorities_enabled": true,
+      "assertions": 29,
+      "failed_assertions": 0,
+      "exit_code": 0,
+      "pool_connections_drained": true,
+      "collection_sha256": "a1f22de53e2c98d65fda920b807d65193eb59171858a297f3528534066e84570"
     }
   ],
   "passed": true
