@@ -9,6 +9,7 @@ import (
 )
 
 type Config struct {
+	SharingCeiling                                                  int
 	PriorityTrusted                                                 string
 	Priorities                                                      bool
 	CatalogURL                                                      string
@@ -35,6 +36,7 @@ func Load(args []string) (Config, error) {
 	f.StringVar(&c.AdminListen, "admin-listen", env("COMMERCE_ADMIN_ADDR", "127.0.0.1:9196"), "loopback-only benchmark controls")
 	f.StringVar(&c.Mode, "mode", env("COMMERCE_MODE", "direct"), "direct, fixed or adaptive")
 	f.StringVar(&c.Role, "role", env("COMMERCE_ROLE", "orders"), "orders, catalog or inventory")
+	f.IntVar(&c.SharingCeiling, "tenant-sharing-ceiling", 0, "opt-in tenant borrowing ceiling; tenant-limit becomes a share")
 	f.IntVar(&c.TenantLimit, "tenant-limit", 0, "optional per-tenant concurrency limit; demo loopback identity only")
 	f.IntVar(&c.TenantMaxTracked, "tenant-max-tracked", 32, "example tenant registry bound")
 	f.DurationVar(&c.TenantIdleTTL, "tenant-idle-ttl", 2*time.Second, "example idle tenant TTL")
@@ -65,6 +67,9 @@ func Load(args []string) (Config, error) {
 	}
 	if c.Mode == "semaphore" && c.MaxConcurrent < 1 {
 		return c, fmt.Errorf("reference semaphore requires a positive limit")
+	}
+	if c.SharingCeiling < 0 || c.SharingCeiling > 0 && c.TenantLimit <= 0 {
+		return c, fmt.Errorf("sharing needs a positive tenant share and ceiling")
 	}
 	if c.TenantLimit < 0 {
 		return c, fmt.Errorf("tenant-limit cannot be negative")

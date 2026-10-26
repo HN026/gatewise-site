@@ -8,7 +8,7 @@
   ],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 4,
+  "version": 5,
   "refresh": "5s",
   "time": {
     "from": "now-15m",
@@ -1255,6 +1255,120 @@
       "fieldConfig": {
         "defaults": {
           "unit": "ops"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 26,
+      "title": "Tenant sharing: active/recent demand",
+      "type": "timeseries",
+      "description": "Optional tenant sharing; aggregate labels only.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 104,
+        "w": 24,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "gatewise_tenant_sharing_demanding_tenants{service=~\"$service\"}",
+          "legendFormat": "{{service}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 27,
+      "title": "Tenant sharing: allocation rate",
+      "type": "timeseries",
+      "description": "Optional tenant sharing; aggregate labels only.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 112,
+        "w": 24,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by(service,allocation) (rate(gatewise_tenant_sharing_admissions_total{service=~\"$service\"}[$__rate_interval]))",
+          "legendFormat": "{{service}} {{allocation}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 28,
+      "title": "Tenant sharing: borrowing paused",
+      "type": "timeseries",
+      "description": "Optional tenant sharing; aggregate labels only.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 120,
+        "w": 24,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "gatewise_tenant_sharing_borrowing_paused{service=~\"$service\"}",
+          "legendFormat": "{{service}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
         },
         "overrides": []
       },

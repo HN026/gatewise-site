@@ -33,6 +33,8 @@ type Config struct {
 	RunID         string            `json:"run_id"`
 }
 type Row struct {
+	CompletionSeconds                           float64
+	Allocation                                  string
 	ChainVerified, EpochMatched, CohortMismatch bool
 	Role, Priority                              string
 	Tenant, Reason                              string
@@ -41,21 +43,23 @@ type Row struct {
 	Limit                                       int
 }
 type Traffic struct {
-	ChainVerified     int            `json:"chain_verified"`
-	CohortComparisons int            `json:"cohort_comparisons"`
-	CohortMismatches  int            `json:"cohort_mismatches"`
-	RejectionReasons  map[string]int `json:"rejection_reasons"`
-	Statuses          map[string]int `json:"statuses"`
-	Sent              int            `json:"sent"`
-	Successful        int            `json:"successful"`
-	Rejected          int            `json:"rejected_503"`
-	Errors            int            `json:"backend_5xx"`
-	Transport         int            `json:"transport_errors"`
-	Other             int            `json:"other_statuses"`
-	P95               *float64       `json:"successful_p95_ms"`
-	Timely            float64        `json:"successful_within_100ms_per_offered_second"`
-	Dispatch          *float64       `json:"dispatch_p95_ms"`
-	Arrival           *float64       `json:"arrival_p95_ms"`
+	Allocations         map[string]int `json:"allocations"`
+	FirstSuccessSeconds *float64       `json:"first_success_seconds"`
+	ChainVerified       int            `json:"chain_verified"`
+	CohortComparisons   int            `json:"cohort_comparisons"`
+	CohortMismatches    int            `json:"cohort_mismatches"`
+	RejectionReasons    map[string]int `json:"rejection_reasons"`
+	Statuses            map[string]int `json:"statuses"`
+	Sent                int            `json:"sent"`
+	Successful          int            `json:"successful"`
+	Rejected            int            `json:"rejected_503"`
+	Errors              int            `json:"backend_5xx"`
+	Transport           int            `json:"transport_errors"`
+	Other               int            `json:"other_statuses"`
+	P95                 *float64       `json:"successful_p95_ms"`
+	Timely              float64        `json:"successful_within_100ms_per_offered_second"`
+	Dispatch            *float64       `json:"dispatch_p95_ms"`
+	Arrival             *float64       `json:"arrival_p95_ms"`
 }
 
 func percentile(v []float64) *float64 {
@@ -67,7 +71,7 @@ func percentile(v []float64) *float64 {
 	return &x
 }
 func summarize(rows []Row, seconds float64) Traffic {
-	t := Traffic{RejectionReasons: map[string]int{}, Statuses: map[string]int{}}
+	t := Traffic{Allocations: map[string]int{}, RejectionReasons: map[string]int{}, Statuses: map[string]int{}}
 	var lat, lag, arrival []float64
 	for _, r := range rows {
 		t.Sent++
@@ -89,6 +93,11 @@ func summarize(rows []Row, seconds float64) Traffic {
 		switch {
 		case r.Code >= 200 && r.Code < 300:
 			t.Successful++
+			t.Allocations[r.Allocation]++
+			if t.FirstSuccessSeconds == nil || r.CompletionSeconds < *t.FirstSuccessSeconds {
+				v := r.CompletionSeconds
+				t.FirstSuccessSeconds = &v
+			}
 			lat = append(lat, r.Latency)
 			if r.Latency <= 100 {
 				t.Timely += 1 / seconds
@@ -225,6 +234,7 @@ func main() {
 			sent := time.Now()
 			code, limit := 0, 0
 			chainVerified, epochMatched, cohortMismatch := false, false, false
+			allocation := ""
 			reason := ""
 			resp, e := client.Do(req)
 			if e == nil {
@@ -236,7 +246,7 @@ func main() {
 					}
 					_ = json.Unmarshal(body, &rejection)
 					switch rejection.Reason {
-					case "tenant_concurrency_limit", "tenant_registry_full", "concurrency_limit", "critical_capacity_reserved", "tier_capacity_reserved", "cohort_limited":
+					case "tenant_concurrency_limit", "tenant_registry_full", "concurrency_limit", "critical_capacity_reserved", "tier_capacity_reserved", "cohort_limited", "tenant_share_reserved":
 						reason = rejection.Reason
 					default:
 						reason = "other_503"
@@ -268,9 +278,10 @@ func main() {
 					code = resp.StatusCode
 				}
 				limit, _ = strconv.Atoi(resp.Header.Get("X-Gatewise-Limit"))
+				allocation = resp.Header.Get("X-Gatewise-Tenant-Admission")
 			}
 			end := time.Now()
-			r := Row{ChainVerified: chainVerified, EpochMatched: epochMatched, CohortMismatch: cohortMismatch, Role: role, Priority: priority, Tenant: tenantGroup, Reason: reason, Code: code, Latency: float64(end.Sub(sent)) / 1e6, Lag: float64(sent.Sub(due)) / 1e6, Arrival: float64(end.Sub(due)) / 1e6, Limit: limit}
+			r := Row{CompletionSeconds: end.Sub(start).Seconds(), Allocation: allocation, ChainVerified: chainVerified, EpochMatched: epochMatched, CohortMismatch: cohortMismatch, Role: role, Priority: priority, Tenant: tenantGroup, Reason: reason, Code: code, Latency: float64(end.Sub(sent)) / 1e6, Lag: float64(sent.Sub(due)) / 1e6, Arrival: float64(end.Sub(due)) / 1e6, Limit: limit}
 			mu.Lock()
 			rows = append(rows, r)
 			mu.Unlock()

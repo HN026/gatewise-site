@@ -45,6 +45,9 @@ func Run(ctx context.Context, c config.Config) error {
 				return err
 			}
 			cfg.Tenants = &middleware.TenantConfig{MaxConcurrent: c.TenantLimit, MaxTracked: c.TenantMaxTracked, IdleTTL: c.TenantIdleTTL, Resolver: resolver}
+			if c.SharingCeiling > 0 {
+				cfg.Tenants.Sharing = &middleware.TenantSharingConfig{MaxConcurrent: c.SharingCeiling, DemandTTL: 500 * time.Millisecond}
+			}
 		}
 		if c.Mode == "adaptive" {
 			cfg.Adaptive = &middleware.AdaptiveConfig{MinConcurrent: c.Minimum, InitialConcurrent: c.Initial, Interval: c.Interval, MinSamples: c.MinSamples, TargetLatency: c.Target}

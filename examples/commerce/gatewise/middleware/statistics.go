@@ -10,17 +10,18 @@ import (
 // Statistics is a bounded snapshot independent of any metrics backend. Histograms
 // contain admitted work only. Rejected requests do not pollute handler latency.
 type Statistics struct {
-	Name            string
-	State           ServiceState
-	Controller      ControllerState
-	Tenants         TenantState
-	Priorities      [2]PriorityStatistics
-	Tiers           []PriorityStatistics
-	Resolutions     []ResolutionStatistics
-	TierActive      map[Priority]int
-	PriorityEnabled bool
-	DurationBounds  [11]float64
-	Adjustments     [2][3]uint64 // decrease/increase; latency_pressure/server_errors/healthy_saturation
+	TenantAllocations [3]uint64 // share, borrowed, fallback; successful service admissions only.
+	Name              string
+	State             ServiceState
+	Controller        ControllerState
+	Tenants           TenantState
+	Priorities        [2]PriorityStatistics
+	Tiers             []PriorityStatistics
+	Resolutions       []ResolutionStatistics
+	TierActive        map[Priority]int
+	PriorityEnabled   bool
+	DurationBounds    [11]float64
+	Adjustments       [2][3]uint64 // decrease/increase; latency_pressure/server_errors/healthy_saturation
 }
 
 type ResolutionStatistics struct {
@@ -30,6 +31,7 @@ type ResolutionStatistics struct {
 }
 
 type PriorityStatistics struct {
+	RejectedTenantShare                                                                                           uint64
 	RejectedTier, RejectedCohort, RejectedPriorityInvalid, RejectedPriorityUntrusted                              uint64
 	Priority                                                                                                      Priority
 	Admitted, RejectedConcurrency, RejectedReservation                                                            uint64
@@ -48,6 +50,7 @@ type OutcomeStatistics struct {
 var durationBounds = [11]float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10}
 
 type statistics struct {
+	allocations [3]uint64
 	mu          sync.Mutex
 	priorities  []PriorityStatistics
 	indices     map[Priority]int
@@ -87,6 +90,8 @@ func (s *statistics) admission(p Priority, decision admission.Decision) {
 		v.RejectedPriorityUntrusted++
 	case admission.Admitted:
 		v.Admitted++
+	case admission.TenantShareReserved:
+		v.RejectedTenantShare++
 	case admission.TenantConcurrencyLimit:
 		v.RejectedTenant++
 	case admission.TenantRegistryFull:
@@ -171,11 +176,23 @@ func (s *Service) Statistics() Statistics {
 	for p, n := range s.limiter.TierCounts() {
 		active[Priority(p)] = n
 	}
-	return Statistics{Tiers: append([]PriorityStatistics(nil), s.statistics.priorities...), Resolutions: resolutions, TierActive: active, PriorityEnabled: s.priorities != nil, Name: s.name, State: state, Controller: controller, Tenants: tenants, Priorities: legacy, DurationBounds: durationBounds, Adjustments: s.statistics.adjustments}
+	return Statistics{TenantAllocations: s.statistics.allocations, Tiers: append([]PriorityStatistics(nil), s.statistics.priorities...), Resolutions: resolutions, TierActive: active, PriorityEnabled: s.priorities != nil, Name: s.name, State: state, Controller: controller, Tenants: tenants, Priorities: legacy, DurationBounds: durationBounds, Adjustments: s.statistics.adjustments}
 }
 
 func (s *statistics) resolution(p Priority, source string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.resolutions[p][source]++
+}
+
+func (s *statistics) tenantAllocation(kind string) {
+	i := 0
+	if kind == "borrowed" {
+		i = 1
+	} else if kind == "fallback" {
+		i = 2
+	}
+	s.mu.Lock()
+	s.allocations[i]++
+	s.mu.Unlock()
 }

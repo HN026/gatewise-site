@@ -1,0 +1,11 @@
+{
+  "source_sha256": "fbda80e9095d683ea9aec63553e39fc7a477d14adbb23928bdbf421083ff6c9b",
+  "runs": 36,
+  "aggregation": "Median run-level rates; pooled rejection counts; ordinary p95 range retains individual actor/run percentiles; return time is median of run-level slowest first completion across ordinary actors",
+  "trace": "proxy-adaptive / sharing-12 / repetition 1; 250ms sampling",
+  "matplotlib": "3.11.2",
+  "images": [
+    "tenant-sharing.png",
+    "tenant-sharing-trace.png"
+  ]
+}

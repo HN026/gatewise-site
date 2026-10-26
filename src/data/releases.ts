@@ -1,6 +1,59 @@
 // Newest published release first. Keep notes and downloads tied to its Git tag.
 export const releases = [
 {
+  "version": "v0.5.0",
+  "publishedAt": "2026-11-08T08:23:49Z",
+  "date": "8 November 2026",
+  "summary": "Optional tenant sharing and bounded borrowing, with protection for returning demand and measured capacity/latency tradeoffs.",
+  "requirements": "Library: Go 1.22+; commerce example: Go 1.25+",
+  "changes": [
+    "TenantConfig.Sharing adds target shares, separate total borrowing ceilings, identity-specific overrides and a configurable recent-demand window. Hard caps remain the default.",
+    "Targets scale when demand exceeds current capacity; below-share capacity rejection pauses new lending while running work drains. Service, priority and cohort limits still apply.",
+    "Aggregate demand/allocation metrics, a tenant_share_reserved rejection reason, admission headers and updated dashboards explain allocation without identity labels.",
+    "The demo compares hard cap 2 against share 2 with ceilings 4/12: 249,696 requests, 36 runs and 456 passing checks. A separate live handoff test passed 28 checks; the extracted demo passed 758 Postman assertions across 17 profiles.",
+    "Plain-language setup, editable handoff diagram and raw reports explain both the throughput benefit and extra waiting/rejections from a larger ceiling."
+  ],
+  "upgrade": "Sharing is opt-in. With it enabled, tenant MaxConcurrent/Limits become target shares; Sharing.MaxConcurrent/Limits set total ceilings. DemandTTL defaults to 500ms and must not exceed IdleTTL. Remove sharing environment overrides as well as the JSON object to disable it. Shares apply per guard/process; running work is not preempted and latency or starvation freedom is not guaranteed. Read per-tenant p95 and rejection rates alongside total throughput.",
+  "downloads": [
+    {
+      "name": "Source ZIP",
+      "path": "archive/refs/tags/v0.5.0.zip"
+    },
+    {
+      "name": "Source tar.gz",
+      "path": "archive/refs/tags/v0.5.0.tar.gz"
+    },
+    {
+      "name": "Demo example",
+      "path": "releases/download/v0.5.0/gatewise-demo.zip"
+    },
+    {
+      "name": "Demo SHA-256",
+      "path": "releases/download/v0.5.0/gatewise-demo.sha256"
+    },
+    {
+      "name": "Postman bundle",
+      "path": "releases/download/v0.5.0/postman.zip"
+    },
+    {
+      "name": "Sharing report \u00b7 gzip",
+      "path": "releases/download/v0.5.0/sharing-results.json.gz"
+    },
+    {
+      "name": "Live handoff validation",
+      "path": "releases/download/v0.5.0/sharing-validation.json"
+    },
+    {
+      "name": "Chart calculations",
+      "path": "releases/download/v0.5.0/sharing-chart-provenance.json"
+    },
+    {
+      "name": "Postman results",
+      "path": "releases/download/v0.5.0/commerce-contract-results.json"
+    }
+  ]
+},
+{
   "version": "v0.4.0",
   "publishedAt": "2026-11-08T07:45:26Z",
   "date": "8 November 2026",

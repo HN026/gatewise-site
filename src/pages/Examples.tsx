@@ -3,7 +3,7 @@ import { Arrow, Button, CodeBlock, Diagram, Note, PageTitle, Section, Table } fr
 
 export default function Examples() {
   return <div className="container"><PageTitle title="Examples and demo">Three PostgreSQL-backed services. Run them directly, behind Gatewise, or with Gatewise middleware.</PageTitle>
-    <div className="download-panel"><div className="download-mark"><img src="logo.svg" alt="Gatewise" /></div><div><span className="mono">Demo example · v0.4.0</span><h2>gatewise-demo.zip</h2><p>{demo.files} source files · {(demo.bytes / 1024).toFixed(0)} KB · Go 1.25+ · Python 3.10+ · Podman or Docker</p></div><Button href="downloads/gatewise-demo.zip" download>Download demo example</Button></div>
+    <div className="download-panel"><div className="download-mark"><img src="logo.svg" alt="Gatewise" /></div><div><span className="mono">Demo example · v0.5.0</span><h2>gatewise-demo.zip</h2><p>{demo.files} source files · {(demo.bytes / 1024).toFixed(0)} KB · Go 1.25+ · Python 3.10+ · Podman or Docker</p></div><Button href="downloads/gatewise-demo.zip" download>Download demo example</Button></div>
     <div className="download-links"><a href="downloads/gatewise-demo.sha256" download>SHA-256 <Arrow /></a><a href="downloads/postman.zip" download>Postman collection <Arrow /></a></div>
     <Section title="Application model"><Diagram name="commerce-services" caption="Each service owns a database, a four-connection pool and its admission budget. The proxy is the fourth HTTP application; middleware runs inside the three services." />
       <Table headers={['Service', 'Critical business operation', 'Background operation']} rows={[
@@ -25,6 +25,17 @@ python3 run.py --profile proxy-fixed --priorities --verify`} />
       <CodeBlock filename="Reproduce per-tier measurements" language="shell" code={`python3 priority_benchmark.py --output results/priority-results.json
 python3 validate_priority.py --output results/priority-validation.json`} />
       <p>The repeated experiment measures both hops at baseline, two catalog-pressure levels and recovery. It retains outcomes for every tier, successful-flow propagation checks, same-epoch cohort comparisons and stable-key rotation probes.</p>
+    </Section>
+    <Section id="tenant-sharing" title="Try tenant sharing">
+      <p>The existing three PostgreSQL services can now use hard caps or lend spare capacity. The example share is 2 concurrent requests per tenant. A ceiling of 4 means up to 4 total requests, not 4 extra borrowed requests.</p>
+      <CodeBlock filename="terminal · extracted demo" language="shell" code={`python3 run.py --profile middleware-fixed --sharing 4
+# Or put the sharing policy in the proxy:
+python3 run.py --profile proxy-adaptive --sharing 4
+# Run the focused Postman contract and remove the disposable environment:
+python3 run.py --profile proxy-fixed --sharing 4 --verify`} />
+      <p>Import <code>postman/Sharing.postman_collection.json</code> with the environment printed by the launcher. It checks actual borrowing, progress for other tenants, bounded tracking and aggregate-only metrics. Use <code>--tenants</code> without sharing for the earlier hard-cap scenario. The CLI runs priority, tenant-hard-cap and sharing contracts separately; the library can combine tenant sharing with priority tiers.</p>
+      <CodeBlock filename="Compare capacity use and returning customers" language="shell" code={`python3 sharing_benchmark.py --output results/sharing-results.json`} />
+      <p>The benchmark starts with one busy customer, brings three others back, makes all four busy, lets the other customers leave, then restores healthy traffic. It compares a hard cap of 2 with a share of 2 and borrowing ceilings of 4 and 12. Every service still has 4 SQL connections, so more borrowed HTTP requests can also mean more database waiting. Loopback identities and these limits are only local demo settings.</p>
     </Section>
     <Section title="Run the demo"><CodeBlock filename="terminal" language="shell" code={`unzip gatewise-demo.zip
 cd gatewise-demo
