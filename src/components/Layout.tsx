@@ -18,7 +18,7 @@ export default function Layout({ page, children }: { page: PageId; children: Rea
   useEffect(() => { setMenu(false); setSearch(false); }, [page]);
   const searchItems = [
     ...navigation.map(n => ({ title: n.label, text: n.description, href: `#/${n.id}` })),
-    ...pageSections.problem.map(([id, label]) => ({ title: label, text: 'Problem and design', href: `#/problem/${id}` })),
+    ...navigation.flatMap(n => pageSections[n.id].map(([id, label]) => ({ title: label, text: n.label, href: `#/${n.id}/${id}` }))),
     ...configuration.map(r => ({ title: r[0], text: r[2], href: '#/reference/proxy-configuration' })),
     ...metricFamilies.map(r => ({ title: r[0], text: r[2], href: '#/metrics/metric-families' })),
   ].filter(item => `${item.title} ${item.text}`.toLowerCase().includes(query.toLowerCase()));

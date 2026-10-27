@@ -1,0 +1,878 @@
+{
+  "info": {
+    "name": "Gatewise controlled signals",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Run run.py --decisions enforce or observe --verify. Real SQL services; controlled loopback signal providers, not automatic resource sensors. Example thresholds/caps only."
+  },
+  "item": [
+    {
+      "name": "Reset primary",
+      "request": {
+        "method": "PUT",
+        "url": "{{catalog_admin}}/signals/primary",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Gatewise-Decision-Mode",
+            "value": "observe"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"value\": 0.2, \"state\": \"measured\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"control accepted\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reset secondary",
+      "request": {
+        "method": "PUT",
+        "url": "{{catalog_admin}}/signals/secondary",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Gatewise-Decision-Mode",
+            "value": "observe"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"value\": 0.2, \"state\": \"measured\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"control accepted\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Healthy observations permit work",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_url}}/catalog/products?limit=5",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Gatewise-Decision-Mode",
+            "value": "observe"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "setTimeout(()=>{}, 400);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const mode=pm.environment.get(\"decision_mode\"); const blocked=mode===\"enforce\" && false; pm.test(\"expected outcome\",()=>pm.response.to.have.status(blocked?503:200));",
+              "pm.test(\"server owns decision mode\",()=>pm.expect(pm.response.headers.get(\"X-Gatewise-Decision-Mode\")).to.eql(mode));",
+              "pm.test(\"cached proposal\",()=>pm.expect(pm.response.headers.get(\"X-Gatewise-Signal-Proposal\")).to.eql(\"allow\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Primary reports pressure",
+      "request": {
+        "method": "PUT",
+        "url": "{{catalog_admin}}/signals/primary",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Gatewise-Decision-Mode",
+            "value": "observe"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"value\": 0.95, \"state\": \"measured\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"control accepted\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pressure tightens proposed cap",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_url}}/catalog/products?limit=5",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Gatewise-Decision-Mode",
+            "value": "observe"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "setTimeout(()=>{}, 400);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const mode=pm.environment.get(\"decision_mode\"); const blocked=mode===\"enforce\" && false; pm.test(\"expected outcome\",()=>pm.response.to.have.status(blocked?503:200));",
+              "pm.test(\"server owns decision mode\",()=>pm.expect(pm.response.headers.get(\"X-Gatewise-Decision-Mode\")).to.eql(mode));",
+              "pm.test(\"cached proposal\",()=>pm.expect(pm.response.headers.get(\"X-Gatewise-Signal-Proposal\")).to.eql(\"limit\"));",
+              "pm.test(\"proposed ceiling\",()=>pm.expect(Number(pm.response.headers.get(\"X-Gatewise-Proposed-Limit\"))).to.eql(4));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Healthy primary cannot cancel secondary pressure",
+      "request": {
+        "method": "PUT",
+        "url": "{{catalog_admin}}/signals/primary",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Gatewise-Decision-Mode",
+            "value": "observe"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"value\": 0.2, \"state\": \"measured\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"control accepted\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Secondary requests rejection",
+      "request": {
+        "method": "PUT",
+        "url": "{{catalog_admin}}/signals/secondary",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Gatewise-Decision-Mode",
+            "value": "observe"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"value\": 0.95, \"state\": \"measured\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"control accepted\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reject dominates healthy observation",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_url}}/catalog/products?limit=5",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Gatewise-Decision-Mode",
+            "value": "observe"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "setTimeout(()=>{}, 400);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const mode=pm.environment.get(\"decision_mode\"); const blocked=mode===\"enforce\" && true; pm.test(\"expected outcome\",()=>pm.response.to.have.status(blocked?503:200));",
+              "pm.test(\"server owns decision mode\",()=>pm.expect(pm.response.headers.get(\"X-Gatewise-Decision-Mode\")).to.eql(mode));",
+              "pm.test(\"cached proposal\",()=>pm.expect(pm.response.headers.get(\"X-Gatewise-Signal-Proposal\")).to.eql(\"reject\"));",
+              "if(blocked){const d=pm.response.json().decision;pm.test(\"rejected before tenant or capacity work\",()=>{pm.expect(d.Stage).to.eql(\"signals\");pm.expect(d.Stages.find(s=>s.Name===\"capacity\").State).to.eql(\"not_evaluated\");});pm.test(\"explicit pressure reason\",()=>pm.expect(d.Reason).to.eql(\"signal_pressure\"));}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Primary also reports pressure",
+      "request": {
+        "method": "PUT",
+        "url": "{{catalog_admin}}/signals/primary",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Gatewise-Decision-Mode",
+            "value": "observe"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"value\": 0.95, \"state\": \"measured\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"control accepted\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reject dominates a cap proposal",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_url}}/catalog/products?limit=5",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Gatewise-Decision-Mode",
+            "value": "observe"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "setTimeout(()=>{}, 400);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const mode=pm.environment.get(\"decision_mode\"); const blocked=mode===\"enforce\" && true; pm.test(\"expected outcome\",()=>pm.response.to.have.status(blocked?503:200));",
+              "pm.test(\"server owns decision mode\",()=>pm.expect(pm.response.headers.get(\"X-Gatewise-Decision-Mode\")).to.eql(mode));",
+              "pm.test(\"cached proposal\",()=>pm.expect(pm.response.headers.get(\"X-Gatewise-Signal-Proposal\")).to.eql(\"reject\"));",
+              "pm.test(\"proposed ceiling\",()=>pm.expect(Number(pm.response.headers.get(\"X-Gatewise-Proposed-Limit\"))).to.eql(4));",
+              "if(blocked){const d=pm.response.json().decision;pm.test(\"rejected before tenant or capacity work\",()=>{pm.expect(d.Stage).to.eql(\"signals\");pm.expect(d.Stages.find(s=>s.Name===\"capacity\").State).to.eql(\"not_evaluated\");});pm.test(\"explicit pressure reason\",()=>pm.expect(d.Reason).to.eql(\"signal_pressure\"));}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Recover secondary",
+      "request": {
+        "method": "PUT",
+        "url": "{{catalog_admin}}/signals/secondary",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Gatewise-Decision-Mode",
+            "value": "observe"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"value\": 0.2, \"state\": \"measured\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"control accepted\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Old primary measurement",
+      "request": {
+        "method": "PUT",
+        "url": "{{catalog_admin}}/signals/primary",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Gatewise-Decision-Mode",
+            "value": "observe"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"value\": 0.95, \"state\": \"measured\", \"age_ms\": 2000}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"control accepted\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stale measurement uses fallback",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_url}}/catalog/products?limit=5",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Gatewise-Decision-Mode",
+            "value": "observe"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "setTimeout(()=>{}, 1100);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const mode=pm.environment.get(\"decision_mode\"); const blocked=mode===\"enforce\" && false; pm.test(\"expected outcome\",()=>pm.response.to.have.status(blocked?503:200));",
+              "pm.test(\"server owns decision mode\",()=>pm.expect(pm.response.headers.get(\"X-Gatewise-Decision-Mode\")).to.eql(mode));",
+              "pm.test(\"cached proposal\",()=>pm.expect(pm.response.headers.get(\"X-Gatewise-Signal-Proposal\")).to.eql(\"limit\"));",
+              "pm.test(\"proposed ceiling\",()=>pm.expect(Number(pm.response.headers.get(\"X-Gatewise-Proposed-Limit\"))).to.eql(2));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Primary explicitly unknown",
+      "request": {
+        "method": "PUT",
+        "url": "{{catalog_admin}}/signals/primary",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Gatewise-Decision-Mode",
+            "value": "observe"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"value\": 0.2, \"state\": \"unknown\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"control accepted\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Unknown measurement uses fallback",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_url}}/catalog/products?limit=5",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Gatewise-Decision-Mode",
+            "value": "observe"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "setTimeout(()=>{}, 400);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const mode=pm.environment.get(\"decision_mode\"); const blocked=mode===\"enforce\" && false; pm.test(\"expected outcome\",()=>pm.response.to.have.status(blocked?503:200));",
+              "pm.test(\"server owns decision mode\",()=>pm.expect(pm.response.headers.get(\"X-Gatewise-Decision-Mode\")).to.eql(mode));",
+              "pm.test(\"cached proposal\",()=>pm.expect(pm.response.headers.get(\"X-Gatewise-Signal-Proposal\")).to.eql(\"limit\"));",
+              "pm.test(\"proposed ceiling\",()=>pm.expect(Number(pm.response.headers.get(\"X-Gatewise-Proposed-Limit\"))).to.eql(2));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Provider fails",
+      "request": {
+        "method": "PUT",
+        "url": "{{catalog_admin}}/signals/primary",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Gatewise-Decision-Mode",
+            "value": "observe"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"value\": 0.2, \"state\": \"measured\", \"error\": true}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"control accepted\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Provider failure uses fallback",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_url}}/catalog/products?limit=5",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Gatewise-Decision-Mode",
+            "value": "observe"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "setTimeout(()=>{}, 400);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const mode=pm.environment.get(\"decision_mode\"); const blocked=mode===\"enforce\" && false; pm.test(\"expected outcome\",()=>pm.response.to.have.status(blocked?503:200));",
+              "pm.test(\"server owns decision mode\",()=>pm.expect(pm.response.headers.get(\"X-Gatewise-Decision-Mode\")).to.eql(mode));",
+              "pm.test(\"cached proposal\",()=>pm.expect(pm.response.headers.get(\"X-Gatewise-Signal-Proposal\")).to.eql(\"limit\"));",
+              "pm.test(\"proposed ceiling\",()=>pm.expect(Number(pm.response.headers.get(\"X-Gatewise-Proposed-Limit\"))).to.eql(2));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Provider exceeds sampling deadline",
+      "request": {
+        "method": "PUT",
+        "url": "{{catalog_admin}}/signals/primary",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Gatewise-Decision-Mode",
+            "value": "observe"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"value\": 0.2, \"state\": \"measured\", \"delay_ms\": 150}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"control accepted\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Slow provider uses fallback",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_url}}/catalog/products?limit=5",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Gatewise-Decision-Mode",
+            "value": "observe"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "setTimeout(()=>{}, 400);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const mode=pm.environment.get(\"decision_mode\"); const blocked=mode===\"enforce\" && false; pm.test(\"expected outcome\",()=>pm.response.to.have.status(blocked?503:200));",
+              "pm.test(\"server owns decision mode\",()=>pm.expect(pm.response.headers.get(\"X-Gatewise-Decision-Mode\")).to.eql(mode));",
+              "pm.test(\"cached proposal\",()=>pm.expect(pm.response.headers.get(\"X-Gatewise-Signal-Proposal\")).to.eql(\"limit\"));",
+              "pm.test(\"proposed ceiling\",()=>pm.expect(Number(pm.response.headers.get(\"X-Gatewise-Proposed-Limit\"))).to.eql(2));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Recover primary",
+      "request": {
+        "method": "PUT",
+        "url": "{{catalog_admin}}/signals/primary",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Gatewise-Decision-Mode",
+            "value": "observe"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"value\": 0.2, \"state\": \"measured\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"control accepted\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Recovery restores ordinary admission",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_url}}/catalog/products?limit=5",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Gatewise-Decision-Mode",
+            "value": "observe"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "setTimeout(()=>{}, 400);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const mode=pm.environment.get(\"decision_mode\"); const blocked=mode===\"enforce\" && false; pm.test(\"expected outcome\",()=>pm.response.to.have.status(blocked?503:200));",
+              "pm.test(\"server owns decision mode\",()=>pm.expect(pm.response.headers.get(\"X-Gatewise-Decision-Mode\")).to.eql(mode));",
+              "pm.test(\"cached proposal\",()=>pm.expect(pm.response.headers.get(\"X-Gatewise-Signal-Proposal\")).to.eql(\"allow\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Decision metrics are exported",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_url}}/metrics",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Gatewise-Decision-Mode",
+            "value": "observe"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"bounded engine metrics\",()=>{const t=pm.response.text();pm.expect(t).includes(\"gatewise_signal_state\");pm.expect(t).includes(\"gatewise_signal_proposals_total\");pm.expect(t).includes(\"gatewise_signal_collection_failures_total\");});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Signal controls are not on public port",
+      "request": {
+        "method": "PUT",
+        "url": "{{catalog_url}}/signals/primary",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Gatewise-Decision-Mode",
+            "value": "observe"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"value\": 0, \"state\": \"measured\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"public signal updates unavailable\",()=>pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -9,12 +9,13 @@ import (
 )
 
 type collector struct {
-	sharingDemand, sharingShares, sharingPause, sharingActive, sharingAdmissions                                    *prometheus.Desc
-	resolutions                                                                                                     *prometheus.Desc
-	tenantLimit, tenantTracked, tenantTrackingLimit, tenantActive, tenantExpired                                    *prometheus.Desc
-	controllerSamples, controllerRatio, controllerFailures, controllerTime, controllerDecision, controllerSaturated *prometheus.Desc
-	service                                                                                                         *middleware.Service
-	limit, minimum, maximum, reserved, active, info, admitted, rejected, completed, duration, adjustments           *prometheus.Desc
+	decisionInfo, proposals, signalState, signalValue, signalThreshold, signalTime, signalAccepted, signalDropped, signalFailures *prometheus.Desc
+	sharingDemand, sharingShares, sharingPause, sharingActive, sharingAdmissions                                                  *prometheus.Desc
+	resolutions                                                                                                                   *prometheus.Desc
+	tenantLimit, tenantTracked, tenantTrackingLimit, tenantActive, tenantExpired                                                  *prometheus.Desc
+	controllerSamples, controllerRatio, controllerFailures, controllerTime, controllerDecision, controllerSaturated               *prometheus.Desc
+	service                                                                                                                       *middleware.Service
+	limit, minimum, maximum, reserved, active, info, admitted, rejected, completed, duration, adjustments                         *prometheus.Desc
 }
 
 // Register adds one service to registry. Service names must be unique within that
@@ -28,6 +29,15 @@ func Register(registry prometheus.Registerer, service *middleware.Service) error
 		return prometheus.NewDesc("gatewise_"+name, help, labels, prometheus.Labels{"service": serviceName})
 	}
 	c := &collector{service: service,
+		decisionInfo:        desc("decision_engine_info", "Configured decision mode.", "mode"),
+		proposals:           desc("signal_proposals_total", "Evaluated proposals; a limit proposal is not a counterfactual rejection.", "action"),
+		signalState:         desc("signal_state", "Current cached signal state; one hot.", "signal", "state"),
+		signalValue:         desc("signal_value", "Last observed value; inspect state before using.", "signal"),
+		signalThreshold:     desc("signal_threshold", "Configured pressure threshold.", "signal"),
+		signalTime:          desc("signal_observed_timestamp_seconds", "Measurement time; zero before observation.", "signal"),
+		signalAccepted:      desc("signal_observations_total", "Accepted cache updates.", "signal"),
+		signalDropped:       desc("signal_observations_dropped_total", "Discarded observations.", "signal", "reason"),
+		signalFailures:      desc("signal_collection_failures_total", "Bounded collection failure reasons, no error text.", "signal", "reason"),
 		sharingDemand:       desc("tenant_sharing_demanding_tenants", "Identified tenants with active or recent demand."),
 		sharingShares:       desc("tenant_sharing_demand_shares", "Configured shares of tenants with active or recent demand."),
 		sharingPause:        desc("tenant_sharing_borrowing_paused", "One while lending is paused after below-share capacity rejection."),
@@ -61,7 +71,7 @@ func Register(registry prometheus.Registerer, service *middleware.Service) error
 }
 
 func (c *collector) Describe(out chan<- *prometheus.Desc) {
-	for _, desc := range []*prometheus.Desc{c.sharingDemand, c.sharingShares, c.sharingPause, c.sharingActive, c.sharingAdmissions, c.resolutions, c.limit, c.minimum, c.maximum, c.reserved, c.active, c.info, c.admitted, c.rejected, c.completed, c.duration, c.adjustments, c.controllerSamples, c.controllerRatio, c.controllerFailures, c.controllerTime, c.controllerDecision, c.controllerSaturated, c.tenantLimit, c.tenantTracked, c.tenantTrackingLimit, c.tenantActive, c.tenantExpired} {
+	for _, desc := range []*prometheus.Desc{c.decisionInfo, c.proposals, c.signalState, c.signalValue, c.signalThreshold, c.signalTime, c.signalAccepted, c.signalDropped, c.signalFailures, c.sharingDemand, c.sharingShares, c.sharingPause, c.sharingActive, c.sharingAdmissions, c.resolutions, c.limit, c.minimum, c.maximum, c.reserved, c.active, c.info, c.admitted, c.rejected, c.completed, c.duration, c.adjustments, c.controllerSamples, c.controllerRatio, c.controllerFailures, c.controllerTime, c.controllerDecision, c.controllerSaturated, c.tenantLimit, c.tenantTracked, c.tenantTrackingLimit, c.tenantActive, c.tenantExpired} {
 		out <- desc
 	}
 }
@@ -73,6 +83,35 @@ func (c *collector) Collect(out chan<- prometheus.Metric) {
 	}
 	counter := func(desc *prometheus.Desc, value uint64, labels ...string) {
 		out <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, float64(value), labels...)
+	}
+	if s.Decisions.Enabled {
+		gauge(c.decisionInfo, 1, string(s.Decisions.Mode))
+		for i, a := range []string{"allow", "limit", "reject"} {
+			counter(c.proposals, s.Decisions.Proposals[i], a)
+		}
+		for _, v := range s.Decisions.Signals {
+			for _, state := range []string{"missing", "healthy", "pressure", "unknown", "stale"} {
+				n := 0.
+				if state == v.State {
+					n = 1
+				}
+				gauge(c.signalState, n, v.Name, state)
+			}
+			gauge(c.signalValue, v.Value, v.Name)
+			gauge(c.signalThreshold, v.Threshold, v.Name)
+			at := 0.
+			if !v.ObservedAt.IsZero() {
+				at = float64(v.ObservedAt.UnixNano()) / 1e9
+			}
+			gauge(c.signalTime, at, v.Name)
+			counter(c.signalAccepted, v.Accepted, v.Name)
+			for i, r := range []string{"invalid", "out_of_order", "future"} {
+				counter(c.signalDropped, v.Dropped[i], v.Name, r)
+			}
+			for i, r := range []string{"error", "timeout", "panic", "busy"} {
+				counter(c.signalFailures, v.Failures[i], v.Name, r)
+			}
+		}
 	}
 	if s.Tenants.Enabled {
 		t := s.Tenants
@@ -145,6 +184,11 @@ func (c *collector) Collect(out chan<- prometheus.Metric) {
 				n      uint64
 			}{{"tier_capacity_reserved", p.RejectedTier}, {"cohort_limited", p.RejectedCohort}, {"priority_metadata_invalid", p.RejectedPriorityInvalid}, {"priority_metadata_untrusted", p.RejectedPriorityUntrusted}} {
 				counter(c.rejected, v.n, priority, v.reason)
+			}
+		}
+		if s.Decisions.Enabled {
+			for i, r := range []string{"signal_pressure", "signal_unavailable", "signal_concurrency_limit"} {
+				counter(c.rejected, p.RejectedSignals[i], priority, r)
 			}
 		}
 		counter(c.rejected, p.RejectedConcurrency, priority, "concurrency_limit")

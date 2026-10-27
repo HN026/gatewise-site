@@ -96,6 +96,15 @@ mux.Handle("GET /metrics", promhttp.HandlerFor(registry,
     promhttp.HandlerOpts{}))`;
 
 export const configuration = [
+  ['services.<name>.decisions', 'Disabled', 'Optional shared signal engine; omit to retain existing integration behaviour.'],
+  ['decisions.mode', 'enforce', 'observe records signal proposals; enforce applies them. Existing hard controls always run.'],
+  ['decisions.signals[]', 'Required when enabled', '1–32 uniquely named rules: scope, threshold, max_age, fallback, pressure effect and HTTP source.'],
+  ['decisions.signals[].scope', 'service', 'service, resource with a server-owned key, or actor with a trusted tenant key.'],
+  ['decisions.signals[].max_age', 'Required', 'Positive freshness bound ≤24h and ≥source interval + timeout.'],
+  ['decisions.signals[].on_unknown', 'allow', 'allow, limit with unknown_limit, or reject for missing/unknown/stale observations.'],
+  ['decisions.signals[].pressure', 'Required', 'Exactly one positive max_concurrent or reject: true. Strictest matching effect wins.'],
+  ['decisions.signals[].source', 'Required in proxy', 'Operator URL, interval 10ms–1h and positive timeout ≤interval. Validation remains offline.'],
+  ['routes[].resource', 'None', 'Server-owned signal resource scope; cannot be selected by caller metadata.'],
   ['services.<name>.upstream_url', 'Required', 'Absolute HTTP(S) upstream. Supports ${ENV_VAR} substitution.'],
   ['services.<name>.max_concurrent', '100', 'Positive ceiling on active synchronous requests.'],
   ['services.<name>.reserved_critical', '0', 'Capacity unavailable to background work; between 0 and the ceiling.'],
@@ -115,6 +124,14 @@ export const configuration = [
 ] as const;
 
 export const metricFamilies = [
+  ['gatewise_decision_engine_info','Gauge','Optional signal engine mode: enforce or observe.'],
+  ['gatewise_signal_proposals_total','Counter','allow/limit/reject proposals; limit is not a counterfactual rejection count.'],
+  ['gatewise_signal_state','Gauge','Cached signal state: missing, healthy, pressure, unknown or stale.'],
+  ['gatewise_signal_value / gatewise_signal_threshold','Gauge','Last measurement and configured threshold; inspect freshness/state too.'],
+  ['gatewise_signal_observed_timestamp_seconds','Gauge','Measurement time, zero before first observation.'],
+  ['gatewise_signal_observations_total','Counter','Accepted cache updates for a configured signal.'],
+  ['gatewise_signal_observations_dropped_total','Counter','Discarded invalid, out-of-order or future samples.'],
+  ['gatewise_signal_collection_failures_total','Counter','Collection error, timeout, panic or busy worker, with bounded labels.'],
   ['gatewise_concurrency_limit', 'Gauge', 'Current admission limit for each service.'],
   ['gatewise_concurrency_min_limit', 'Gauge', 'Configured lower admission bound.'],
   ['gatewise_concurrency_max_limit', 'Gauge', 'Configured admission ceiling.'],
@@ -136,13 +153,13 @@ export const metricFamilies = [
 
 export const pageSections: Record<PageId, readonly (readonly [string, string])[]> = {
   overview: [],
-  problem: [['basics', 'Request basics'], ['overload', 'Overload problem'], ['alternatives', 'Alternative approaches'], ['design-decisions', 'Gatewise decisions'], ['evolution', 'Implementation layers'], ['architecture', 'Architecture'], ['admission', 'Admission rules'], ['lifecycle', 'Request lifetime'], ['adaptive', 'Adaptive controller'], ['operations', 'Deployment constraints'], ['references', 'References']],
-  installation: [['source', 'Download source'], ['configure', 'Configure'], ['run', 'Run'], ['verify', 'Verify'], ['adaptive-setup', 'Enable adaptive mode'], ['tenant-isolation', 'Tenant isolation'], ['priority-propagation', 'Priority propagation'], ['tenant-sharing', 'Tenant sharing'], ['validate-config', 'Validate configuration'], ['tuning', 'Choose limits'], ['deployment', 'Deployment'], ['library-deployment', 'Go application'], ['proxy-deployment', 'Proxy service']],
-  examples: [['application-model', 'Application model'], ['run-the-demo', 'Run the demo'], ['postman-scenarios', 'Postman scenarios'], ['tenant-isolation', 'Tenant isolation'], ['priority-chain', 'Priority service chain'], ['tenant-sharing', 'Tenant sharing'], ['reproduce-benchmarks', 'Reproduce benchmarks']],
-  benchmarks: [['tenant-sharing', 'Sharing spare capacity · v0.5.0'], ['priority-chain', 'Priority chain · v0.4.0'], ['tenant-isolation', 'Tenant isolation · v0.3.0'], ['recorded-results', 'Service overload · v0.2.0'], ['service-results', 'Per-service results'], ['controller-validation', 'Controller validation'], ['methodology', 'Methodology'], ['resources-and-limitations', 'Resources and limitations'], ['reproduction', 'Reproduction']],
-  metrics: [['benchmark-metrics', 'Benchmark metrics'], ['prometheus-integration', 'Prometheus integration'], ['grafana-dashboard', 'Grafana dashboard'], ['controller-feedback', 'Controller feedback'], ['tenant-feedback', 'Tenant diagnostics'], ['priority-diagnostics', 'Priority diagnostics'], ['sharing-diagnostics', 'Sharing diagnostics'], ['metric-families', 'Metric families']],
+  problem: [['basics', 'Request basics'], ['overload', 'Overload problem'], ['alternatives', 'Alternative approaches'], ['design-decisions', 'Gatewise decisions'], ['evolution', 'Implementation layers'], ['architecture', 'Architecture'], ['admission', 'Admission rules'], ['lifecycle', 'Request lifetime'], ['adaptive', 'Adaptive controller'], ['operations', 'Deployment constraints'], ['combined-signals', 'Combining signals'], ['references', 'References']],
+  installation: [['source', 'Download source'], ['configure', 'Configure'], ['run', 'Run'], ['verify', 'Verify'], ['signal-setup', 'Overload signals'], ['adaptive-setup', 'Enable adaptive mode'], ['tenant-isolation', 'Tenant isolation'], ['priority-propagation', 'Priority propagation'], ['tenant-sharing', 'Tenant sharing'], ['validate-config', 'Validate configuration'], ['tuning', 'Choose limits'], ['deployment', 'Deployment'], ['library-deployment', 'Go application'], ['proxy-deployment', 'Proxy service']],
+  examples: [['controlled-signals', 'Signal validation'], ['application-model', 'Application model'], ['run-the-demo', 'Run the demo'], ['postman-scenarios', 'Postman scenarios'], ['tenant-isolation', 'Tenant isolation'], ['priority-chain', 'Priority service chain'], ['tenant-sharing', 'Tenant sharing'], ['reproduce-benchmarks', 'Reproduce benchmarks']],
+  benchmarks: [['signal-engine','Combining signals · v0.6.0'], ['tenant-sharing', 'Sharing spare capacity · v0.5.0'], ['priority-chain', 'Priority chain · v0.4.0'], ['tenant-isolation', 'Tenant isolation · v0.3.0'], ['recorded-results', 'Service overload · v0.2.0'], ['service-results', 'Per-service results'], ['controller-validation', 'Controller validation'], ['methodology', 'Methodology'], ['resources-and-limitations', 'Resources and limitations'], ['reproduction', 'Reproduction']],
+  metrics: [['signal-feedback','Signal diagnostics'], ['benchmark-metrics', 'Benchmark metrics'], ['prometheus-integration', 'Prometheus integration'], ['grafana-dashboard', 'Grafana dashboard'], ['controller-feedback', 'Controller feedback'], ['tenant-feedback', 'Tenant diagnostics'], ['priority-diagnostics', 'Priority diagnostics'], ['sharing-diagnostics', 'Sharing diagnostics'], ['metric-families', 'Metric families']],
   versions: [['latest', 'Latest release'], ['install-version', 'Install a version'], ['release-history', 'Release history'], ['upgrading', 'Upgrading']],
-  reference: [['sharing-reference', 'Sharing policy'], ['priority-reference', 'Priority API and wire format'], ['proxy-configuration', 'Proxy configuration'], ['environment-overrides', 'Environment overrides'], ['public-go-api', 'Public Go API'], ['http-responses', 'HTTP responses'], ['scope', 'Scope']],
+  reference: [['decision-reference','Decision engine'], ['sharing-reference', 'Sharing policy'], ['priority-reference', 'Priority API and wire format'], ['proxy-configuration', 'Proxy configuration'], ['environment-overrides', 'Environment overrides'], ['public-go-api', 'Public Go API'], ['http-responses', 'HTTP responses'], ['scope', 'Scope']],
 };
 
 export const adaptiveInstallationExample = `guard, err := middleware.NewService(middleware.ServiceConfig{

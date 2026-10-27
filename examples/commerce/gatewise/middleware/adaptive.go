@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"fmt"
+	"github.com/HN026/gatewise/decision"
 	"time"
 )
 
@@ -47,7 +48,20 @@ func normalizeAdaptive(c ServiceConfig) (AdaptiveConfig, error) {
 	return a, nil
 }
 
-type handlerOptions struct{ targetLatency time.Duration }
+type handlerOptions struct {
+	targetLatency time.Duration
+	resource      string
+}
+
+// WithResource selects a server-controlled resource scope, never a caller header.
+// Scoped ceilings still compare the shared Service in-flight count.
+func WithResource(name string) HandlerOption {
+	if !decision.ValidName(name) {
+		panic("gatewise: invalid resource name")
+	}
+	return func(o *handlerOptions) { o.resource = name }
+}
+
 type HandlerOption func(*handlerOptions)
 
 // WithLatencyTarget gives this handler its own budget so naturally slower work

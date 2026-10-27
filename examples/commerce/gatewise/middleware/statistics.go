@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"github.com/HN026/gatewise/decision"
 	"github.com/HN026/gatewise/internal/admission"
 	"github.com/HN026/gatewise/priority"
 	"sync"
@@ -10,6 +11,7 @@ import (
 // Statistics is a bounded snapshot independent of any metrics backend. Histograms
 // contain admitted work only. Rejected requests do not pollute handler latency.
 type Statistics struct {
+	Decisions         DecisionState
 	TenantAllocations [3]uint64 // share, borrowed, fallback; successful service admissions only.
 	Name              string
 	State             ServiceState
@@ -31,6 +33,7 @@ type ResolutionStatistics struct {
 }
 
 type PriorityStatistics struct {
+	RejectedSignals                                                                                               [3]uint64 // pressure, unavailable, concurrency limit
 	RejectedTenantShare                                                                                           uint64
 	RejectedTier, RejectedCohort, RejectedPriorityInvalid, RejectedPriorityUntrusted                              uint64
 	Priority                                                                                                      Priority
@@ -50,12 +53,14 @@ type OutcomeStatistics struct {
 var durationBounds = [11]float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10}
 
 type statistics struct {
-	allocations [3]uint64
-	mu          sync.Mutex
-	priorities  []PriorityStatistics
-	indices     map[Priority]int
-	resolutions map[Priority]map[string]uint64
-	adjustments [2][3]uint64
+	lastDecision decision.Result
+	proposals    [3]uint64
+	allocations  [3]uint64
+	mu           sync.Mutex
+	priorities   []PriorityStatistics
+	indices      map[Priority]int
+	resolutions  map[Priority]map[string]uint64
+	adjustments  [2][3]uint64
 }
 
 func newStatistics() *statistics {
@@ -80,6 +85,12 @@ func (s *statistics) admission(p Priority, decision admission.Decision) {
 	defer s.mu.Unlock()
 	v := &s.priorities[s.indices[p]]
 	switch decision {
+	case admission.SignalPressure:
+		v.RejectedSignals[0]++
+	case admission.SignalUnavailable:
+		v.RejectedSignals[1]++
+	case admission.SignalConcurrencyLimit:
+		v.RejectedSignals[2]++
 	case admission.TierCapacityReserved:
 		v.RejectedTier++
 	case admission.CohortLimited:
@@ -160,6 +171,7 @@ func (s *Service) Statistics() Statistics {
 	state := s.Snapshot()
 	controller := s.ControllerSnapshot()
 	tenants := s.TenantSnapshot()
+	decisions := s.DecisionSnapshot()
 	s.statistics.mu.Lock()
 	defer s.statistics.mu.Unlock()
 	var legacy [2]PriorityStatistics
@@ -176,7 +188,7 @@ func (s *Service) Statistics() Statistics {
 	for p, n := range s.limiter.TierCounts() {
 		active[Priority(p)] = n
 	}
-	return Statistics{TenantAllocations: s.statistics.allocations, Tiers: append([]PriorityStatistics(nil), s.statistics.priorities...), Resolutions: resolutions, TierActive: active, PriorityEnabled: s.priorities != nil, Name: s.name, State: state, Controller: controller, Tenants: tenants, Priorities: legacy, DurationBounds: durationBounds, Adjustments: s.statistics.adjustments}
+	return Statistics{Decisions: decisions, TenantAllocations: s.statistics.allocations, Tiers: append([]PriorityStatistics(nil), s.statistics.priorities...), Resolutions: resolutions, TierActive: active, PriorityEnabled: s.priorities != nil, Name: s.name, State: state, Controller: controller, Tenants: tenants, Priorities: legacy, DurationBounds: durationBounds, Adjustments: s.statistics.adjustments}
 }
 
 func (s *statistics) resolution(p Priority, source string) {

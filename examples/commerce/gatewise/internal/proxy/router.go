@@ -29,6 +29,9 @@ func newRouter(routes []config.Route, backends map[string]backend) http.Handler 
 			priority = admission.Critical
 		}
 		var options []middleware.HandlerOption
+		if r.Resource != "" {
+			options = append(options, middleware.WithResource(r.Resource))
+		}
 		if r.LatencyTarget > 0 {
 			options = append(options, middleware.WithLatencyTarget(r.LatencyTarget))
 		}

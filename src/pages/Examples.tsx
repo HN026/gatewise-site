@@ -3,7 +3,7 @@ import { Arrow, Button, CodeBlock, Diagram, Note, PageTitle, Section, Table } fr
 
 export default function Examples() {
   return <div className="container"><PageTitle title="Examples and demo">Three PostgreSQL-backed services. Run them directly, behind Gatewise, or with Gatewise middleware.</PageTitle>
-    <div className="download-panel"><div className="download-mark"><img src="logo.svg" alt="Gatewise" /></div><div><span className="mono">Demo example · v0.5.0</span><h2>gatewise-demo.zip</h2><p>{demo.files} source files · {(demo.bytes / 1024).toFixed(0)} KB · Go 1.25+ · Python 3.10+ · Podman or Docker</p></div><Button href="downloads/gatewise-demo.zip" download>Download demo example</Button></div>
+    <div className="download-panel"><div className="download-mark"><img src="logo.svg" alt="Gatewise" /></div><div><span className="mono">Demo example · v0.6.0</span><h2>gatewise-demo.zip</h2><p>{demo.files} source files · {(demo.bytes / 1024).toFixed(0)} KB · Go 1.25+ · Python 3.10+ · Podman or Docker</p></div><Button href="downloads/gatewise-demo.zip" download>Download demo example</Button></div>
     <div className="download-links"><a href="downloads/gatewise-demo.sha256" download>SHA-256 <Arrow /></a><a href="downloads/postman.zip" download>Postman collection <Arrow /></a></div>
     <Section title="Application model"><Diagram name="commerce-services" caption="Each service owns a database, a four-connection pool and its admission budget. The proxy is the fourth HTTP application; middleware runs inside the three services." />
       <Table headers={['Service', 'Critical business operation', 'Background operation']} rows={[
@@ -26,7 +26,15 @@ python3 run.py --profile proxy-fixed --priorities --verify`} />
 python3 validate_priority.py --output results/priority-validation.json`} />
       <p>The repeated experiment measures both hops at baseline, two catalog-pressure levels and recovery. It retains outcomes for every tier, successful-flow propagation checks, same-epoch cohort comparisons and stable-key rotation probes.</p>
     </Section>
-    <Section id="tenant-sharing" title="Try tenant sharing">
+    <Section id="controlled-signals" title="Test signal decisions">
+ <p>This scenario adds two controlled observation endpoints to each existing service’s loopback admin port. It keeps real PostgreSQL work and the maximum of four application processes. The values are test inputs, not measurements of actual pool pressure.</p>
+ <CodeBlock filename="terminal · extracted demo" language="shell" code={`python3 run.py --profile middleware-fixed --decisions enforce --verify
+python3 run.py --profile proxy-adaptive --decisions observe --verify
+python3 decision_benchmark.py --output results/decision-results.json`} />
+ <p>Import <code>postman/Signals.postman_collection.json</code> with the printed environment. The collection checks healthy readings, conflicting sources, stale readings, unknown state, provider errors/timeouts and recovery. It also verifies that caller headers cannot select observe mode and that observation controls are unavailable on the business port.</p>
+ <p>The primary source caps matching work at 4 under pressure and uses 2 when unavailable. The secondary source requests rejection under pressure and permits work when unavailable. Both are sampled every 100 ms with a 50 ms deadline and 600 ms freshness bound. In observe mode, these remain proposals; hard capacity controls continue to run. Run this focused contract separately from the tenant/priority scenarios.</p>
+ </Section>
+ <Section id="tenant-sharing" title="Try tenant sharing">
       <p>The existing three PostgreSQL services can now use hard caps or lend spare capacity. The example share is 2 concurrent requests per tenant. A ceiling of 4 means up to 4 total requests, not 4 extra borrowed requests.</p>
       <CodeBlock filename="terminal · extracted demo" language="shell" code={`python3 run.py --profile middleware-fixed --sharing 4
 # Or put the sharing policy in the proxy:

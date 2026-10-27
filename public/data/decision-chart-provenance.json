@@ -1,0 +1,12 @@
+{
+  "source_sha256": "14fe910a61dbf8af1015801ca4c3789a8f8860129057ca5cca37a34870f07aa2",
+  "overhead_sha256": "20a9b8eb5ccf80eaaa7362467acf74290a1f5d17fa626487830603d33b794741",
+  "aggregation": "Median run-level goodput/successful p95; pooled rejection/error percentages; pooled SQL wait duration divided by waited acquisitions. Three repetitions per deployment/strategy.",
+  "trace": "proxy-adaptive / enforce / repetition 1 / orders; ~200 ms samples; cached state one-hot metrics mapped to categorical y values",
+  "overhead": "Go benchmarks, three repetitions, HTTP recorder and immediately completing handler for middleware; cached Evaluate alone for 1/8/32 rules; no contention or network included.",
+  "matplotlib": "3.11.2",
+  "images": [
+    "decision-pressure.png",
+    "decision-trace.png"
+  ]
+}

@@ -1,6 +1,59 @@
 // Newest published release first. Keep notes and downloads tied to its Git tag.
 export const releases = [
 {
+  "version": "v0.6.0",
+  "publishedAt": "2026-11-08T09:04:32Z",
+  "date": "8 November 2026",
+  "summary": "An optional shared decision engine combines cached overload signals with existing service, tenant and priority controls.",
+  "requirements": "Library: Go 1.22+; commerce example: Go 1.25+",
+  "changes": [
+    "Service, resource and trusted-actor observations include measurement time, freshness bounds and explicit unknown-data fallback. The smallest matching ceiling wins; explicit rejection takes precedence.",
+    "Atomic admission retains hard service, tenant, priority and cohort rules. Signal ceilings do not overwrite the adaptive baseline, including during concurrent limit changes.",
+    "Observe mode records proposals without signal enforcement. Background or push collection handles timeout/error/panic, stale/out-of-order/future data and bounded stuck providers.",
+    "Inspectable admission stages, bounded Prometheus diagnostics, dashboard panels, offline proxy config validation and complete middleware/proxy setup.",
+    "The final PostgreSQL experiment sent 86,400 requests across 36 runs and passed 348 checks. The exact demo passed 1,158 Postman assertions across 25 profiles. Raw evidence, measured charts and code-path overhead are included."
+  ],
+  "upgrade": "Opt-in: leave ServiceConfig.Decisions or services.name.decisions unset to retain existing integration behaviour. Start in observe mode, choose explicit freshness/failure policies, then enable enforcement after validation. Limits are process-local; scoped caps compare shared service occupancy. Providers must honour cancellation; a noncooperative provider can retain one worker per signal. The demo providers are controlled inputs, not automatic runtime/database regulators.",
+  "downloads": [
+    {
+      "name": "Source ZIP",
+      "path": "archive/refs/tags/v0.6.0.zip"
+    },
+    {
+      "name": "Source tar.gz",
+      "path": "archive/refs/tags/v0.6.0.tar.gz"
+    },
+    {
+      "name": "Demo example",
+      "path": "releases/download/v0.6.0/gatewise-demo.zip"
+    },
+    {
+      "name": "Demo SHA-256",
+      "path": "releases/download/v0.6.0/gatewise-demo.sha256"
+    },
+    {
+      "name": "Postman bundle",
+      "path": "releases/download/v0.6.0/postman.zip"
+    },
+    {
+      "name": "Signal report \u00b7 gzip",
+      "path": "releases/download/v0.6.0/decision-results.json.gz"
+    },
+    {
+      "name": "Chart calculations",
+      "path": "releases/download/v0.6.0/decision-chart-provenance.json"
+    },
+    {
+      "name": "Measured overhead",
+      "path": "releases/download/v0.6.0/decision-overhead.txt"
+    },
+    {
+      "name": "Postman results",
+      "path": "releases/download/v0.6.0/commerce-contract-results.json"
+    }
+  ]
+},
+{
   "version": "v0.5.0",
   "publishedAt": "2026-11-08T08:23:49Z",
   "date": "8 November 2026",

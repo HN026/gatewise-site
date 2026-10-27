@@ -9,6 +9,7 @@ import (
 )
 
 type Config struct {
+ DecisionMode string
 	SharingCeiling                                                  int
 	PriorityTrusted                                                 string
 	Priorities                                                      bool
@@ -29,7 +30,8 @@ func Load(args []string) (Config, error) {
 		}
 		return d
 	}
-	f.StringVar(&c.PriorityTrusted, "priority-trusted-proxies", "127.0.0.1/32,::1/128", "demo trusted immediate peers; empty trusts none")
+	f.StringVar(&c.DecisionMode,"decisions","","controlled decision providers: enforce or observe")
+ f.StringVar(&c.PriorityTrusted, "priority-trusted-proxies", "127.0.0.1/32,::1/128", "demo trusted immediate peers; empty trusts none")
 	f.BoolVar(&c.Priorities, "priorities", false, "enable example ordered tiers and trusted loopback propagation")
 	f.StringVar(&c.CatalogURL, "catalog-url", "", "optional downstream catalog base URL")
 	f.StringVar(&c.Listen, "listen", env("COMMERCE_LISTEN_ADDR", "127.0.0.1:9195"), "business HTTP address")
@@ -52,7 +54,8 @@ func Load(args []string) (Config, error) {
 	if err := f.Parse(args); err != nil {
 		return c, err
 	}
-	if c.Role != "orders" && c.Role != "catalog" && c.Role != "inventory" {
+	if c.DecisionMode != "" && c.DecisionMode != "enforce" && c.DecisionMode != "observe" { return c, fmt.Errorf("invalid decision mode") }
+ if c.Role != "orders" && c.Role != "catalog" && c.Role != "inventory" {
 		return c, fmt.Errorf("invalid role")
 	}
 	if c.DatabaseURL == "" {
