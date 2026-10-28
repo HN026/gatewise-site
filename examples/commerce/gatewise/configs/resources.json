@@ -1,0 +1,64 @@
+{
+  "listen_addr": "127.0.0.1:8080",
+  "services": {
+    "storage": {
+      "upstream_url": "http://127.0.0.1:9090",
+      "max_concurrent": 20,
+      "decisions": {
+        "mode": "observe",
+        "signals": [
+          {
+            "name": "memory",
+            "scope": {
+              "kind": "resource",
+              "key": "write"
+            },
+            "threshold": 0.8,
+            "max_age": "2s",
+            "on_unknown": "limit",
+            "unknown_limit": 2,
+            "pressure": {
+              "max_concurrent": 4
+            },
+            "source": {
+              "url": "${STORAGE_MEMORY_URL}",
+              "interval": "250ms",
+              "timeout": "100ms"
+            }
+          }
+        ],
+        "cost_metadata": {
+          "trusted_peers": [
+            "192.0.2.10/32"
+          ]
+        },
+        "budgets": [
+          {
+            "name": "writes",
+            "resource": "write",
+            "max_write_bytes": 8388608
+          },
+          {
+            "name": "keys",
+            "resource": "write",
+            "keys": {
+              "max_concurrent": 2,
+              "max_tracked": 1024,
+              "idle_ttl": "5m",
+              "missing": "reject",
+              "overflow": "shared"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "routes": [
+    {
+      "path_prefix": "/writes",
+      "service": "storage",
+      "resource": "write",
+      "priority": "critical"
+    }
+  ]
+}

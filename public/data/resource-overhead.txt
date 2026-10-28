@@ -1,0 +1,27 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/HN026/gatewise/tests/decision
+cpu: Apple M4 Pro
+BenchmarkMiddleware/disabled-12         	 2347413	       510.2 ns/op	    1257 B/op	      18 allocs/op
+BenchmarkMiddleware/disabled-12         	 2425474	       501.1 ns/op	    1257 B/op	      18 allocs/op
+BenchmarkMiddleware/disabled-12         	 2380122	       498.0 ns/op	    1257 B/op	      18 allocs/op
+BenchmarkMiddleware/observe-12          	 1000000	      1164 ns/op	    3673 B/op	      31 allocs/op
+BenchmarkMiddleware/observe-12          	 1000000	      1156 ns/op	    3673 B/op	      31 allocs/op
+BenchmarkMiddleware/observe-12          	 1000000	      1164 ns/op	    3673 B/op	      31 allocs/op
+BenchmarkMiddleware/enforce-12          	 1000000	      1173 ns/op	    3673 B/op	      31 allocs/op
+BenchmarkMiddleware/enforce-12          	 1000000	      1175 ns/op	    3673 B/op	      31 allocs/op
+BenchmarkMiddleware/enforce-12          	 1000000	      1167 ns/op	    3673 B/op	      31 allocs/op
+PASS
+ok  	github.com/HN026/gatewise/tests/decision	13.278s
+goos: darwin
+goarch: arm64
+pkg: github.com/HN026/gatewise/tests/regulator
+cpu: Apple M4 Pro
+BenchmarkResourceMiddleware/enforce-12         	  865965	      1367 ns/op	    4065 B/op	      39 allocs/op
+BenchmarkResourceMiddleware/enforce-12         	  890391	      1380 ns/op	    4065 B/op	      39 allocs/op
+BenchmarkResourceMiddleware/enforce-12         	  872227	      1372 ns/op	    4065 B/op	      39 allocs/op
+BenchmarkResourceMiddleware/observe-12         	  889442	      1387 ns/op	    4065 B/op	      39 allocs/op
+BenchmarkResourceMiddleware/observe-12         	  875408	      1388 ns/op	    4065 B/op	      39 allocs/op
+BenchmarkResourceMiddleware/observe-12         	  868510	      1380 ns/op	    4065 B/op	      39 allocs/op
+PASS
+ok  	github.com/HN026/gatewise/tests/regulator	9.169s

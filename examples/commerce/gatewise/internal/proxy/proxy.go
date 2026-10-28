@@ -31,6 +31,7 @@ func newUpstream(c config.Config, target *url.URL, logger *slog.Logger) (http.Ha
 		Rewrite: func(r *httputil.ProxyRequest) {
 			r.SetURL(target)
 			priority.Inject(r.Out)
+			middleware.InjectCost(r.Out)
 			// SetXForwarded builds fresh forwarding headers; incoming values are not trusted.
 			r.Out.Header.Del("Forwarded")
 			r.SetXForwarded()
@@ -60,7 +61,7 @@ func New(c config.Config, logger *slog.Logger) (http.Handler, func()) {
 	for name, service := range c.Services {
 		h, closeIdle := newUpstream(c, service.Upstream, logger.With("service", name))
 		guard, err := middleware.NewService(middleware.ServiceConfig{
-			Decisions: service.Decisions, Name: name, MaxConcurrent: service.MaxConcurrent, ReservedCritical: service.ReservedCritical, Logger: logger, Adaptive: service.Adaptive, Tenants: service.Tenants, Priorities: service.Priorities,
+			CostResolver: service.CostResolver, Decisions: service.Decisions, Name: name, MaxConcurrent: service.MaxConcurrent, ReservedCritical: service.ReservedCritical, Logger: logger, Adaptive: service.Adaptive, Tenants: service.Tenants, Priorities: service.Priorities,
 		})
 		if err != nil {
 			panic("proxy: invalid validated service configuration: " + err.Error())

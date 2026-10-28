@@ -9,13 +9,14 @@ import (
 )
 
 type collector struct {
-	decisionInfo, proposals, signalState, signalValue, signalThreshold, signalTime, signalAccepted, signalDropped, signalFailures *prometheus.Desc
-	sharingDemand, sharingShares, sharingPause, sharingActive, sharingAdmissions                                                  *prometheus.Desc
-	resolutions                                                                                                                   *prometheus.Desc
-	tenantLimit, tenantTracked, tenantTrackingLimit, tenantActive, tenantExpired                                                  *prometheus.Desc
-	controllerSamples, controllerRatio, controllerFailures, controllerTime, controllerDecision, controllerSaturated               *prometheus.Desc
-	service                                                                                                                       *middleware.Service
-	limit, minimum, maximum, reserved, active, info, admitted, rejected, completed, duration, adjustments                         *prometheus.Desc
+	budgetBytes, budgetLimit, budgetActive, budgetTracked, budgetTrackingLimit, budgetFallback, budgetExpired, budgetAttempts, budgetProposals, budgetRejected, budgetAdmitted *prometheus.Desc
+	decisionInfo, proposals, signalState, signalValue, signalThreshold, signalTime, signalAccepted, signalDropped, signalFailures                                              *prometheus.Desc
+	sharingDemand, sharingShares, sharingPause, sharingActive, sharingAdmissions                                                                                               *prometheus.Desc
+	resolutions                                                                                                                                                                *prometheus.Desc
+	tenantLimit, tenantTracked, tenantTrackingLimit, tenantActive, tenantExpired                                                                                               *prometheus.Desc
+	controllerSamples, controllerRatio, controllerFailures, controllerTime, controllerDecision, controllerSaturated                                                            *prometheus.Desc
+	service                                                                                                                                                                    *middleware.Service
+	limit, minimum, maximum, reserved, active, info, admitted, rejected, completed, duration, adjustments                                                                      *prometheus.Desc
 }
 
 // Register adds one service to registry. Service names must be unique within that
@@ -29,6 +30,17 @@ func Register(registry prometheus.Registerer, service *middleware.Service) error
 		return prometheus.NewDesc("gatewise_"+name, help, labels, prometheus.Labels{"service": serviceName})
 	}
 	c := &collector{service: service,
+		budgetBytes:         desc("resource_write_bytes_in_flight", "Reserved planned logical write bytes; includes short pre-admission reservations.", "budget"),
+		budgetLimit:         desc("resource_write_bytes_limit", "Configured concurrent planned logical write-byte budget.", "budget"),
+		budgetActive:        desc("resource_reservations_in_flight", "Active resource reservations; held until handler return.", "budget"),
+		budgetTracked:       desc("resource_keys_tracked", "Bounded retained key entries; no key labels.", "budget"),
+		budgetTrackingLimit: desc("resource_keys_tracking_limit", "Maximum retained key entries.", "budget"),
+		budgetFallback:      desc("resource_key_fallback_in_flight", "Fallback reservations by bounded bucket.", "budget", "bucket"),
+		budgetExpired:       desc("resource_keys_expired_total", "Idle key entries expired.", "budget"),
+		budgetAttempts:      desc("resource_attempts_total", "Matched resource-policy evaluations.", "budget"),
+		budgetProposals:     desc("resource_rejection_proposals_total", "Resource policy rejection proposals; observe mode still tracks actual occupancy.", "budget"),
+		budgetRejected:      desc("resource_rejections_total", "Evaluations blocked by combined resource rules or metadata validation.", "budget"),
+		budgetAdmitted:      desc("resource_admissions_total", "Resource reservations committed after all hard admission checks.", "budget"),
 		decisionInfo:        desc("decision_engine_info", "Configured decision mode.", "mode"),
 		proposals:           desc("signal_proposals_total", "Evaluated proposals; a limit proposal is not a counterfactual rejection.", "action"),
 		signalState:         desc("signal_state", "Current cached signal state; one hot.", "signal", "state"),
@@ -71,7 +83,7 @@ func Register(registry prometheus.Registerer, service *middleware.Service) error
 }
 
 func (c *collector) Describe(out chan<- *prometheus.Desc) {
-	for _, desc := range []*prometheus.Desc{c.decisionInfo, c.proposals, c.signalState, c.signalValue, c.signalThreshold, c.signalTime, c.signalAccepted, c.signalDropped, c.signalFailures, c.sharingDemand, c.sharingShares, c.sharingPause, c.sharingActive, c.sharingAdmissions, c.resolutions, c.limit, c.minimum, c.maximum, c.reserved, c.active, c.info, c.admitted, c.rejected, c.completed, c.duration, c.adjustments, c.controllerSamples, c.controllerRatio, c.controllerFailures, c.controllerTime, c.controllerDecision, c.controllerSaturated, c.tenantLimit, c.tenantTracked, c.tenantTrackingLimit, c.tenantActive, c.tenantExpired} {
+	for _, desc := range []*prometheus.Desc{c.budgetBytes, c.budgetLimit, c.budgetActive, c.budgetTracked, c.budgetTrackingLimit, c.budgetFallback, c.budgetExpired, c.budgetAttempts, c.budgetProposals, c.budgetRejected, c.budgetAdmitted, c.decisionInfo, c.proposals, c.signalState, c.signalValue, c.signalThreshold, c.signalTime, c.signalAccepted, c.signalDropped, c.signalFailures, c.sharingDemand, c.sharingShares, c.sharingPause, c.sharingActive, c.sharingAdmissions, c.resolutions, c.limit, c.minimum, c.maximum, c.reserved, c.active, c.info, c.admitted, c.rejected, c.completed, c.duration, c.adjustments, c.controllerSamples, c.controllerRatio, c.controllerFailures, c.controllerTime, c.controllerDecision, c.controllerSaturated, c.tenantLimit, c.tenantTracked, c.tenantTrackingLimit, c.tenantActive, c.tenantExpired} {
 		out <- desc
 	}
 }
@@ -86,6 +98,20 @@ func (c *collector) Collect(out chan<- prometheus.Metric) {
 	}
 	if s.Decisions.Enabled {
 		gauge(c.decisionInfo, 1, string(s.Decisions.Mode))
+		for _, b := range s.Decisions.Budgets {
+			gauge(c.budgetBytes, float64(b.ActiveWriteBytes), b.Name)
+			gauge(c.budgetLimit, float64(b.MaxWriteBytes), b.Name)
+			gauge(c.budgetActive, float64(b.Active), b.Name)
+			gauge(c.budgetTracked, float64(b.Tracked), b.Name)
+			gauge(c.budgetTrackingLimit, float64(b.TrackingLimit), b.Name)
+			gauge(c.budgetFallback, float64(b.MissingActive), b.Name, "missing")
+			gauge(c.budgetFallback, float64(b.OverflowActive), b.Name, "overflow")
+			counter(c.budgetExpired, b.Expired, b.Name)
+			counter(c.budgetAttempts, b.Attempts, b.Name)
+			counter(c.budgetProposals, b.WouldReject, b.Name)
+			counter(c.budgetRejected, b.Rejected, b.Name)
+			counter(c.budgetAdmitted, b.Admitted, b.Name)
+		}
 		for i, a := range []string{"allow", "limit", "reject"} {
 			counter(c.proposals, s.Decisions.Proposals[i], a)
 		}
@@ -187,6 +213,9 @@ func (c *collector) Collect(out chan<- prometheus.Metric) {
 			}
 		}
 		if s.Decisions.Enabled {
+			for i, r := range []string{"write_bytes_limit", "hot_key_limit", "resource_key_registry_full", "resource_cost_missing", "resource_key_missing", "resource_metadata_invalid", "resource_metadata_untrusted", "resource_accounting_exhausted"} {
+				counter(c.rejected, p.RejectedResources[i], priority, r)
+			}
 			for i, r := range []string{"signal_pressure", "signal_unavailable", "signal_concurrency_limit"} {
 				counter(c.rejected, p.RejectedSignals[i], priority, r)
 			}

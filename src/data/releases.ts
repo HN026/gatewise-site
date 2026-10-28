@@ -1,6 +1,63 @@
 // Newest published release first. Keep notes and downloads tied to its Git tag.
 export const releases = [
 {
+  "version": "v0.7.0",
+  "publishedAt": "2026-11-08T10:31:52Z",
+  "date": "8 November 2026",
+  "summary": "Measured memory/goroutine signals and atomic planned write-byte/hot-key protection in the shared decision engine.",
+  "requirements": "Library: Go 1.22+; commerce example: Go 1.25+",
+  "changes": [
+    "Optional regulator.Memory and Goroutines providers measure backend runtime pressure. Memory uses explicit Go budgets/finite GOMEMLIMIT and visible Linux cgroup limits; proxy mode reads the protected backend, not its own runtime.",
+    "Decision-engine budgets combine planned concurrent logical write bytes with per-key concurrency. Keys are hashed, tracking/expiry/fallback are bounded, and all matching reservations commit or reject together.",
+    "Trusted CostResolver and reserved proxy metadata, observe/enforce accounting, rollback after later rejection and handler-lifetime release. Cancellation alone does not release still-running work.",
+    "Resource explanations, bounded metrics/dashboard panels, offline configuration checks and detailed middleware/proxy installation examples.",
+    "Real allocations, fanout, persisted PostgreSQL writes and hot-key contention: 87,840 requests, 36 runs, 396 passing checks. The exact demo passed 1,506 Postman assertions across 37 profiles, with a separate real 256MiB Linux cgroup-v2 check."
+  ],
+  "upgrade": "Opt-in: existing consumers can leave resource providers/budgets unset. Budgets require a trusted CostResolver (proxy: cost_metadata.trusted_peers); derive logical cost and keys from the validated operation plan, not body length or untrusted headers. X-Gatewise-Cost is reserved and unresolved values are stripped by the proxy. Start in observe mode. Memory/goroutine signals are sampled and can overshoot; write/key reservations are atomic. Raw keys never become diagnostics/labels. Limits are per engine/process, and work outliving a handler needs separate accounting.",
+  "downloads": [
+    {
+      "name": "Source ZIP",
+      "path": "archive/refs/tags/v0.7.0.zip"
+    },
+    {
+      "name": "Source tar.gz",
+      "path": "archive/refs/tags/v0.7.0.tar.gz"
+    },
+    {
+      "name": "Demo example",
+      "path": "releases/download/v0.7.0/gatewise-demo.zip"
+    },
+    {
+      "name": "Demo SHA-256",
+      "path": "releases/download/v0.7.0/gatewise-demo.sha256"
+    },
+    {
+      "name": "Postman bundle",
+      "path": "releases/download/v0.7.0/postman.zip"
+    },
+    {
+      "name": "Resource report \u00b7 gzip",
+      "path": "releases/download/v0.7.0/resource-results.json.gz"
+    },
+    {
+      "name": "Chart calculations",
+      "path": "releases/download/v0.7.0/resource-chart-provenance.json"
+    },
+    {
+      "name": "Measured overhead",
+      "path": "releases/download/v0.7.0/resource-overhead.txt"
+    },
+    {
+      "name": "Linux measurement check",
+      "path": "releases/download/v0.7.0/resource-platform-validation.json"
+    },
+    {
+      "name": "Postman results",
+      "path": "releases/download/v0.7.0/commerce-contract-results.json"
+    }
+  ]
+},
+{
   "version": "v0.6.0",
   "publishedAt": "2026-11-08T09:04:32Z",
   "date": "8 November 2026",

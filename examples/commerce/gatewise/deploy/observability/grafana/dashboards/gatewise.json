@@ -1455,6 +1455,234 @@
           "placement": "bottom"
         }
       }
+    },
+    {
+      "id": 31,
+      "title": "Planned write bytes in flight",
+      "type": "timeseries",
+      "description": "Optional resource budgets. Empty when disabled. Observe proposals do not change hard service limits.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 136
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "gatewise_resource_write_bytes_in_flight{service=~\"$service\"}",
+          "legendFormat": "{{service}} / {{budget}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 32,
+      "title": "Planned write-byte budget",
+      "type": "timeseries",
+      "description": "Optional resource budgets. Empty when disabled. Observe proposals do not change hard service limits.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 136
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "gatewise_resource_write_bytes_limit{service=~\"$service\"}",
+          "legendFormat": "{{service}} / {{budget}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 33,
+      "title": "Retained resource keys",
+      "type": "timeseries",
+      "description": "Optional resource budgets. Empty when disabled. Observe proposals do not change hard service limits.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 144
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "gatewise_resource_keys_tracked{service=~\"$service\"}",
+          "legendFormat": "{{service}} / {{budget}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 34,
+      "title": "Resource reservations",
+      "type": "timeseries",
+      "description": "Optional resource budgets. Empty when disabled. Observe proposals do not change hard service limits.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 144
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "gatewise_resource_reservations_in_flight{service=~\"$service\"}",
+          "legendFormat": "{{service}} / {{budget}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 35,
+      "title": "Resource rejection proposals / sec",
+      "type": "timeseries",
+      "description": "Optional resource budgets. Empty when disabled. Observe proposals do not change hard service limits.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 152
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(gatewise_resource_rejection_proposals_total{service=~\"$service\"}[$__rate_interval])",
+          "legendFormat": "{{service}} / {{budget}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 36,
+      "title": "Resource admissions / sec",
+      "type": "timeseries",
+      "description": "Optional resource budgets. Empty when disabled. Observe proposals do not change hard service limits.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 152
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(gatewise_resource_admissions_total{service=~\"$service\"}[$__rate_interval])",
+          "legendFormat": "{{service}} / {{budget}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
     }
   ],
   "templating": {

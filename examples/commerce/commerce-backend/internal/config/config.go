@@ -10,6 +10,7 @@ import (
 
 type Config struct {
  DecisionMode string
+ ResourceMode string
 	SharingCeiling                                                  int
 	PriorityTrusted                                                 string
 	Priorities                                                      bool
@@ -30,7 +31,8 @@ func Load(args []string) (Config, error) {
 		}
 		return d
 	}
-	f.StringVar(&c.DecisionMode,"decisions","","controlled decision providers: enforce or observe")
+	f.StringVar(&c.ResourceMode,"resources","","real resource regulators: disabled, enforce or observe")
+ f.StringVar(&c.DecisionMode,"decisions","","controlled decision providers: enforce or observe")
  f.StringVar(&c.PriorityTrusted, "priority-trusted-proxies", "127.0.0.1/32,::1/128", "demo trusted immediate peers; empty trusts none")
 	f.BoolVar(&c.Priorities, "priorities", false, "enable example ordered tiers and trusted loopback propagation")
 	f.StringVar(&c.CatalogURL, "catalog-url", "", "optional downstream catalog base URL")
@@ -54,7 +56,9 @@ func Load(args []string) (Config, error) {
 	if err := f.Parse(args); err != nil {
 		return c, err
 	}
-	if c.DecisionMode != "" && c.DecisionMode != "enforce" && c.DecisionMode != "observe" { return c, fmt.Errorf("invalid decision mode") }
+	if c.ResourceMode!="" && c.ResourceMode!="disabled" && c.ResourceMode!="enforce" && c.ResourceMode!="observe" {return c,fmt.Errorf("invalid resource mode")}
+ if c.ResourceMode!="" && c.DecisionMode!="" {return c,fmt.Errorf("run resource and controlled-signal scenarios separately")}
+ if c.DecisionMode != "" && c.DecisionMode != "enforce" && c.DecisionMode != "observe" { return c, fmt.Errorf("invalid decision mode") }
  if c.Role != "orders" && c.Role != "catalog" && c.Role != "inventory" {
 		return c, fmt.Errorf("invalid role")
 	}

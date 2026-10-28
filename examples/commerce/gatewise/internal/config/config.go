@@ -22,6 +22,7 @@ import (
 const DefaultMaxConcurrent = 100
 
 type Service struct {
+	CostResolver     middleware.CostResolver
 	Decisions        *decision.Engine
 	Collectors       []decision.Collector
 	Upstream         *url.URL
@@ -191,11 +192,15 @@ func LoadWithEnv(filename, envFile string) (Config, error) {
 		if err != nil {
 			return Config{}, err
 		}
+		costResolver, err := parseCost(service.Decisions)
+		if err != nil {
+			return Config{}, err
+		}
 		de, collectors, err := parseDecisions(name, service.Decisions, lookup, t != nil)
 		if err != nil {
 			return Config{}, err
 		}
-		c.Services[name] = Service{Decisions: de, Collectors: collectors, Upstream: target, MaxConcurrent: limit, ReservedCritical: reserved, Adaptive: a, Tenants: t, Priorities: pc}
+		c.Services[name] = Service{CostResolver: costResolver, Decisions: de, Collectors: collectors, Upstream: target, MaxConcurrent: limit, ReservedCritical: reserved, Adaptive: a, Tenants: t, Priorities: pc}
 	}
 	prefixes := map[string]bool{}
 	for _, r := range raw.Routes {

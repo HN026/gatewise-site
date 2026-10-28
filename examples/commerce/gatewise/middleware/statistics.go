@@ -33,6 +33,7 @@ type ResolutionStatistics struct {
 }
 
 type PriorityStatistics struct {
+	RejectedResources                                                                                             [8]uint64
 	RejectedSignals                                                                                               [3]uint64 // pressure, unavailable, concurrency limit
 	RejectedTenantShare                                                                                           uint64
 	RejectedTier, RejectedCohort, RejectedPriorityInvalid, RejectedPriorityUntrusted                              uint64
@@ -85,6 +86,22 @@ func (s *statistics) admission(p Priority, decision admission.Decision) {
 	defer s.mu.Unlock()
 	v := &s.priorities[s.indices[p]]
 	switch decision {
+	case admission.WriteBytesLimit:
+		v.RejectedResources[0]++
+	case admission.HotKeyLimit:
+		v.RejectedResources[1]++
+	case admission.ResourceKeyRegistryFull:
+		v.RejectedResources[2]++
+	case admission.ResourceCostMissing:
+		v.RejectedResources[3]++
+	case admission.ResourceKeyMissing:
+		v.RejectedResources[4]++
+	case admission.ResourceMetadataInvalid:
+		v.RejectedResources[5]++
+	case admission.ResourceMetadataUntrusted:
+		v.RejectedResources[6]++
+	case admission.ResourceAccountingExhausted:
+		v.RejectedResources[7]++
 	case admission.SignalPressure:
 		v.RejectedSignals[0]++
 	case admission.SignalUnavailable:

@@ -29,7 +29,8 @@ const (
 
 type ServiceConfig struct {
 	// Decisions is optional. The caller owns observation collection and lifecycle.
-	Decisions *decisionpkg.Engine
+	Decisions    *decisionpkg.Engine
+	CostResolver CostResolver
 	// Name identifies this service in rejection responses and logs; default "service".
 	Name string
 	// MaxConcurrent is required and must be positive.
@@ -50,6 +51,7 @@ type ServiceConfig struct {
 // capacity; construct separate instances for independent service budgets.
 type Service struct {
 	decisions      *decisionpkg.Engine
+	costResolver   CostResolver
 	name           string
 	limiter        *admission.Limiter
 	logger         *slog.Logger
@@ -79,6 +81,13 @@ func NewService(c ServiceConfig) (*Service, error) {
 		return nil, err
 	}
 	s.decisions = c.Decisions
+	s.costResolver = c.CostResolver
+	if c.Decisions != nil && c.Decisions.HasBudgets() && c.CostResolver == nil {
+		return nil, fmt.Errorf("gatewise: resource budgets require a trusted CostResolver")
+	}
+	if c.CostResolver != nil && c.Decisions == nil {
+		return nil, fmt.Errorf("gatewise: cost resolver requires a decision engine")
+	}
 	if s.decisions != nil && s.decisions.HasActorRules() && s.tenantResolver == nil {
 		return nil, fmt.Errorf("gatewise: actor rules require a trusted tenant resolver")
 	}
@@ -223,6 +232,41 @@ func (s *Service) Middleware(priority Priority, next http.Handler, options ...Ha
 			}
 		}
 		trace.Mark("signals", "")
+		stage = "resources"
+		var resourceLease *decisionpkg.Lease
+		if s.decisions != nil && s.decisions.NeedsCost(o.resource) {
+			var cost decisionpkg.Cost
+			if s.costResolver != nil {
+				var err error
+				cost, err = s.costResolver(r)
+				if r.Context().Err() != nil {
+					return
+				}
+				if err != nil {
+					status := 400
+					reason := admission.ResourceMetadataInvalid
+					if errors.Is(err, ErrUntrustedCostSource) {
+						status = 403
+						reason = admission.ResourceMetadataUntrusted
+					}
+					fail(reason, status)
+					return
+				}
+			}
+			var reason string
+			resourceLease, trace.Budgets, reason = s.decisions.AcquireResources(decisionpkg.Target{Resource: o.resource, Actor: id}, cost, time.Now())
+			if reason != "" {
+				status := 503
+				if reason == "resource_metadata_invalid" || reason == "resource_cost_missing" || reason == "resource_key_missing" {
+					status = 400
+				}
+				fail(admission.Decision(reason), status)
+				return
+			}
+			defer resourceLease.Release()
+			r = r.WithContext(resolvedCost(r.Context(), cost))
+		}
+		trace.Mark("resources", "")
 		stage = "tenant"
 		if s.tenants != nil {
 			capacity := 0
@@ -269,6 +313,9 @@ func (s *Service) Middleware(priority Priority, next http.Handler, options ...Ha
 				w.Header().Set("X-Gatewise-Tenant-Share", strconv.Itoa(tenantLease.Share()))
 				w.Header().Set("X-Gatewise-Tenant-Ceiling", strconv.Itoa(tenantLease.Ceiling()))
 			}
+		}
+		if resourceLease != nil {
+			resourceLease.Retain()
 		}
 		trace.Mark("capacity", "")
 		trace.Allowed = true

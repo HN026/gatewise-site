@@ -1,0 +1,591 @@
+{
+  "info": {
+    "name": "Gatewise real resource regulators",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Real Go memory/goroutine measurements and PostgreSQL logical writes/key contention. Run run.py --resources enforce/observe/disabled --verify. Loopback planner metadata is trusted only for this isolated example."
+  },
+  "item": [
+    {
+      "name": "Measure real memory",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_admin}}/resource/signals/memory",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"measured observation\",()=>{pm.response.to.have.status(200);const o=pm.response.json();pm.expect(o.state).to.eql(\"measured\");pm.expect(o.value).to.be.at.least(0);pm.expect(Date.now()-Date.parse(o.observed_at)).to.be.below(3000);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Measure real goroutines",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_admin}}/resource/signals/goroutines",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"measured observation\",()=>{pm.response.to.have.status(200);const o=pm.response.json();pm.expect(o.state).to.eql(\"measured\");pm.expect(o.value).to.be.at.least(0);pm.expect(Date.now()-Date.parse(o.observed_at)).to.be.below(3000);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Healthy resource configuration",
+      "request": {
+        "method": "PUT",
+        "url": "{{catalog_admin}}/resource/control",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"hold_ms\": 20, \"collect\": true, \"reset_peaks\": true}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"control accepted\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Healthy allocation avoids false rejection",
+      "request": {
+        "method": "POST",
+        "url": "{{catalog_url}}/catalog/resource/allocation",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"bytes\": 65536}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"low-cost work succeeds\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Healthy fanout avoids false rejection",
+      "request": {
+        "method": "POST",
+        "url": "{{catalog_url}}/catalog/resource/fanout",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"workers\": 1}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"low-cost work succeeds\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Healthy write",
+      "request": {
+        "method": "POST",
+        "url": "{{catalog_url}}/catalog/resource/write",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Gatewise-Cost",
+            "value": "{\"write_bytes\": 1024, \"key\": \"healthy-contract\"}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"bytes\": 1024, \"key\": \"healthy-contract\", \"workers\": 0}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"healthy work succeeds\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"actual planned bytes written\",()=>pm.expect(pm.response.json().logical_write_bytes).to.eql(1024));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Healthy key_write",
+      "request": {
+        "method": "POST",
+        "url": "{{catalog_url}}/catalog/resource/key_write",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Gatewise-Cost",
+            "value": "{\"write_bytes\": 1024, \"key\": \"healthy-contract\"}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"bytes\": 1024, \"key\": \"healthy-contract\", \"workers\": 0}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"healthy work succeeds\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"actual planned bytes written\",()=>pm.expect(pm.response.json().logical_write_bytes).to.eql(1024));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Key contention test",
+      "request": {
+        "method": "PUT",
+        "url": "{{catalog_admin}}/resource/control",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"hold_ms\": 200, \"collect\": true, \"reset_peaks\": true}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"control accepted\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Run concurrent hot-key writes",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_url}}/healthz",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const mode=pm.environment.get(\"resource_mode\");const enforcing=mode===\"enforce\";\nconst send=(i)=>new Promise((resolve,reject)=>pm.sendRequest({url:pm.environment.get(\"catalog_url\")+\"/catalog/resource/key_write\",method:\"POST\",header:{\"Content-Type\":\"application/json\",\"X-Gatewise-Cost\":JSON.stringify({write_bytes:1024,key:\"one-hot-contract\"})},body:{mode:\"raw\",raw:JSON.stringify({bytes:1024,key:\"one-hot-contract\",workers:0})}},(e,r)=>e?reject(e):resolve(r)));\nPromise.all(Array.from({length:4},(_,i)=>send(i))).then(responses=>{\n pm.test(\"at least one real operation completes\",()=>pm.expect(responses.some(r=>r.code===200)).to.be.true);\n pm.test(\"only expected statuses\",()=>pm.expect(responses.every(r=>r.code===200||enforcing&&r.code===503)).to.be.true);\n pm.test(\"mode controls resource shedding\",()=>pm.expect(responses.some(r=>r.code===503)).to.eql(enforcing));\n if(enforcing)pm.test(\"resource reason explained\",()=>responses.filter(r=>r.code===503).forEach(r=>{pm.expect(r.json().reason).to.eql(\"hot_key_limit\");pm.expect(r.json().decision.Stage).to.eql(\"resources\");}));\n}).catch(e=>pm.test(\"parallel operations complete\",()=>{throw e;}));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Inspect hot-key bound and cleanup",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_admin}}/resource/state",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const s=pm.response.json();pm.test(\"write work released\",()=>{pm.expect(s.write_bytes_active).to.eql(0);pm.expect(s.active_keys).to.eql(0);});",
+              "if(pm.environment.get(\"resource_mode\")===\"enforce\")pm.test(\"one concurrent operation per key\",()=>pm.expect(s.key_peak_concurrent).to.eql(1));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Concurrent byte test",
+      "request": {
+        "method": "PUT",
+        "url": "{{catalog_admin}}/resource/control",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"hold_ms\": 150, \"collect\": true, \"reset_peaks\": true}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"control accepted\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Run concurrent large writes",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_url}}/healthz",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const mode=pm.environment.get(\"resource_mode\");const enforcing=mode===\"enforce\";\nconst send=(i)=>new Promise((resolve,reject)=>pm.sendRequest({url:pm.environment.get(\"catalog_url\")+\"/catalog/resource/write\",method:\"POST\",header:{\"Content-Type\":\"application/json\",\"X-Gatewise-Cost\":JSON.stringify({write_bytes:131072,key:\"byte-contract-\"+i})},body:{mode:\"raw\",raw:JSON.stringify({bytes:131072,key:\"byte-contract-\"+i,workers:0})}},(e,r)=>e?reject(e):resolve(r)));\nPromise.all(Array.from({length:4},(_,i)=>send(i))).then(responses=>{\n pm.test(\"at least one real operation completes\",()=>pm.expect(responses.some(r=>r.code===200)).to.be.true);\n pm.test(\"only expected statuses\",()=>pm.expect(responses.every(r=>r.code===200||enforcing&&r.code===503)).to.be.true);\n pm.test(\"mode controls resource shedding\",()=>pm.expect(responses.some(r=>r.code===503)).to.eql(enforcing));\n if(enforcing)pm.test(\"resource reason explained\",()=>responses.filter(r=>r.code===503).forEach(r=>{pm.expect(r.json().reason).to.eql(\"write_bytes_limit\");pm.expect(r.json().decision.Stage).to.eql(\"resources\");}));\n}).catch(e=>pm.test(\"parallel operations complete\",()=>{throw e;}));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Inspect write-byte bound and cleanup",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_admin}}/resource/state",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const s=pm.response.json();pm.test(\"writes released\",()=>pm.expect(s.write_bytes_active).to.eql(0));",
+              "if(pm.environment.get(\"resource_mode\")===\"enforce\")pm.test(\"actual writes respect byte budget\",()=>pm.expect(s.write_bytes_peak).to.be.at.most(262144));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Read persisted logical bytes from PostgreSQL",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_admin}}/resource/persisted"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"database readback succeeds\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"large value really persisted\",()=>{const s=pm.response.json();pm.expect(s.rows).to.be.at.least(1);pm.expect(s.max_logical_bytes).to.eql(131072);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Unrelated ordinary SQL work remains available",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_url}}/catalog/products?limit=5",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"ordinary request succeeds\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Validated plan owns the actual write cost",
+      "request": {
+        "method": "POST",
+        "url": "{{catalog_url}}/catalog/resource/write",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Gatewise-Cost",
+            "value": "{\"write_bytes\": 1, \"key\": \"mismatch\"}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"bytes\": 2048, \"key\": \"mismatch\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const strippingProxy=pm.environment.get(\"resource_mode\")===\"disabled\" && pm.environment.get(\"catalog_url\")!==pm.environment.get(\"catalog_backend\");pm.test(\"unresolved metadata cannot change the plan\",()=>{pm.response.to.have.status(strippingProxy?200:400);if(strippingProxy)pm.expect(pm.response.json().logical_write_bytes).to.eql(2048);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Metrics expose bounded resource accounting",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_url}}/metrics",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
+              "if(pm.environment.get(\"resource_mode\")!==\"disabled\")pm.test(\"resource diagnostics\",()=>{const t=pm.response.text();pm.expect(t).includes(\"gatewise_resource_write_bytes_in_flight\");pm.expect(t).includes(\"gatewise_resource_keys_tracked\");pm.expect(t).not.includes(\"one-hot-contract\");});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Restore healthy operation",
+      "request": {
+        "method": "PUT",
+        "url": "{{catalog_admin}}/resource/control",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"hold_ms\": 20, \"collect\": true, \"reset_peaks\": true}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"control accepted\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Measure healthy recovery",
+      "request": {
+        "method": "POST",
+        "url": "{{catalog_url}}/catalog/resource/write",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Gatewise-Cost",
+            "value": "{\"write_bytes\": 1024, \"key\": \"recovered\"}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"bytes\": 1024, \"key\": \"recovered\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"recovery succeeds\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Resource controls are not public",
+      "request": {
+        "method": "PUT",
+        "url": "{{catalog_url}}/resource/control",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"hold_ms\": 0}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"public control unavailable\",()=>pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
