@@ -9,8 +9,9 @@ import (
 )
 
 type Config struct {
- DecisionMode string
- ResourceMode string
+	OperationsMode, ReplicaURL                                      string
+	DecisionMode                                                    string
+	ResourceMode                                                    string
 	SharingCeiling                                                  int
 	PriorityTrusted                                                 string
 	Priorities                                                      bool
@@ -31,9 +32,11 @@ func Load(args []string) (Config, error) {
 		}
 		return d
 	}
-	f.StringVar(&c.ResourceMode,"resources","","real resource regulators: disabled, enforce or observe")
- f.StringVar(&c.DecisionMode,"decisions","","controlled decision providers: enforce or observe")
- f.StringVar(&c.PriorityTrusted, "priority-trusted-proxies", "127.0.0.1/32,::1/128", "demo trusted immediate peers; empty trusts none")
+	f.StringVar(&c.OperationsMode, "operations", "", "operation demo: disabled, fixed or pool")
+	f.StringVar(&c.ReplicaURL, "replica-url", "", "physical standby database URL")
+	f.StringVar(&c.ResourceMode, "resources", "", "real resource regulators: disabled, enforce or observe")
+	f.StringVar(&c.DecisionMode, "decisions", "", "controlled decision providers: enforce or observe")
+	f.StringVar(&c.PriorityTrusted, "priority-trusted-proxies", "127.0.0.1/32,::1/128", "demo trusted immediate peers; empty trusts none")
 	f.BoolVar(&c.Priorities, "priorities", false, "enable example ordered tiers and trusted loopback propagation")
 	f.StringVar(&c.CatalogURL, "catalog-url", "", "optional downstream catalog base URL")
 	f.StringVar(&c.Listen, "listen", env("COMMERCE_LISTEN_ADDR", "127.0.0.1:9195"), "business HTTP address")
@@ -56,11 +59,20 @@ func Load(args []string) (Config, error) {
 	if err := f.Parse(args); err != nil {
 		return c, err
 	}
-	if c.ResourceMode!="" && c.ResourceMode!="disabled" && c.ResourceMode!="enforce" && c.ResourceMode!="observe" {return c,fmt.Errorf("invalid resource mode")}
- if c.ResourceMode!="" && c.DecisionMode!="" {return c,fmt.Errorf("run resource and controlled-signal scenarios separately")}
- if c.DecisionMode != "" && c.DecisionMode != "enforce" && c.DecisionMode != "observe" { return c, fmt.Errorf("invalid decision mode") }
- if c.Role != "orders" && c.Role != "catalog" && c.Role != "inventory" {
+	if c.ResourceMode != "" && c.ResourceMode != "disabled" && c.ResourceMode != "enforce" && c.ResourceMode != "observe" {
+		return c, fmt.Errorf("invalid resource mode")
+	}
+	if c.ResourceMode != "" && c.DecisionMode != "" {
+		return c, fmt.Errorf("run resource and controlled-signal scenarios separately")
+	}
+	if c.DecisionMode != "" && c.DecisionMode != "enforce" && c.DecisionMode != "observe" {
+		return c, fmt.Errorf("invalid decision mode")
+	}
+	if c.Role != "orders" && c.Role != "catalog" && c.Role != "inventory" {
 		return c, fmt.Errorf("invalid role")
+	}
+	if c.OperationsMode != "" && (c.Role != "orders" || c.ReplicaURL == "" || c.OperationsMode != "disabled" && c.OperationsMode != "fixed" && c.OperationsMode != "pool") {
+		return c, fmt.Errorf("operations require orders role, replica URL and disabled/fixed/pool mode")
 	}
 	if c.DatabaseURL == "" {
 		return c, fmt.Errorf("DATABASE_URL is required")

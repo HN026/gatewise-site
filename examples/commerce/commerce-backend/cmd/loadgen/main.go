@@ -22,6 +22,7 @@ type TenantWeight struct {
 	Weight int    `json:"weight"`
 }
 type Config struct {
+ OperationWork bool `json:"operation_work"`
 	ResourceWork  string            `json:"resource_work"`
 	PriorityFlows bool              `json:"priority_flows"`
 	Tenants       []TenantWeight    `json:"tenants"`
@@ -269,6 +270,7 @@ func main() {
 					body = nil
 				}
 			}
+			if c.OperationWork {role="orders";priority="critical";method="POST";path="/orders/operations/transaction";body=[]byte("{}")}
 			req, e := http.NewRequest(method, c.URLs[role]+path, bytes.NewReader(body))
 			if e != nil {
 				panic(e)

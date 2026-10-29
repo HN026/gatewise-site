@@ -1,6 +1,55 @@
 // Newest published release first. Keep notes and downloads tied to its Git tag.
 export const releases = [
 {
+  "version": "v0.8.0",
+  "publishedAt": "2026-11-08T11:28:32Z",
+  "date": "8 November 2026",
+  "summary": "One admission engine for HTTP, worker jobs and SQL lifetimes, with real pool and physical-standby signals.",
+  "requirements": "Library: Go 1.22+; commerce example: Go 1.25+",
+  "changes": [
+    "Transport-neutral operation.Engine with trusted priority/tenant/resource metadata, Begin/Do, exact-once completion, context propagation and explicit same-engine nesting rules. HTTP middleware and proxy use this shared core.",
+    "Driver-independent sqlguard statements, streamed rows and transaction ownership. InTx commits on success and rolls back on error/panic; cancellation retains permits through actual cleanup.",
+    "SQLPool utilization and primary-side PostgreSQL physical-standby observation with WAL byte backlog, heartbeat freshness and explicit unknown-data handling.",
+    "Bounded work-kind/outcome/duration metrics, updated dashboards, technical installation/reference and an independent worker/storage/standby demo with four HTTP application processes maximum.",
+    "28,080 requests in 36 contention runs, four physical-standby profiles and 528 passing checks. Exact downloadable demo: 1,794 Postman assertions across 49 profiles."
+  ],
+  "upgrade": "Existing HTTP middleware/proxy consumers retain their entry points; operation/SQL integration is opt-in. Use separate engines for HTTP, worker and database capacity. Pass Permit.Context/tx.Context, use transaction methods inside InTx and always close rows. Configure driver/network timeouts for transaction control. Sampling does not preempt work, and driver cleanup does not establish engine-native database enforcement or server-side termination after ambiguous failures. Do not sum layered work metrics as end-to-end throughput. Limits remain per engine/process.",
+  "downloads": [
+    {
+      "name": "Source ZIP",
+      "path": "archive/refs/tags/v0.8.0.zip"
+    },
+    {
+      "name": "Source tar.gz",
+      "path": "archive/refs/tags/v0.8.0.tar.gz"
+    },
+    {
+      "name": "Demo example",
+      "path": "releases/download/v0.8.0/gatewise-demo.zip"
+    },
+    {
+      "name": "Demo SHA-256",
+      "path": "releases/download/v0.8.0/gatewise-demo.sha256"
+    },
+    {
+      "name": "Postman bundle",
+      "path": "releases/download/v0.8.0/postman.zip"
+    },
+    {
+      "name": "Operation report \u00b7 gzip",
+      "path": "releases/download/v0.8.0/operation-results.json.gz"
+    },
+    {
+      "name": "Chart calculations",
+      "path": "releases/download/v0.8.0/operation-chart-provenance.json"
+    },
+    {
+      "name": "Postman results",
+      "path": "releases/download/v0.8.0/commerce-contract-results.json"
+    }
+  ]
+},
+{
   "version": "v0.7.0",
   "publishedAt": "2026-11-08T10:31:52Z",
   "date": "8 November 2026",

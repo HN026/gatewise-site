@@ -73,6 +73,7 @@ type Evaluation struct {
 }
 type Stage struct{ Name, State, Reason string }
 type Result struct {
+	Kind                              string
 	Allowed                           bool
 	Priority, Resource, Reason, Stage string
 	Evaluation                        Evaluation

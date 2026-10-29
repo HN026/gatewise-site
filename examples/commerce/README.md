@@ -97,3 +97,17 @@ Run `python3 run.py --profile proxy-fixed --resources enforce --verify` (or choo
 `python3 resource_benchmark.py --output results/resource-results.json` compares all three policies in fixed/adaptive middleware and proxy modes, three repetitions. It allocates 8MiB/request, creates 32 waiting child goroutines, persists 128KiB values, and contends on a hot row while cold keys continue. All routes are critical; 20% of traffic is unrelated probe work. Memory uses a 128MiB Go-managed budget at ratio .65; goroutine threshold is 180; both sample every 50ms and propose cap 2. Byte budget is 256KiB, per-key concurrency 1, registry 32 and idle TTL 2s. These are test values, not defaults or production guidance.
 
 The runner collects unused runtime pages explicitly between phases. This is fixture cleanup, not an automatic recovery-time guarantee. Runtime pressure can overshoot or oscillate; byte/key reservations are atomic and held until handler completion. Waiting goroutines demonstrate count pressure, not CPU overload. Read probe p95, rejection/error rates, pressure-work outcomes and actual resource use together. All temporary database containers/volumes are removed on exit.
+
+## Operation and physical-standby example
+
+```sh
+python3 run.py --profile middleware-fixed --operations pool --verify
+python3 run.py --profile proxy-adaptive --operations pool
+python3 operation_benchmark.py --output /tmp/operation-results.json
+```
+
+`--operations` accepts disabled/fixed/pool. Disabled bypasses public primary/follower SQL admission, fixed adds a four-operation budget with one critical reservation, and pool also samples actual pool utilization to restrict background jobs. All modes keep the six-worker executor and bounded queue of 16. The administrative stream probe always uses sqlguard. Import `postman/Operations.postman_collection.json` with the printed environment. The collection checks real transactions, standby reads, stream lifetime, pool exhaustion/deadline cleanup, worker execution and recovery.
+
+The launcher adds a disposable physical standby, not an HTTP application. Its named replication connection uses demo-only credentials. The benchmark pauses real WAL replay and generates writes to create a backlog, then resumes; it also stops/restarts the standby and distinguishes unknown data from pressure. A four-second idle check verifies that an idle caught-up standby remains healthy. All fixtures are uniquely named and removed at shutdown. This is a local fault experiment, not a production database topology or durable job broker.
+
+HTTP, worker and SQL engines have independent budgets. SQL permits span connection acquisition through statement completion, rows Close/terminal iteration or transaction Commit/Rollback. Cancellation alone never frees active work; transaction control waits for driver cleanup/timeouts. Use transaction methods and tx.Context inside InTx, always close rows, and do not reuse the same active engine recursively. Samples use InUse/MaxOpen and WAL byte distance plus heartbeat freshness; no fake lag values. Driver completion is not proof of server-side termination after ambiguous network failure. Default benchmark repeats four HTTP deployments and three SQL policies three times; p95 is successful latency, paired with rejections, deadline responses, worker outcomes and pool waiting.

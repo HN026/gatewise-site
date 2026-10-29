@@ -46,6 +46,40 @@ class Stack:
                 return
             except subprocess.SubprocessError:time.sleep(.2)
         raise RuntimeError('PostgreSQL did not become ready')
+    def start_standby(self):
+        if getattr(self,'standby_created',False):return
+        self.network=self.name+'-replication';self.standby=self.name+'-standby';self.standby_volume=self.standby+'-data';self.replica_port=port()
+        self.command('network','create',self.network);self.network_created=True
+        self.command('network','connect','--alias','primary',self.network,self.name)
+        self.sql("CREATE ROLE gatewise_replicator WITH REPLICATION LOGIN PASSWORD 'gatewise-local'")
+        self.sql("ALTER SYSTEM SET wal_keep_size='64MB'")
+        self.command('exec',self.name,'sh','-c',"echo 'host replication gatewise_replicator all scram-sha-256' >> /var/lib/postgresql/18/docker/pg_hba.conf")
+        self.sql('SELECT pg_reload_conf()')
+        self.command('volume','create',self.standby_volume);self.standby_volume_created=True
+        self.command('run','--rm','-v',self.standby_volume+':/var/lib/postgresql',self.image,'sh','-c','mkdir -p /var/lib/postgresql/18/docker && chown -R postgres:postgres /var/lib/postgresql')
+        self.command('run','--rm','--user','postgres','--network',self.network,'-v',self.standby_volume+':/var/lib/postgresql',self.image,'pg_basebackup','-D','/var/lib/postgresql/18/docker','-R','-X','stream','-d','host=primary user=gatewise_replicator password=gatewise-local application_name=gatewise_standby',timeout=90)
+        self.command('run','-d','--name',self.standby,'--network',self.network,'-p',f'127.0.0.1:{self.replica_port}:5432','-e','PGDATA=/var/lib/postgresql/18/docker','-v',self.standby_volume+':/var/lib/postgresql',self.image,'postgres','-c','hot_standby=on','-c','wal_receiver_status_interval=1s')
+        self.standby_created=True;self.wait_standby()
+    def standby_sql(self,text):
+        return self.command('exec',self.standby,'psql','-U','gatewise','-d','gatewise','-v','ON_ERROR_STOP=1','-Atc',text)
+    def wait_standby(self):
+        until=time.monotonic()+30
+        while time.monotonic()<until:
+            try:
+                if self.standby_sql('SELECT pg_is_in_recovery()')=='t' and self.sql("SELECT count(*) FROM pg_stat_replication WHERE application_name='gatewise_standby' AND state='streaming'")=='1':return
+            except subprocess.SubprocessError:pass
+            time.sleep(.1)
+        raise RuntimeError('Physical standby not ready')
+    def pause_replay(self):
+        self.standby_sql('SELECT pg_wal_replay_pause()')
+        until=time.monotonic()+5
+        while time.monotonic()<until:
+            if self.standby_sql('SELECT pg_get_wal_replay_pause_state()')=='paused':return
+            time.sleep(.05)
+        raise RuntimeError('Replay pause not acknowledged')
+    def resume_replay(self):self.standby_sql('SELECT pg_wal_replay_resume()')
+    def stop_standby(self):self.command('stop','-t','3',self.standby)
+    def restart_standby(self):self.command('start',self.standby);self.wait_standby()
     def sql(self,text):return self.command('exec',self.name,'psql','-U','gatewise','-d','gatewise','-v','ON_ERROR_STOP=1','-Atc',text)
     def start_process(self,name,args,env):
         log=(self.temp/(name+'.log')).open('w');self.logs.append(log)
@@ -59,7 +93,9 @@ class Stack:
             except Exception:pass
             time.sleep(.05)
         raise RuntimeError('Service readiness timed out; logs: '+str(self.temp))
-    def start_app(self,profile,tenants=False,priorities=False,untrusted_entry=False,sharing=0,decisions="",resources=""):
+    def start_app(self,profile,tenants=False,priorities=False,untrusted_entry=False,sharing=0,decisions="",resources="",operations=""):
+        self.operation_mode=operations
+        if operations:self.start_standby()
         self.resource_mode=resources
         self.decision_mode=decisions
         self.priorities_enabled=priorities
@@ -77,6 +113,7 @@ class Stack:
             business,admin=addresses[role];self.backends[role]=f'http://127.0.0.1:{business}';self.admins[role]=f'http://127.0.0.1:{admin}'
             service_env={**env,'DATABASE_URL':f'postgres://gatewise:gatewise-local@127.0.0.1:{self.dbport}/{database}?sslmode=disable'}
             args=[str(self.projects/'commerce-backend/bin/commerce-backend'),'-role',role,'-listen',f'127.0.0.1:{business}','-admin-listen',f'127.0.0.1:{admin}','-mode',mode]
+            if operations and role=='orders':args += ['-operations',operations,'-replica-url',f'postgres://gatewise:gatewise-local@127.0.0.1:{self.replica_port}/{database}?sslmode=disable']
             if resources:args += ["-resources",resources]
             if decisions:args += ["-decisions",decisions]
             if priorities:
@@ -117,7 +154,7 @@ class Stack:
     def control(self,multiplier=1,delay=0,failures=0):
         return {role:api(url,'/control',{'work_multiplier':multiplier,'sql_delay_ms':delay,'failure_every':failures},'PUT') for role,url in self.admins.items()}
     def environment(self):
-        values=[{'key':'resource_mode','value':getattr(self,'resource_mode',''),'enabled':True}]+[{'key':'decision_mode','value':getattr(self,'decision_mode',''),'enabled':True}]+[{'key':role+'_url','value':url,'enabled':True} for role,url in self.urls.items()]+[{'key':role+'_admin','value':url,'enabled':True} for role,url in self.admins.items()]+[{'key':role+'_backend','value':url,'enabled':True} for role,url in self.backends.items()]+[{'key':'tenant_header','value':'X-Demo-Tenant','enabled':True},{'key':'tenant_max_tracked','value':'32','enabled':True},{'key':'expected_mode','value':self.profile.removeprefix('proxy-').removeprefix('middleware-'),'enabled':True}]
+        values=[{'key':'operation_mode','value':getattr(self,'operation_mode',''),'enabled':True},{'key':'resource_mode','value':getattr(self,'resource_mode',''),'enabled':True}]+[{'key':'decision_mode','value':getattr(self,'decision_mode',''),'enabled':True}]+[{'key':role+'_url','value':url,'enabled':True} for role,url in self.urls.items()]+[{'key':role+'_admin','value':url,'enabled':True} for role,url in self.admins.items()]+[{'key':role+'_backend','value':url,'enabled':True} for role,url in self.backends.items()]+[{'key':'tenant_header','value':'X-Demo-Tenant','enabled':True},{'key':'tenant_max_tracked','value':'32','enabled':True},{'key':'expected_mode','value':self.profile.removeprefix('proxy-').removeprefix('middleware-'),'enabled':True}]
         path=self.temp/'Commerce.postman_environment.json';path.write_text(json.dumps({'name':'Gatewise commerce example','values':values,'_postman_variable_scope':'environment'},indent=2));return path
     def stop_app(self):
         for p in self.children:
@@ -134,13 +171,19 @@ class Stack:
         try:
             if self.container:self.stop_app()
         finally:
+            if getattr(self,'standby_created',False):subprocess.run([self.engine,'rm','-f',self.standby],capture_output=True);self.standby_created=False
+            if getattr(self,'standby_volume_created',False):subprocess.run([self.engine,'volume','rm',self.standby_volume],capture_output=True);self.standby_volume_created=False
+            if getattr(self,'network_created',False):
+                subprocess.run([self.engine,'network','disconnect',self.network,self.name],capture_output=True)
+                subprocess.run([self.engine,'network','rm',self.network],capture_output=True);self.network_created=False
             if self.container:subprocess.run([self.engine,'rm','-f',self.name],capture_output=True);self.container=False
             if self.volume_created:subprocess.run([self.engine,'volume','rm',self.volume],capture_output=True);self.volume_created=False
     def __enter__(self):return self
     def __exit__(self,*_):self.close()
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--projects',type=pathlib.Path,default=ROOT);p.add_argument('--engine',default=os.environ.get('CONTAINER_ENGINE','podman'));p.add_argument('--profile',choices=['direct','proxy-fixed','proxy-adaptive','middleware-fixed','middleware-adaptive'],default='middleware-adaptive');p.add_argument('--resources',choices=['disabled','enforce','observe'],default='',help='real resource regulators and pressure operations');p.add_argument('--decisions',choices=['enforce','observe'],default='',help='controlled providers for decision-engine validation');p.add_argument('--tenants',action='store_true',help='enable example tenant limits: 2 per tenant, 32 identities, 2s idle TTL');p.add_argument('--sharing',type=int,default=0,help='enable tenant sharing with this borrowing ceiling (example: 4)');p.add_argument('--priorities',action='store_true',help='enable priority tiers, cohorts and orders-to-catalog flow');p.add_argument('--monitor',action='store_true',help='start optional local Prometheus and Grafana');p.add_argument('--verify',action='store_true',help='run the Postman contract and clean up');a=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--projects',type=pathlib.Path,default=ROOT);p.add_argument('--engine',default=os.environ.get('CONTAINER_ENGINE','podman'));p.add_argument('--profile',choices=['direct','proxy-fixed','proxy-adaptive','middleware-fixed','middleware-adaptive'],default='middleware-adaptive');p.add_argument('--operations',choices=['disabled','fixed','pool'],default='',help='SQL/worker/physical-standby example');p.add_argument('--resources',choices=['disabled','enforce','observe'],default='',help='real resource regulators and pressure operations');p.add_argument('--decisions',choices=['enforce','observe'],default='',help='controlled providers for decision-engine validation');p.add_argument('--tenants',action='store_true',help='enable example tenant limits: 2 per tenant, 32 identities, 2s idle TTL');p.add_argument('--sharing',type=int,default=0,help='enable tenant sharing with this borrowing ceiling (example: 4)');p.add_argument('--priorities',action='store_true',help='enable priority tiers, cohorts and orders-to-catalog flow');p.add_argument('--monitor',action='store_true',help='start optional local Prometheus and Grafana');p.add_argument('--verify',action='store_true',help='run the Postman contract and clean up');a=p.parse_args()
+    if a.operations and (a.resources or a.decisions or a.tenants or a.sharing or a.priorities):p.error('--operations is a focused scenario')
     if a.resources and (a.profile=='direct' or a.decisions or a.tenants or a.sharing or a.priorities):p.error('--resources needs a standalone proxy/middleware validation profile')
     if a.decisions and (a.profile=='direct' or a.tenants or a.sharing or a.priorities):p.error('--decisions needs an independent proxy/middleware validation profile')
     if a.sharing and a.profile=='direct':p.error('--sharing needs proxy or middleware admission')
@@ -149,7 +192,7 @@ def main():
     if a.priorities and a.profile=='direct':p.error('--priorities needs proxy or middleware admission')
     if a.tenants and a.profile=='direct':p.error('--tenants needs proxy or middleware admission')
     with Stack(a.projects,a.engine) as stack:
-        stack.build();stack.start_db();stack.start_app(a.profile,a.tenants,a.priorities,sharing=a.sharing,decisions=a.decisions,resources=a.resources);environment=stack.environment()
+        stack.build();stack.start_db();stack.start_app(a.profile,a.tenants,a.priorities,sharing=a.sharing,decisions=a.decisions,resources=a.resources,operations=a.operations);environment=stack.environment()
         print(json.dumps({'services':stack.urls,'backends':stack.backends,'metrics':[url+'/metrics' for url in stack.metrics_urls],'controls':stack.admins,'postman_environment':str(environment),'profile':a.profile}),flush=True)
         monitoring=None
         try:
@@ -157,7 +200,7 @@ def main():
                 from monitor import Monitoring
                 monitoring=Monitoring(stack);monitoring.start();print(json.dumps({'grafana':monitoring.grafana+'/d/gatewise-commerce','prometheus':monitoring.prometheus}),flush=True)
             if a.verify:
-                subprocess.run(['postman','collection','run',str(ROOT/'postman'/('Resources.postman_collection.json' if a.resources else 'Signals.postman_collection.json' if a.decisions else 'Sharing.postman_collection.json' if a.sharing else 'Priorities.postman_collection.json' if a.priorities else ('Tenants.postman_collection.json' if a.tenants else 'Commerce.postman_collection.json'))),'-e',str(environment),'--no-report-events','--timeout-request','5000','--timeout-script','15000'],check=True)
+                subprocess.run(['postman','collection','run',str(ROOT/'postman'/('Operations.postman_collection.json' if a.operations else 'Resources.postman_collection.json' if a.resources else 'Signals.postman_collection.json' if a.decisions else 'Sharing.postman_collection.json' if a.sharing else 'Priorities.postman_collection.json' if a.priorities else ('Tenants.postman_collection.json' if a.tenants else 'Commerce.postman_collection.json'))),'-e',str(environment),'--no-report-events','--timeout-request','5000','--timeout-script','15000'],check=True)
                 subprocess.run(['postman','status'],cwd=ROOT,check=False)
             else:
                 print('Ctrl+C stops this example and removes its PostgreSQL volume.',flush=True)

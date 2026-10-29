@@ -1,3 +1,4 @@
+import { OperationBenchmarks } from '../components/OperationBenchmarks';
 import { ResourceBenchmarks } from '../components/ResourceBenchmarks';
 import { useState } from 'react';
 import data from '../data/commerce.json';
@@ -21,9 +22,10 @@ export default function Benchmarks() {
   const phaseNames: Record<string,string> = {baseline:'Normal traffic',ramp:'Traffic increases',pressure:'Database overload',burst:'Sudden traffic spike','intermittent-errors':'Database errors',recovery:'Recovery',sustained:'One minute of steady traffic','low-traffic':'Low traffic'};
   return <div className="container"><PageTitle title="Benchmarks">We run real services against PostgreSQL, stress their runtime and database work, and send more requests than the services can handle. These tests show which requests still finish, how long they take, and how many Gatewise rejects.</PageTitle>
 
-    <p>The newest experiment measures real memory, goroutine, write-byte and hot-key protection alongside other requests sharing the service. Earlier tests cover signal decisions, lending spare capacity, priority across services and database overload.</p>
+    <p>The newest experiment measures competing worker/SQL lifetimes and real physical-standby failures. Earlier resource tests measure memory, goroutines, write bytes and hot keys alongside other traffic. Earlier tests cover signal decisions, lending spare capacity, priority across services and database overload.</p>
     <Note label="How to read the results">A fast response is useful only if the request succeeds. We use 100 ms as the response-time goal for these tests and show how many requests succeed within it, alongside rejection and error rates. “p95” means 95% of successful requests finished within that time; rejected and failed requests are counted separately. “RPS” means requests per second.</Note>
     <p>We compare two ways to use Gatewise: middleware inside a Go service, and a proxy in front of a service. Fixed mode keeps the configured concurrency limit. Adaptive mode adjusts that limit within the bounds set by the operator.</p>
+    <OperationBenchmarks/>
     <ResourceBenchmarks/>
     <Section id="signal-engine" title="Combining overload signals · v0.6.0">
  <h3>The problem</h3><p>Completed-request latency is useful feedback, but a service may know about resource pressure sooner. Several sources may disagree, or a source may stop responding. We need one predictable way to combine their advice while retaining existing hard limits.</p>

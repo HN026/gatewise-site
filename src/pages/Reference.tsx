@@ -5,7 +5,17 @@ import { CodeBlock, Note, PageTitle, Section, Table } from '../components/ui';
 export default function Reference() {
   const [filter, setFilter] = useState('');
   const rows = configuration.filter(r => r.join(' ').toLowerCase().includes(filter.toLowerCase()));
-  return <div className="container"><PageTitle title="Configuration and API reference">Proxy configuration, environment overrides, public Go interfaces and rejection responses.</PageTitle><Section id="resource-reference" title="Resource APIs"><Table headers={['API','Contract']} rows={[
+  return <div className="container"><PageTitle title="Configuration and API reference">Proxy configuration, environment overrides, public Go interfaces and rejection responses.</PageTitle><Section id="operation-reference" title="Operation and SQL APIs"><Table headers={['API','Contract']} rows={[
+ ['operation.New(Config)','Transport-neutral, process-local engine. Reuses the HTTP limiter, priorities, tenant rules, signal decisions, byte/key budgets and adaptive controller.'],
+ ['Engine.Begin(ctx, Request)','Never queues. Returns Permit or error. Metadata is supplied by trusted application code; Kind is bounded to operation/http. Same-engine active nesting returns ErrNested.'],
+ ['Engine.Do(ctx, Request, fn)','Calls fn with the admitted context; finishes exactly once on return or panic. Errors remain application-owned; no retry.'],
+ ['Permit.Context / Decision / Finish','Carry the admitted context; inspect a cloned decision; finish only after actual work and cleanup end. Outcome has Err, StatusCode, Canceled and Panicked. Cancellation alone does not release.'],
+ ['sqlguard.New(db, engine, Metadata)','Wraps an existing database/sql pool; does not install a driver or own pool shutdown. Metadata is a local trusted resolver.'],
+ ['DB.ExecContext / QueryContext / QueryRowContext','Statement permit through completion; stream permit through Close/terminal iteration; QueryRow released by Scan. Close streams even on early exit.'],
+ ['DB.BeginTx / InTx','One permit for the whole transaction. Transaction methods reuse it. InTx commits on success and rolls back on error/panic. Use tx.Context; explicit transaction owners must Commit/Rollback.'],
+ ['regulator.SQLPool','Cached decision provider from finite-pool InUse/MaxOpen; no health query and no queue-depth estimate.'],
+ ['postgres.NewReplication / Snapshot','Primary-side physical standby byte backlog and heartbeat freshness. Exactly one named standby required. Failed or ambiguous state becomes unknown.']
+]}/><p>See <a href="#/installation/operation-setup">lifetime, nesting and driver-timeout rules</a> before integration. HTTP rejection codes remain unchanged; operation rejections are Go errors so applications can choose their transport response.</p></Section><Section id="resource-reference" title="Resource APIs"><Table headers={['API','Contract']} rows={[
  ['regulator.NewMemory(MemoryConfig{LimitBytes})','decision.Provider. Nonnegative explicit Go budget; zero uses a finite current GOMEMLIMIT where available. On Linux also inspects visible v1/v2 cgroup usage/limit pairs and chooses the highest ratio. No guessed host-RAM fallback.'],
  ['regulator.Memory.Snapshot()','Last selected source, used/limit bytes, ratio and observed time. It is stale if collection fails; inspect engine state/freshness too.'],
  ['regulator.Goroutines{}','decision.Provider returning runtime.NumGoroutine. No admission-path runtime sampling.'],
@@ -13,7 +23,7 @@ export default function Reference() {
  ['middleware.ServiceConfig.CostResolver','Local trusted planner callback returning decision.Cost{WriteBytes,Key}. No cost inference from HTTP body length. Do not trust caller-chosen headers without an authenticated ingress.'],
  ['decision.KeyBudget','Positive MaxConcurrent; MaxTracked defaults 1024, range 1–100000; IdleTTL defaults 5m, maximum 24h. Missing/Overflow reject by default; shared uses two separate bounded fallback buckets.'],
  ['decision.Cost','Nonnegative WriteBytes, maximum 1 TiB per operation; matching write budgets require positive cost. Key is at most 128 printable non-space ASCII bytes. Raw keys are hashed internally and omitted from diagnostics.'],
- ['decision.Engine.AcquireResources / decision.Lease','Low-level atomic byte/key reservations used by the HTTP adapter. Retain commits statistics after hard admission. Release is idempotent; call it on every exit. This does not replace a service admission API for workers/transactions.'],
+ ['decision.Engine.AcquireResources / decision.Lease','Low-level atomic byte/key reservations used by the shared operation engine. Retain commits statistics after hard admission. Release is idempotent; call it on every exit. Use operation.Engine for worker/transaction admission instead of manually assembling leases.'],
  ['guard.DecisionSnapshot().Budgets','Detached aggregate active bytes, reservations, bounded registry/fallback state and proposal/rejection/admission counters. No per-key labels.'],
  ['middleware.TrustedCostHeader(CIDRs)','Validate one reserved X-Gatewise-Cost JSON value, at most 512 bytes, from trusted immediate peers. Errors reject with 400/403. Ingress authenticates and overwrites the value.'],
  ['middleware.InjectCost(request)','Strip unresolved reserved metadata and inject only server-resolved cost on the proxy hop. Receiving services still need an explicit trust boundary.'],

@@ -9,7 +9,7 @@ export default function Problem() {
       <Table headers={['Term', 'Meaning']} rows={[
         ['Arrival rate', 'Requests reaching the service per second (RPS).'], ['Latency', 'Time between starting a request and completing its synchronous work.'], ['Concurrency', 'Requests active at the same time. This is different from RPS and open TCP connections.'], ['Throughput', 'Requests completed per second. Accepted and rejected completions must be counted separately.'], ['Admission control', 'A decision to accept or reject work before executing the application handler.'],
       ]} />
-      <p>Gatewise controls the lifetime of admitted synchronous handlers. It does not count database operations, CPU utilization or bytes processed, and it does not manage an application’s asynchronous jobs.</p>
+      <p>Gatewise accounts for admitted HTTP handlers and, through explicit Go adapters, worker callbacks and SQL operations. Each resource has its own budget. It does not infer CPU capacity or manage durable job delivery.</p>
     </Section>
     <Section id="overload" title="How dependency slowdown causes overload">
       <p>Arrival rate alone does not determine service load. The number of active requests also depends on how long each request occupies resources. In a stable system, Little’s law relates average work in flight to arrival rate and average duration:</p>
@@ -88,7 +88,7 @@ export default function Problem() {
         ['Queuing', 'No waiting queue, queue timeout policy or FIFO/LIFO scheduling. Unavailable capacity produces 503 immediately.'],
         ['Fairness', 'Optional bounded tenant caps or target shares/borrowing, plus key concurrency; authentication remains external and fairness is process-local.'],
         ['Signals', 'Handler latency/errors plus optional named cached observations with scope, freshness, failure fallback and explanations.'],
-        ['Resource and remote signals', 'Real Go memory/goroutine providers, planned logical write bytes and bounded hot keys. Worker/transaction adapters and follower-lag integration remain later work.'],
+        ['Resource and remote signals', 'Real Go memory/goroutine providers, planned logical write bytes and bounded hot keys. The shared operation engine now covers worker jobs and SQL lifetimes; real pool/physical-standby observations can restrict relevant work.'],
         ['Controller', 'Configured bounds and bucketed latency feedback; no PID or TCP-Vegas autotuner.'],
       ]} />
     </Section>
@@ -117,6 +117,7 @@ export default function Problem() {
       <p>Cancellation does not forcibly terminate work. A handler that ignores its context retains the slot until it returns. Work in goroutines that outlive the handler is outside this budget and needs separate resource controls.</p>
       <p><code>X-Gatewise-Limit</code> and <code>X-Gatewise-Mode</code> are snapshots near admission, not reservation tokens or latency guarantees.</p>
     </Section>
+    <Section id="operation-lifetimes" title="Protect the resource where work actually runs"><p>A handler limit cannot account for a background job after the response returns. It also cannot stop unrelated jobs from consuming the SQL pool. Gatewise now uses the same admission policy at each lifetime: HTTP request, worker callback and database operation. Each independent resource gets its own engine. One transaction keeps one database permit until cleanup finishes; a stream keeps it until rows close.</p><Diagram name="operation-lifetimes" caption="Separate HTTP, worker and SQL budgets share one policy engine. The database observer samples outside admission; a standby restriction applies to follower reads."/><p>Pool utilization and physical replication observations become cached signal inputs. A busy primary pool can restrict background jobs while preserving critical capacity. A follower backlog or missing follower can reject follower reads while primary writes remain usable. Already-admitted work drains; Gatewise does not preempt database queries. <a href="#/installation/operation-setup">Integration and lifetime rules</a> explain cancellation and ownership.</p></Section>
     <Section id="adaptive" title="Adaptive concurrency controller">
       <p>Fixed mode retains its configured limit. Adaptive mode evaluates request completions and adjusts a local limit between explicit bounds. There is no controller goroutine; without relevant completions, no adjustment occurs.</p>
       <Diagram name="feedback-loop" caption="Completions release capacity and supply feedback. Limit changes affect future admissions." />

@@ -2,7 +2,7 @@
   "uid": "gatewise-commerce",
   "title": "Gatewise \u00b7 Commerce experiment",
   "schemaVersion": 39,
-  "version": 4,
+  "version": 5,
   "timezone": "utc",
   "refresh": "5s",
   "time": {
@@ -25,7 +25,7 @@
           "type": "prometheus",
           "uid": "gatewise-prometheus"
         },
-        "query": "label_values(commerce_db_pool_in_use, service)",
+        "query": "label_values(gatewise_service_info, service)",
         "refresh": 1,
         "multi": true,
         "includeAll": true,
@@ -1223,6 +1223,158 @@
       "fieldConfig": {
         "defaults": {
           "unit": "ops",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 31,
+      "title": "Work admitted / sec",
+      "type": "timeseries",
+      "description": "Separate HTTP, worker and database budgets. Layered counts are not end-to-end throughput.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 136
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(gatewise_work_admitted_total{service=~\"$service\"}[$__rate_interval])",
+          "legendFormat": "{{service}} / {{kind}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 32,
+      "title": "Work finished / sec",
+      "type": "timeseries",
+      "description": "Separate HTTP, worker and database budgets. Layered counts are not end-to-end throughput.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 136
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(gatewise_work_completed_total{service=~\"$service\"}[$__rate_interval])",
+          "legendFormat": "{{service}} / {{kind}} / {{outcome}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 33,
+      "title": "Work rejected / sec",
+      "type": "timeseries",
+      "description": "Separate HTTP, worker and database budgets. Layered counts are not end-to-end throughput.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 144
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(gatewise_work_rejected_total{service=~\"$service\"}[$__rate_interval])",
+          "legendFormat": "{{service}} / {{kind}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 34,
+      "title": "Work lifetime p95",
+      "type": "timeseries",
+      "description": "Separate HTTP, worker and database budgets. Layered counts are not end-to-end throughput.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 144
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le,service,kind) (rate(gatewise_work_duration_seconds_bucket{service=~\"$service\"}[$__rate_interval])))",
+          "legendFormat": "{{service}} / {{kind}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
           "color": {
             "mode": "palette-classic"
           }
