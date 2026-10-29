@@ -10,7 +10,7 @@ export default function Versions() {
       <Table headers={['Requirement', 'Value']} rows={[
         ['Go toolchain', latestRelease.requirements],
         ['Go module', 'github.com/HN026/gatewise'],
-        ['Integrations', 'Go middleware and standalone HTTP proxy'],
+        ['Integrations', 'Go middleware, HTTP proxy, worker and SQL adapters'],
         ['License', 'MIT'],
       ]} />
       <a className="text-link" href={`${repositoryUrl}/releases/tag/${latestRelease.version}`}>View release on GitHub ↗</a>
