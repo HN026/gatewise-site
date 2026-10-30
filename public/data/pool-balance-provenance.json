@@ -1,0 +1,22 @@
+{
+  "source_sha256": "cdb5462942a4b2300a2115d02857b91c7864e0ac6b00328e4fe963ae04cccc3e",
+  "aggregation": "Median run-level successful p95, useful throughput and job counts; pooled rejection percentages and error counts. Whiskers show min/max of three repeats, not confidence intervals. Job counts include drain; job production stops when the HTTP load command returns, including its response tail.",
+  "comparison": "Combined contention signal plus existing server-owned workload-class sharing versus retained occupancy-only policy. Not an ablation or proof that either change alone produces the result.",
+  "criteria": {
+    "critical_timely_ratio_min": 0.9,
+    "background_completion_ratio_min": 1.5,
+    "background_completed_min_per_run": 8,
+    "critical_p95_budget_ms": 100,
+    "pool_critical_timely_ratio_min": 0.9,
+    "pool_p95_relative_max": 1.25,
+    "pool_p95_slack_ms": 25,
+    "light_background_ratio_min": 0.9
+  },
+  "limitations": "Short local workload, no admission queue, no preemption or starvation bound. Initial detection requires a new pool wait after provider construction; historical totals are ignored. Full-after-wait remains pressured until nonfull/quiet. A pressure cap1 and critical reservation1 still block background under real contention. These workload classes use the tenant dimension, not an additional independent customer isolation layer.",
+  "matplotlib": "3.11.2",
+  "images": [
+    "pool-balance-workers.png",
+    "pool-balance-external.png",
+    "pool-balance-recovery.png"
+  ]
+}

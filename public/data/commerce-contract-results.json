@@ -1,7 +1,7 @@
 {
-  "release": "v0.8.0",
+  "release": "v0.8.1",
   "target": "Freshly extracted source-only demo with real PostgreSQL",
-  "archive_sha256": "f1b09e0557e05a54ec127b3ad396a9e911bf7dc2e22cc2f46ea40b8b90d60572",
+  "archive_sha256": "1913238372f44d81ade4dba4143fa89dfe7ccb5d494b59b547788b0fb16acb83",
   "profiles": [
     {
       "profile": "direct",
@@ -533,7 +533,7 @@
       "failed_assertions": 0,
       "exit_code": 0,
       "pool_connections_drained": true,
-      "collection_sha256": "4eafaa5eacf3f7d88ee1d6d4f56c8973b55070137ee31ecce66650e4b41cdebe"
+      "collection_sha256": "efb7204779e5d21498b4bb58a027aec0a8693e9e8ae69382941b807f1a9b2e81"
     },
     {
       "profile": "proxy-fixed",
@@ -547,7 +547,7 @@
       "failed_assertions": 0,
       "exit_code": 0,
       "pool_connections_drained": true,
-      "collection_sha256": "4eafaa5eacf3f7d88ee1d6d4f56c8973b55070137ee31ecce66650e4b41cdebe"
+      "collection_sha256": "efb7204779e5d21498b4bb58a027aec0a8693e9e8ae69382941b807f1a9b2e81"
     },
     {
       "profile": "proxy-fixed",
@@ -561,7 +561,21 @@
       "failed_assertions": 0,
       "exit_code": 0,
       "pool_connections_drained": true,
-      "collection_sha256": "4eafaa5eacf3f7d88ee1d6d4f56c8973b55070137ee31ecce66650e4b41cdebe"
+      "collection_sha256": "efb7204779e5d21498b4bb58a027aec0a8693e9e8ae69382941b807f1a9b2e81"
+    },
+    {
+      "profile": "proxy-fixed",
+      "tenants_enabled": false,
+      "priorities_enabled": false,
+      "sharing_ceiling": 0,
+      "decision_mode": "",
+      "resource_mode": "",
+      "operation_mode": "balanced",
+      "assertions": 27,
+      "failed_assertions": 0,
+      "exit_code": 0,
+      "pool_connections_drained": true,
+      "collection_sha256": "efb7204779e5d21498b4bb58a027aec0a8693e9e8ae69382941b807f1a9b2e81"
     },
     {
       "profile": "proxy-adaptive",
@@ -575,7 +589,7 @@
       "failed_assertions": 0,
       "exit_code": 0,
       "pool_connections_drained": true,
-      "collection_sha256": "4eafaa5eacf3f7d88ee1d6d4f56c8973b55070137ee31ecce66650e4b41cdebe"
+      "collection_sha256": "efb7204779e5d21498b4bb58a027aec0a8693e9e8ae69382941b807f1a9b2e81"
     },
     {
       "profile": "proxy-adaptive",
@@ -589,7 +603,7 @@
       "failed_assertions": 0,
       "exit_code": 0,
       "pool_connections_drained": true,
-      "collection_sha256": "4eafaa5eacf3f7d88ee1d6d4f56c8973b55070137ee31ecce66650e4b41cdebe"
+      "collection_sha256": "efb7204779e5d21498b4bb58a027aec0a8693e9e8ae69382941b807f1a9b2e81"
     },
     {
       "profile": "proxy-adaptive",
@@ -603,7 +617,21 @@
       "failed_assertions": 0,
       "exit_code": 0,
       "pool_connections_drained": true,
-      "collection_sha256": "4eafaa5eacf3f7d88ee1d6d4f56c8973b55070137ee31ecce66650e4b41cdebe"
+      "collection_sha256": "efb7204779e5d21498b4bb58a027aec0a8693e9e8ae69382941b807f1a9b2e81"
+    },
+    {
+      "profile": "proxy-adaptive",
+      "tenants_enabled": false,
+      "priorities_enabled": false,
+      "sharing_ceiling": 0,
+      "decision_mode": "",
+      "resource_mode": "",
+      "operation_mode": "balanced",
+      "assertions": 27,
+      "failed_assertions": 0,
+      "exit_code": 0,
+      "pool_connections_drained": true,
+      "collection_sha256": "efb7204779e5d21498b4bb58a027aec0a8693e9e8ae69382941b807f1a9b2e81"
     },
     {
       "profile": "middleware-fixed",
@@ -617,7 +645,7 @@
       "failed_assertions": 0,
       "exit_code": 0,
       "pool_connections_drained": true,
-      "collection_sha256": "4eafaa5eacf3f7d88ee1d6d4f56c8973b55070137ee31ecce66650e4b41cdebe"
+      "collection_sha256": "efb7204779e5d21498b4bb58a027aec0a8693e9e8ae69382941b807f1a9b2e81"
     },
     {
       "profile": "middleware-fixed",
@@ -631,7 +659,7 @@
       "failed_assertions": 0,
       "exit_code": 0,
       "pool_connections_drained": true,
-      "collection_sha256": "4eafaa5eacf3f7d88ee1d6d4f56c8973b55070137ee31ecce66650e4b41cdebe"
+      "collection_sha256": "efb7204779e5d21498b4bb58a027aec0a8693e9e8ae69382941b807f1a9b2e81"
     },
     {
       "profile": "middleware-fixed",
@@ -645,7 +673,21 @@
       "failed_assertions": 0,
       "exit_code": 0,
       "pool_connections_drained": true,
-      "collection_sha256": "4eafaa5eacf3f7d88ee1d6d4f56c8973b55070137ee31ecce66650e4b41cdebe"
+      "collection_sha256": "efb7204779e5d21498b4bb58a027aec0a8693e9e8ae69382941b807f1a9b2e81"
+    },
+    {
+      "profile": "middleware-fixed",
+      "tenants_enabled": false,
+      "priorities_enabled": false,
+      "sharing_ceiling": 0,
+      "decision_mode": "",
+      "resource_mode": "",
+      "operation_mode": "balanced",
+      "assertions": 27,
+      "failed_assertions": 0,
+      "exit_code": 0,
+      "pool_connections_drained": true,
+      "collection_sha256": "efb7204779e5d21498b4bb58a027aec0a8693e9e8ae69382941b807f1a9b2e81"
     },
     {
       "profile": "middleware-adaptive",
@@ -659,7 +701,7 @@
       "failed_assertions": 0,
       "exit_code": 0,
       "pool_connections_drained": true,
-      "collection_sha256": "4eafaa5eacf3f7d88ee1d6d4f56c8973b55070137ee31ecce66650e4b41cdebe"
+      "collection_sha256": "efb7204779e5d21498b4bb58a027aec0a8693e9e8ae69382941b807f1a9b2e81"
     },
     {
       "profile": "middleware-adaptive",
@@ -673,7 +715,7 @@
       "failed_assertions": 0,
       "exit_code": 0,
       "pool_connections_drained": true,
-      "collection_sha256": "4eafaa5eacf3f7d88ee1d6d4f56c8973b55070137ee31ecce66650e4b41cdebe"
+      "collection_sha256": "efb7204779e5d21498b4bb58a027aec0a8693e9e8ae69382941b807f1a9b2e81"
     },
     {
       "profile": "middleware-adaptive",
@@ -687,7 +729,21 @@
       "failed_assertions": 0,
       "exit_code": 0,
       "pool_connections_drained": true,
-      "collection_sha256": "4eafaa5eacf3f7d88ee1d6d4f56c8973b55070137ee31ecce66650e4b41cdebe"
+      "collection_sha256": "efb7204779e5d21498b4bb58a027aec0a8693e9e8ae69382941b807f1a9b2e81"
+    },
+    {
+      "profile": "middleware-adaptive",
+      "tenants_enabled": false,
+      "priorities_enabled": false,
+      "sharing_ceiling": 0,
+      "decision_mode": "",
+      "resource_mode": "",
+      "operation_mode": "balanced",
+      "assertions": 27,
+      "failed_assertions": 0,
+      "exit_code": 0,
+      "pool_connections_drained": true,
+      "collection_sha256": "efb7204779e5d21498b4bb58a027aec0a8693e9e8ae69382941b807f1a9b2e81"
     }
   ],
   "passed": true
