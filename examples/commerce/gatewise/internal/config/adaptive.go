@@ -9,6 +9,7 @@ import (
 )
 
 type rawAdaptive struct {
+	Profile           string `json:"profile"`
 	MinConcurrent     int    `json:"min_concurrent"`
 	InitialConcurrent int    `json:"initial_concurrent"`
 	Interval          string `json:"interval"`
@@ -36,7 +37,13 @@ func parseAdaptive(name, mode string, raw *rawAdaptive, lookup func(string) (str
 	if raw == nil {
 		raw = &rawAdaptive{}
 	}
-	a := &middleware.AdaptiveConfig{MinConcurrent: raw.MinConcurrent, InitialConcurrent: raw.InitialConcurrent, MinSamples: raw.MinSamples}
+	a := &middleware.AdaptiveConfig{Profile: raw.Profile, MinConcurrent: raw.MinConcurrent, InitialConcurrent: raw.InitialConcurrent, MinSamples: raw.MinSamples}
+	if value, ok := lookup(prefix + "ADAPTIVE_PROFILE"); ok {
+		if value == "" {
+			return nil, fmt.Errorf("service %s adaptive profile must not be empty", name)
+		}
+		a.Profile = value
+	}
 	for _, f := range []struct {
 		key string
 		dst *int

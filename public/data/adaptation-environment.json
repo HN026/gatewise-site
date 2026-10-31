@@ -1,0 +1,14 @@
+{
+  "observed_at": "2026-11-08T14:35:37.023628+00:00",
+  "scope": "Observed on the same host while the confirmatory matrix ran; not resource isolation or production capacity.",
+  "host": {
+    "cpu": "Apple M4 Pro",
+    "logical_cpus": 12,
+    "memory_bytes": 51539607552
+  },
+  "database_vm": {
+    "CPUs": 6,
+    "Memory": 10240
+  },
+  "go_version": "go version go1.27.3 darwin/arm64"
+}

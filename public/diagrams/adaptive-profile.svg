@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 405" role="img" aria-label="adaptive-profile">
+<defs><marker id="arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0L7 3.5L0 7" fill="#91ab9a"/></marker></defs>
+<rect width="1080" height="405" fill="#101a13"/>
+<path d="M205 60.0 H240.0 V60.0 H272" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M495 60.0 H535.0 V60.0 H572" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M385.0 95 V212" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M495 60.0 H535.0 V250.0 H572" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<text x="535.0" y="146.0" fill="#91ab9a" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">pressure</text>
+<path d="M685.0 95 V212" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<text x="693.0" y="155.0" fill="#91ab9a" text-anchor="start" font-family="Arial,sans-serif" font-size="11">healthy</text>
+<path d="M795 250.0 H830.0 V250.0 H862" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M960.0 285 V375 H110.0 V98" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="15" y="25" width="190" height="70" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="110.0" y="50" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Completed work</text>
+<text x="110.0" y="71" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Canceled feedback excluded</text>
+<rect x="275" y="25" width="220" height="70" rx="2" fill="#142019" stroke="#6faf91"/>
+<text x="385.0" y="50" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Window feedback</text>
+<text x="385.0" y="71" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Targets + tier tails</text>
+<rect x="575" y="25" width="220" height="70" rx="2" fill="#142019" stroke="#6faf91"/>
+<text x="685.0" y="50" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Growth gate</text>
+<text x="685.0" y="71" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Refused demand + headroom</text>
+<rect x="275" y="215" width="220" height="70" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="385.0" y="240" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Insufficient evidence</text>
+<text x="385.0" y="261" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Hold and explain</text>
+<rect x="575" y="215" width="220" height="70" rx="2" fill="#142019" stroke="#6faf91"/>
+<text x="685.0" y="240" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Bounded limit</text>
+<text x="685.0" y="261" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Floor / ceiling / signal veto</text>
+<rect x="865" y="215" width="190" height="70" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="960.0" y="240" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Next admission</text>
+<text x="960.0" y="261" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Permit or immediate rejection</text>
+</svg>

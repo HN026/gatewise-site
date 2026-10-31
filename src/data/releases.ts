@@ -1,6 +1,58 @@
 // Newest published release first. Keep notes and downloads tied to its Git tag.
 export const releases = [
 {
+  "version": "v0.9.0",
+  "publishedAt": "2026-11-08T14:54:10Z",
+  "date": "8 November 2026",
+  "summary": "Opt-in stable adaptive feedback with priority-aware latency checks, bounded movement and clearer controller diagnostics.",
+  "requirements": "Library: Go 1.22+; commerce example: Go 1.25+",
+  "changes": [
+    "Stable is an explicit profile for middleware, native operations and the proxy. Legacy remains the default; explicit settings and operator bounds remain authoritative.",
+    "Growth requires real refused demand and healthy headroom. Priority-tier feedback, rising-latency holds, sparse holds, idle reset and binding-signal coordination are explained in diagnostics and setup.",
+    "927,540 HTTP requests across 18 fixed-code repeated comparisons; all 210 invariant/comparison checks passed. Reports retain successful work, p95, rejection/errors, per-service tiers, periodic movement and censored recovery observations.",
+    "Exact source-only demo passed 2,172 Postman assertions across 59 profiles. Race tests, vet and CI passed; dashboards and reproducible comparison scripts are included."
+  ],
+  "upgrade": "Opt-in: set AdaptiveConfig.Profile / adaptive.profile to stable in adaptive mode. Keep explicit bounds and latency budgets; selecting a profile does not erase existing overrides. Defaults still start at reservation +1. Inspect selected control feedback separately from aggregate p90 and inspect effective signal limits separately from the adaptive baseline. Sparse feedback can produce an observable hold without meeting the ordinary sample minimum. Use keyed config literals. Roll back to legacy and restart. No queue, retry, preemption, production-capacity guarantee or automatic operator-bound tuning is added. Legacy defaults also need zero advanced overrides; measured preset behavior is not a human tuning-effort study.",
+  "downloads": [
+    {
+      "name": "Source ZIP",
+      "path": "archive/refs/tags/v0.9.0.zip"
+    },
+    {
+      "name": "Source tar.gz",
+      "path": "archive/refs/tags/v0.9.0.tar.gz"
+    },
+    {
+      "name": "Demo example",
+      "path": "releases/download/v0.9.0/gatewise-demo.zip"
+    },
+    {
+      "name": "Demo SHA-256",
+      "path": "releases/download/v0.9.0/gatewise-demo.sha256"
+    },
+    {
+      "name": "Postman bundle",
+      "path": "releases/download/v0.9.0/postman.zip"
+    },
+    {
+      "name": "Controller comparison \u00b7 gzip",
+      "path": "releases/download/v0.9.0/adaptation-results.json.gz"
+    },
+    {
+      "name": "Criteria and calculations",
+      "path": "releases/download/v0.9.0/adaptation-provenance.json"
+    },
+    {
+      "name": "Recorded environment",
+      "path": "releases/download/v0.9.0/adaptation-environment.json"
+    },
+    {
+      "name": "Postman results",
+      "path": "releases/download/v0.9.0/commerce-contract-results.json"
+    }
+  ]
+},
+{
   "version": "v0.8.1",
   "publishedAt": "2026-11-08T13:14:54Z",
   "date": "8 November 2026",

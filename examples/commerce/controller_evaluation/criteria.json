@@ -1,0 +1,14 @@
+{
+  "overall_useful_ratio_min": 0.95,
+  "degradation_useful_ratio_min": 0.9,
+  "degradation_p95_ratio_max": 1.25,
+  "p95_budget_floor_ms": 100,
+  "recovery_useful_ratio_min": 0.95,
+  "recovery_extra_bin_seconds_max": 1,
+  "periodic_adjustment_ratio_max": 0.8,
+  "periodic_variation_ratio_max": 1.1,
+  "noninjected_error_rate_extra_max": 0.005,
+  "key_phases": ["capacity-loss", "gradual-25", "gradual-45", "mixed-cost"],
+  "recovery_phases": ["loss-recovery", "gradual-recovery", "error-recovery", "mixed-recovery", "signal-recovery"],
+  "interpretation": "Per HTTP deployment, median run outcomes compared with each retained legacy configuration; periodic stability compared with the smaller baseline median. A recovery bin qualifies at >=95% scheduled critical success within100ms with zero server/transport errors, requiring two consecutive full1s bins. Zero means the first pair starts at phase start, not instantaneous recovery. Preset configuration footprint is measured; this is not a human tuning-effort study."
+}

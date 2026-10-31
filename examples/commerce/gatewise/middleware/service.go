@@ -180,6 +180,9 @@ func (s *Service) setHeaders(w http.ResponseWriter) {
 	state := s.Snapshot()
 	w.Header().Set("X-Gatewise-Limit", strconv.Itoa(state.Limit))
 	w.Header().Set("X-Gatewise-Mode", state.Mode)
+	if controller := s.ControllerSnapshot(); controller.Enabled {
+		w.Header().Set("X-Gatewise-Controller", controller.Profile)
+	}
 }
 func (s *Service) signalHeaders(w http.ResponseWriter, trace decision.Result) {
 	e := trace.Evaluation
