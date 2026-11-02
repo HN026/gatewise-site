@@ -18,6 +18,7 @@ type WorkStatistics struct {
 }
 
 type Statistics struct {
+	Queue             QueueState
 	Work              [2]WorkStatistics // operation, http. Outcomes: success, failed, canceled, panicked.
 	Decisions         DecisionState
 	TenantAllocations [3]uint64 // share, borrowed, fallback; successful service admissions only.
@@ -41,6 +42,7 @@ type ResolutionStatistics struct {
 }
 
 type PriorityStatistics struct {
+	RejectedQueue                                                                                                 [5]uint64 // full, reserved, timeout, deadline, canceled
 	RejectedResources                                                                                             [8]uint64
 	RejectedSignals                                                                                               [3]uint64 // pressure, unavailable, concurrency limit
 	RejectedTenantShare                                                                                           uint64
@@ -95,6 +97,16 @@ func (s *statistics) admission(p Priority, decision admission.Decision) {
 	defer s.mu.Unlock()
 	v := &s.priorities[s.indices[p]]
 	switch decision {
+	case "queue_full":
+		v.RejectedQueue[0]++
+	case "queue_reserved":
+		v.RejectedQueue[1]++
+	case "queue_timeout":
+		v.RejectedQueue[2]++
+	case "queue_deadline":
+		v.RejectedQueue[3]++
+	case "queue_canceled":
+		v.RejectedQueue[4]++
 	case admission.WriteBytesLimit:
 		v.RejectedResources[0]++
 	case admission.HotKeyLimit:
@@ -194,6 +206,7 @@ func (s *statistics) adjustment(previous, current int, reason string) {
 // Statistics returns coherent histogram buckets/counts/sums and a live capacity
 // snapshot. Scraping this method does not count as service traffic.
 func (s *Engine) Statistics() Statistics {
+	queue := s.QueueSnapshot()
 	state := s.Snapshot()
 	controller := s.ControllerSnapshot()
 	tenants := s.TenantSnapshot()
@@ -214,7 +227,7 @@ func (s *Engine) Statistics() Statistics {
 	for p, n := range s.limiter.TierCounts() {
 		active[Priority(p)] = n
 	}
-	return Statistics{Work: s.statistics.work, Decisions: decisions, TenantAllocations: s.statistics.allocations, Tiers: append([]PriorityStatistics(nil), s.statistics.priorities...), Resolutions: resolutions, TierActive: active, PriorityEnabled: s.priorities != nil, Name: s.name, State: state, Controller: controller, Tenants: tenants, Priorities: legacy, DurationBounds: durationBounds, Adjustments: s.statistics.adjustments}
+	return Statistics{Queue: queue, Work: s.statistics.work, Decisions: decisions, TenantAllocations: s.statistics.allocations, Tiers: append([]PriorityStatistics(nil), s.statistics.priorities...), Resolutions: resolutions, TierActive: active, PriorityEnabled: s.priorities != nil, Name: s.name, State: state, Controller: controller, Tenants: tenants, Priorities: legacy, DurationBounds: durationBounds, Adjustments: s.statistics.adjustments}
 }
 
 func (s *statistics) resolution(p Priority, source string) {

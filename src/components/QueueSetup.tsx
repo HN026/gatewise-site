@@ -1,0 +1,37 @@
+import { CodeBlock, Diagram, Note, Section, Table } from './ui';
+export function QueueSetup({mode}:{mode:string}){return <Section id="bounded-waiting" title="Optional bounded waiting">
+<p>Immediate rejection remains the default. Enable a queue when short bursts can finish within the caller’s remaining budget. Waiting does not add execution capacity and can make sustained overload slower.</p>
+{mode==='middleware'?<><p>Replace the guard constructor in the complete middleware example. These values are examples: 20 executing requests, up to 32 waiting requests and at most 40 ms waiting after preparation. Waiting and execution reservations are separate.</p><CodeBlock filename="Go middleware · constructor replacement" code={`guard, err := middleware.NewService(middleware.ServiceConfig{
+    Name: "orders", MaxConcurrent: 20, ReservedCritical: 5,
+    Queue: &middleware.QueueConfig{
+        MaxWaiting: 32, MaxWait: 40 * time.Millisecond,
+        AgingAfter: 20 * time.Millisecond,
+        Reserved: map[middleware.Priority]int{middleware.Critical: 8},
+    },
+})
+if err != nil { log.Fatal(err) }`}/><p>Set ReadTimeout on the HTTP server, for example <code>ReadTimeout: 5 * time.Second</code> alongside its existing ReadHeaderTimeout. Bound uploads, authentication and request planning independently of queue capacity. The library cannot inspect or configure your server.</p></>:<><p>This is a complete proxy configuration fragment. Keep read_timeout at the top level. Replace the upstream and route prefixes, then tune both capacities for your service.</p><CodeBlock filename="configs/orders.json" language="json" code={JSON.stringify({listen_addr:'127.0.0.1:8080',read_timeout:'5s',services:{orders:{upstream_url:'http://127.0.0.1:9090',max_concurrent:20,reserved_critical:5,queue:{max_waiting:32,max_wait:'40ms',aging_after:'20ms',reserved:{critical:8}}}},routes:[{path_prefix:'/reports',service:'orders',priority:'background'},{path_prefix:'/',service:'orders',priority:'critical'}]},null,2)}/><p>The proxy requires a positive read_timeout when queue body buffering is enabled. Existing configurations with no queue retain their previous timeout behavior. <code>GATEWISE_READ_TIMEOUT</code> overrides the top-level value.</p><CodeBlock filename="Validate before starting" language="shell" code={'./bin/gatewise -check-config -config configs/orders.json -env-file ""'}/></>}
+<h3>How selection works</h3><Diagram name="bounded-waiting" caption="The queue holds waiting requests, not execution, tenant or resource permits. A selected request rechecks policy and acquires all required permits before starting."/>
+<Table headers={['Rule','Behavior']} rows={[
+ ['Capacity','MaxWaiting bounds waiting entries, independently of MaxConcurrent. The full queue returns queue_full. Reservations protect higher tiers from combined lower-tier waiting; a refused lower tier returns queue_reserved.'],
+ ['Selection','FIFO within each configured priority. Before AgingAfter, higher-priority work is preferred. Aged work is selected before unaged work, oldest first. Aging changes scheduling order only; the original priority and every execution reservation still apply.'],
+ ['Blocked priority','A tier unable to acquire local capacity yields to other eligible tiers until capacity changes or the short retry timer runs. It does not block an otherwise eligible critical request.'],
+ ['Maximum wait','MaxWait starts on queue insertion, after identity/body/cost preparation and the first admission check. The earlier caller deadline wins. Expiration removes the entry; queue_timeout is a distinct admission rejection. Native caller cancellation/deadline returns its context error.'],
+ ['Rechecks','Signals, tenant limits, resource budgets and local capacity are checked again before execution. Only local concurrency/reservation refusals wait. Binding signal caps, explicit signal rejection, tenant/resource refusal and cohort rejection remain policy vetoes.'],
+ ['Permits','No permit is retained during waiting. Once work starts, cancellation does not release its permits early; Finish or handler completion still owns release.'],
+ ['Controller feedback','Adaptive latency measures executing work. Queue time is separate, and must be included when you assess whole-request latency and useful completions.'],
+ ['Implementation','Per-tier FIFO lists, targeted notifications and a single 10 ms retry timer while nonempty. No permanent dispatcher remains when the queue empties. These are process-local queues, not a durable or distributed scheduler.']
+]}/>
+<h3>Request bodies and cancellation</h3><p>HTTP/1.1 can detect a disconnect late while a request body is unread. With queues enabled, Gatewise buffers known-length bodies up to 64 KiB before admission and restores them for the handler. Use <code>QueueBodyMaxBytes</code> in middleware or <code>queue.max_body_bytes</code> in proxy JSON to choose a different limit, up to 1 MiB. Set -1 to disable buffering. No-body requests remain eligible.</p><p>Large or unknown-length bodies keep streaming and use fail-fast admission instead of waiting. They still obey hard limits and queued-predecessor ordering. <code>X-Gatewise-Queue-Eligible</code> reports this server-owned decision. Successful admissions also return <code>X-Gatewise-Queue-Wait-Ms</code>; zero means no queue delay. Queue bounds cover neither body preparation nor every incoming connection/goroutine. Keep HTTP upload timeouts and infrastructure limits explicit.</p>
+<h3>Native jobs and SQL</h3><CodeBlock filename="Native operation engine · imports operation and time" code={`engine, err := operation.New(operation.Config{
+    Name: "storage", MaxConcurrent: 4, ReservedCritical: 1,
+    Queue: &operation.QueueConfig{
+        MaxWaiting: 8, MaxWait: 20 * time.Millisecond,
+        Reserved: map[operation.Priority]int{operation.Critical: 2},
+    },
+})
+if err != nil { log.Fatal(err) }
+// Use engine.Do or pass engine to sqlguard.New as before.
+// Request{NoWait: true} opts a server-owned operation out of waiting.`}/><p>Waiting before a worker callback or SQL acquisition holds neither that callback’s execution permit nor a SQL connection. An outer HTTP or worker budget can still be held during a downstream wait: keep acquisition order consistent and size deadlines across the whole chain. Acquire a SQL permit before opening its connection or transaction. Same-engine nesting through an active Permit.Context remains rejected. Priority reservations use the actual configured tier names; Critical/Background remain the default two tiers.</p>
+<h3>Choose limits and roll back</h3><p>Start with a small queue and a wait allowance below the caller’s remaining response budget. If executing work already uses nearly all of that budget, keep immediate rejection. Check successful completions within budget, p95, refusals and deadline failures together. Aging provides an opportunity to progress; it cannot guarantee completion or override unavailable lower-tier execution capacity.</p><Note label="Disable waiting">Set Queue to nil in Go, remove the JSON queue object, or set <code>GATEWISE_SERVICE_ORDERS_QUEUE_ENABLED=false</code> and restart normally. Existing in-flight work keeps its lifetime rules. Waiting is in memory and is not replayed after a restart.</Note>
+<p><a href="#/benchmarks/queue">Read the measured burst and overload comparison</a> before enabling waiting for another workload.</p>
+</Section>}

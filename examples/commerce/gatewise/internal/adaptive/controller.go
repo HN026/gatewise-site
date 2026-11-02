@@ -231,7 +231,7 @@ func (c *Controller) reset(now time.Time) {
 }
 
 // Snapshot does not evaluate or reset the controller. A zero timestamp means no
-// complete window has met both the interval and sample requirements yet.
+// eligible ordinary or sparse window has been evaluated yet.
 func (c *Controller) Snapshot() Evaluation {
 	c.mu.Lock()
 	defer c.mu.Unlock()

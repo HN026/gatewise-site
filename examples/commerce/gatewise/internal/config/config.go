@@ -22,15 +22,17 @@ import (
 const DefaultMaxConcurrent = 100
 
 type Service struct {
-	CostResolver     middleware.CostResolver
-	Decisions        *decision.Engine
-	Collectors       []decision.Collector
-	Upstream         *url.URL
-	MaxConcurrent    int
-	ReservedCritical int
-	Adaptive         *middleware.AdaptiveConfig
-	Tenants          *middleware.TenantConfig
-	Priorities       *prioritypkg.Config
+	QueueBodyMaxBytes int64
+	Queue             *middleware.QueueConfig
+	CostResolver      middleware.CostResolver
+	Decisions         *decision.Engine
+	Collectors        []decision.Collector
+	Upstream          *url.URL
+	MaxConcurrent     int
+	ReservedCritical  int
+	Adaptive          *middleware.AdaptiveConfig
+	Tenants           *middleware.TenantConfig
+	Priorities        *prioritypkg.Config
 }
 
 type Route struct {
@@ -42,6 +44,7 @@ type Route struct {
 	LatencyTarget time.Duration
 }
 type Config struct {
+	ReadTimeout           time.Duration
 	ListenAddr            string
 	Services              map[string]Service
 	Routes                []Route
@@ -50,11 +53,13 @@ type Config struct {
 	ShutdownTimeout       time.Duration
 }
 type rawConfig struct {
+	ReadTimeout           string `json:"read_timeout"`
 	ListenAddr            string `json:"listen_addr"`
 	DialTimeout           string `json:"dial_timeout"`
 	ResponseHeaderTimeout string `json:"response_header_timeout"`
 	ShutdownTimeout       string `json:"shutdown_timeout"`
 	Services              map[string]struct {
+		Queue            *rawQueue     `json:"queue"`
 		Decisions        *rawDecisions `json:"decisions"`
 		UpstreamURL      string        `json:"upstream_url"`
 		Mode             string        `json:"mode"`
@@ -108,6 +113,7 @@ func LoadWithEnv(filename, envFile string) (Config, error) {
 		dst *string
 	}{
 		{"GATEWISE_LISTEN_ADDR", &raw.ListenAddr},
+		{"GATEWISE_READ_TIMEOUT", &raw.ReadTimeout},
 		{"GATEWISE_DIAL_TIMEOUT", &raw.DialTimeout}, {"GATEWISE_RESPONSE_HEADER_TIMEOUT", &raw.ResponseHeaderTimeout}, {"GATEWISE_SHUTDOWN_TIMEOUT", &raw.ShutdownTimeout},
 	} {
 		if value, ok := lookup(field.key); ok {
@@ -123,6 +129,12 @@ func LoadWithEnv(filename, envFile string) (Config, error) {
 		return Config{}, fmt.Errorf("listen_addr port must be between 1 and 65535")
 	}
 	c := Config{ListenAddr: raw.ListenAddr, Services: make(map[string]Service)}
+	if raw.ReadTimeout != "" {
+		c.ReadTimeout, err = time.ParseDuration(raw.ReadTimeout)
+		if err != nil || c.ReadTimeout <= 0 {
+			return Config{}, fmt.Errorf("read_timeout must be a positive duration")
+		}
+	}
 	for _, field := range []struct {
 		name, value string
 		dst         *time.Duration
@@ -184,6 +196,17 @@ func LoadWithEnv(filename, envFile string) (Config, error) {
 				adaptiveReserved += tier.Reserved
 			}
 		}
+		q, err := parseQueue(name, service.Queue, lookup, limit, reserved, pc)
+		if err != nil {
+			return Config{}, err
+		}
+		bodyMax, err := parseQueueBody(name, service.Queue, lookup, q != nil)
+		if err != nil {
+			return Config{}, err
+		}
+		if q != nil && bodyMax >= 0 && c.ReadTimeout <= 0 {
+			return Config{}, fmt.Errorf("service %s: queue body buffering requires positive read_timeout", name)
+		}
 		a, err := parseAdaptive(name, service.Mode, service.Adaptive, lookup, limit, adaptiveReserved)
 		if err != nil {
 			return Config{}, err
@@ -200,7 +223,7 @@ func LoadWithEnv(filename, envFile string) (Config, error) {
 		if err != nil {
 			return Config{}, err
 		}
-		c.Services[name] = Service{CostResolver: costResolver, Decisions: de, Collectors: collectors, Upstream: target, MaxConcurrent: limit, ReservedCritical: reserved, Adaptive: a, Tenants: t, Priorities: pc}
+		c.Services[name] = Service{QueueBodyMaxBytes: bodyMax, Queue: q, CostResolver: costResolver, Decisions: de, Collectors: collectors, Upstream: target, MaxConcurrent: limit, ReservedCritical: reserved, Adaptive: a, Tenants: t, Priorities: pc}
 	}
 	prefixes := map[string]bool{}
 	for _, r := range raw.Routes {

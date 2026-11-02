@@ -1,0 +1,51 @@
+"""Export the fixed-code queue comparison and retain earlier release evidence."""
+import argparse,gzip,hashlib,json,pathlib,statistics
+ROOT=pathlib.Path(__file__).resolve().parents[1]
+def main():
+ p=argparse.ArgumentParser();p.add_argument('--report',type=pathlib.Path,required=True);a=p.parse_args();raw=a.report.read_bytes();d=json.loads(raw)
+ assert d['passed'] and len(d['runs'])==24 and all(r['passed'] for r in d['runs']) and all(c['pass'] for c in d['comparison_checks'])
+ for profile in ['middleware-fixed','proxy-fixed','middleware-adaptive','proxy-adaptive']:
+  for policy in ['fail-fast','queue']:assert {r['repeat'] for r in d['runs'] if r['profile']==profile and r['policy']==policy}=={1,2,3}
+ checks=[c for r in d['runs'] for c in r['checks']]+d['comparison_checks'];compressed=gzip.compress(raw,mtime=0);out=ROOT/'public/data';(out/'queue-results.json.gz').write_bytes(compressed)
+ summary={k:d[k] for k in ['rows','groups','criteria','methodology','started_at','finished_at']};summary.update(source_sha256=hashlib.sha256(raw).hexdigest(),gzip_sha256=hashlib.sha256(compressed).hexdigest(),sent=sum(p['sent'] for r in d['runs'] for p in r['phases']),runs=len(d['runs']),checks=len(checks),passed_checks=sum(c['pass'] for c in checks),passed=d['passed'],comparisons=d['comparison_checks'],deadline_errors=sum(t['client_deadline_errors'] for r in d['runs'] for p in r['phases'] for t in p['traffic'].values()),other_transport_errors=sum(t['transport_errors']-t['client_deadline_errors'] for r in d['runs'] for p in r['phases'] for t in p['traffic'].values()),missed=sum(p['dropped_schedules'] for r in d['runs'] for p in r['phases']));summary['rows']=[dict(r,service='all') for r in d['rows']]
+ for profile in sorted({r['profile'] for r in d['runs']}):
+  for policy in ['fail-fast','queue']:
+   selected=[r for r in d['runs'] if r['profile']==profile and r['policy']==policy]
+   for name in [p['name'] for p in selected[0]['phases']]:
+    phases=[next(p for p in r['phases'] if p['name']==name) for r in selected]
+    for role in ['orders','catalog','inventory']:
+     for priority in ['critical','background']:
+      t=[p['services'][role][priority] for p in phases];sent=sum(v['sent'] for v in t);base=next(r for r in d['rows'] if r['profile']==profile and r['policy']==policy and r['phase']==name and r['priority']==priority)
+      def med(values):
+       vals=[x for x in values if x is not None];return statistics.median(vals) if vals else None
+      summary['rows'].append(dict(base,service=role,sent=sent,success_rps=med(v['successful']/p['seconds'] for v,p in zip(t,phases)),timely_rps=med(v['successful_within_100ms_from_schedule_per_offered_second'] for v in t),p95_ms=med(v['successful_p95_ms'] for v in t),queue_p95_ms=med(v['admitted_queue_wait_p95_ms'] for v in t),rejected_percent=sum(v['rejected_503'] for v in t)/sent*100 if sent else 0,deadline_percent=sum(v['client_deadline_errors'] for v in t)/sent*100 if sent else 0,errors=sum(v['backend_5xx'] for v in t)))
+ (ROOT/'src/data/queue.json').write_text(json.dumps(summary,indent=2)+'\n')
+ import matplotlib;matplotlib.use('Agg');import matplotlib.pyplot as plt
+ plt.rcParams.update({'font.family':'DejaVu Sans','font.size':10,'text.color':'#dae8df','axes.labelcolor':'#bccfc2','xtick.color':'#a9bfb0','ytick.color':'#cbdcd1','axes.edgecolor':'#45604f','figure.facecolor':'#101b16','axes.facecolor':'#101b16','savefig.facecolor':'#101b16'})
+ colors={'fail-fast':'#829d8e','queue':'#76d9bc'};groups=d['groups'];labels=[g['profile'].replace('-',' / ')+' · '+g['policy'] for g in groups]
+ fig,axes=plt.subplots(1,2,figsize=(16,8))
+ for i,(key,label) in enumerate([('burst_useful','Critical successes within 100 ms from schedule / three bursts'),('burst_p95_ms','Worst burst successful critical p95 · ms')]):
+  vals=[g[key] for g in groups];errs=[]
+  for g in groups:
+   selected=[r for r in d['runs'] if r['profile']==g['profile'] and r['policy']==g['policy']]
+   samples=g['burst_useful_repeats'] if key=='burst_useful' else [max(p['traffic']['critical']['successful_p95_ms'] or 0 for p in r['phases'] if p['name'].startswith('burst-')) for r in selected];errs.append([g[key]-min(samples),max(samples)-g[key]])
+  ax=axes[i];ax.barh(range(len(groups)),vals,color=[colors[g['policy']] for g in groups],xerr=[[e[0] for e in errs],[e[1] for e in errs]],error_kw={'ecolor':'#dae8df','capsize':3},height=.65);ax.invert_yaxis();ax.set_yticks(range(len(groups)),labels if i==0 else []);ax.set_xlabel(label);ax.grid(axis='x',alpha=.12);ax.set_axisbelow(True);ax.spines[['top','right']].set_visible(False)
+ axes[1].axvline(100,color='#bdab79',linestyle='--',linewidth=1);fig.suptitle('Short bursts: more work completes, with additional waiting',x=.025,ha='left',fontsize=17,y=.97);fig.text(.025,.025,'Real PostgreSQL · same offered traffic · three repeats per deployment and policy\nMedians with min/max repeat whiskers, not confidence intervals. Each run has three 100 ms bursts at 1,800 total requests/sec.\nUseful work includes scheduling and queue delay. The p95 panel uses the worst burst p95 in each run before taking its median.',color='#a9bfb0');fig.tight_layout(rect=(0,.13,1,.92));fig.savefig(ROOT/'public/images/queue-bursts.png',dpi=150);plt.close(fig)
+ selected=[r for r in d['rows'] if r['phase'] in ['sustained','caller-deadline'] and r['priority']=='critical'];fig,axes=plt.subplots(1,2,figsize=(16,8))
+ for i,phase in enumerate(['sustained','caller-deadline']):
+  rows=[r for r in selected if r['phase']==phase];ax=axes[i]
+  if phase=='sustained':vals=[r['p95_ms'] or 0 for r in rows];axis='Successful critical p95 · ms'
+  else:vals=[r['deadline_percent'] for r in rows];axis='Critical client deadline failures · % offered'
+  ax.barh(range(len(rows)),vals,color=[colors[r['policy']] for r in rows],height=.65);ax.invert_yaxis();ax.set_yticks(range(len(rows)),[r['profile'].replace('-',' / ')+' · '+r['policy'] for r in rows] if i==0 else []);ax.set_xlabel(axis);ax.grid(axis='x',alpha=.12);ax.set_axisbelow(True);ax.spines[['top','right']].set_visible(False)
+ fig.suptitle('Costs: sustained-load latency and intentionally tight deadlines',x=.025,ha='left',fontsize=17,y=.97);fig.text(.025,.025,'Sustained phase: 10 ms SQL delay, 1,800 requests/sec. Deadline phase: 80 ms SQL delay, 1,000 requests/sec and a 20 ms client timeout.\nSuccessful p95 is the median of run-level values. Deadline percentages pool requests; failures are not successful low-latency work.\nImmediate refusals reduce exposure to deadline errors. Queued caller cancellation is separately recorded; the table retains rejection and error rates.',color='#a9bfb0');fig.tight_layout(rect=(0,.13,1,.92));fig.savefig(ROOT/'public/images/queue-costs.png',dpi=150);plt.close(fig)
+ run=next(r for r in d['runs'] if r['profile']=='middleware-adaptive' and r['policy']=='queue' and r['repeat']==1);fig,axes=plt.subplots(3,1,figsize=(16,10),sharex=True)
+ for role,color in [('orders','#76d9bc'),('catalog','#bdab79'),('inventory','#829d8e')]:
+  pts=[t for t in run['trace'] if t['service']==role];x=[t['seconds'] for t in pts]
+  for ax,key in zip(axes,['waiting','active','limit']):ax.plot(x,[t[key] for t in pts],label=role,color=color,linewidth=1)
+ for phase in run['phases']:
+  if phase['name'] in ['sustained','slowdown','caller-deadline','recovery']:axes[0].axvline(phase['started'],color='#a9bfb0',alpha=.35,linewidth=.7);axes[0].text(phase['started'],15.3,phase['name'],fontsize=8,rotation=25)
+ axes[0].axhline(16,color='#bdab79',linestyle='--',linewidth=.7);axes[1].axhline(4,color='#bdab79',linestyle='--',linewidth=.7);axes[0].set_ylim(0,18);axes[0].set_ylabel('Waiting requests');axes[1].set_ylabel('Executing requests');axes[2].set_ylabel('Adaptive baseline slots');axes[2].set_xlabel('Seconds since run start, including controls and drain');axes[0].legend(loc='upper left',ncol=3)
+ for ax in axes:ax.grid(alpha=.12);ax.spines[['top','right']].set_visible(False)
+ fig.suptitle('Waiting and execution are separate budgets',x=.06,ha='left',fontsize=17);fig.text(.06,.015,'One adaptive-middleware / queue run, sampled about every 25 ms. Short peaks and brief transitions can be missed.\nThe harness drains all requests, waiters and SQL between phases. Existing execution can exceed a reduced adaptive baseline while draining.',fontsize=10,color='#a9bfb0');fig.tight_layout(rect=(0,.07,1,.95));fig.savefig(ROOT/'public/images/queue-trace.png',dpi=150);plt.close(fig)
+ provenance={'source_sha256':summary['source_sha256'],'gzip_sha256':summary['gzip_sha256'],'runtime_source_sha256':d['methodology']['runtime_source_sha256'],'started_at':d['started_at'],'finished_at':d['finished_at'],'aggregation':'Useful burst work sums successful critical requests completed within 100 ms of schedule over three bursts in each run; charts show medians with observed min/max, not confidence intervals. Burst p95 is the median of each run\'s worst-burst successful p95. Table rates/p95 are medians; rejection/deadline percentages pool counts. Background outcomes retained. SQL wait covers all services/priorities and divides total wait time by acquisitions that waited.','deadline_scope':'The 20 ms client timeout with 80 ms SQL delay intentionally induces failures. Deadline errors remain a subset of transport_errors in raw output; other transport errors are zero. Queue cancellation counts a server-observed canceled waiting entry, not database-side termination.','body_scope':'Known small bodies are buffered before waiting so net/http observes HTTP/1.1 disconnects. Large/unknown bodies stay streaming and fail-fast; proxy upload timeout is explicit. Queue bounds do not cover metadata/upload preparation.','criteria':d['criteria'],'comparison_checks':d['comparison_checks'],'limitations':'Local short experiments, no durable queue, preemption, retries, distributed budget, production capacity or starvation guarantee. Aging changes scheduling preference, not hard priority reservations. Adaptive feedback excludes waiting; client useful-work measurement includes it.','matplotlib':matplotlib.__version__,'images':['queue-bursts.png','queue-costs.png','queue-trace.png']};(out/'queue-provenance.json').write_text(json.dumps(provenance,indent=2)+'\n');print(summary['sent'],'requests;',summary['checks'],'checks',flush=True)
+if __name__=='__main__':main()

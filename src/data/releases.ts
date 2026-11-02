@@ -1,6 +1,55 @@
 // Newest published release first. Keep notes and downloads tied to its Git tag.
 export const releases = [
 {
+  "version": "v0.10.0",
+  "publishedAt": "2026-11-08T15:41:03Z",
+  "date": "8 November 2026",
+  "summary": "Optional bounded waiting preserves more short-burst work, with explicit latency, cancellation and overload costs.",
+  "requirements": "Library: Go 1.22+; commerce example: Go 1.25+",
+  "changes": [
+    "Shared operation, middleware and proxy queues add waiting capacity, maximum wait, FIFO priority selection, aging and independent waiting reservations. Immediate rejection remains the default.",
+    "Queued work holds no execution, tenant or resource permits. Policy is rechecked before execution; cancellation/deadline cleanup, native NoWait and bounded queue metrics explain outcomes.",
+    "Small known HTTP bodies are buffered before admission so HTTP/1.1 cancellation is observable. Large/unknown bodies retain streaming and immediate admission/refusal. Proxy queue buffering requires explicit positive read_timeout.",
+    "220,080 requests in 24 repeated PostgreSQL comparison runs; all 228 checks passed. Useful short-burst work improved across all deployments, with additional waiting and explicit deadline/refusal costs.",
+    "Exact demo passed 2,232 Postman assertions across 63 profiles. Core race tests, vet and CI passed; updated setup, editable diagram, metrics dashboards and reproducible reports are included."
+  ],
+  "upgrade": "Opt-in: set Queue in Go or services.<name>.queue in proxy JSON. Keep execution and waiting limits separate; choose MaxWait from the remaining request budget. Reservations use actual configured tier names and protect higher tiers from lower-tier waiting. HTTP buffers up to 64 KiB by default; set ReadTimeout on your server. QueueBodyMaxBytes / queue.max_body_bytes supports -1 (disable), zero (default) or at most 1 MiB. Large/unknown bodies do not queue. Positive proxy read_timeout is required with buffering. Use keyed struct literals. Disable Queue, remove its JSON object, or set QUEUE_ENABLED=false and restart. Queues are in-memory/process-local, add no capacity, and provide no durable delivery, preemption, retries or starvation guarantee. Assess whole-request latency; controller processing feedback excludes waiting.",
+  "downloads": [
+    {
+      "name": "Source ZIP",
+      "path": "archive/refs/tags/v0.10.0.zip"
+    },
+    {
+      "name": "Source tar.gz",
+      "path": "archive/refs/tags/v0.10.0.tar.gz"
+    },
+    {
+      "name": "Demo example",
+      "path": "releases/download/v0.10.0/gatewise-demo.zip"
+    },
+    {
+      "name": "Demo SHA-256",
+      "path": "releases/download/v0.10.0/gatewise-demo.sha256"
+    },
+    {
+      "name": "Postman bundle",
+      "path": "releases/download/v0.10.0/postman.zip"
+    },
+    {
+      "name": "Queue comparison \u00b7 gzip",
+      "path": "releases/download/v0.10.0/queue-results.json.gz"
+    },
+    {
+      "name": "Criteria and calculations",
+      "path": "releases/download/v0.10.0/queue-provenance.json"
+    },
+    {
+      "name": "Postman results",
+      "path": "releases/download/v0.10.0/commerce-contract-results.json"
+    }
+  ]
+},
+{
   "version": "v0.9.0",
   "publishedAt": "2026-11-08T14:54:10Z",
   "date": "8 November 2026",

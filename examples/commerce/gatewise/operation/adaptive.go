@@ -75,7 +75,7 @@ func (s *Engine) Snapshot() ServiceState {
 }
 
 // ControllerState contains the last evaluated adaptive window. EvaluatedAt is
-// zero until both interval and sample requirements are met. Decision is one of
+// zero until an ordinary or sparse window is evaluated. Decision is one of
 // not_evaluated, hold, increase or decrease. These are observations, not controls.
 type ControllerState struct {
 	ControlRatio, ControlFailureFraction          float64

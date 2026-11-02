@@ -153,6 +153,7 @@ func (a *API) State(w http.ResponseWriter, r *http.Request) {
 	if a.Guard != nil {
 		v["guard"] = a.Guard.Snapshot()
 		v["controller"] = a.Guard.ControllerSnapshot()
+		v["queue"] = a.Guard.QueueSnapshot()
 		v["tenants"] = a.Guard.TenantSnapshot()
 		v["decisions"] = a.Guard.DecisionSnapshot()
 	}

@@ -1,0 +1,147 @@
+{
+  "source_sha256": "f14cc5a61eeca309d320ebe3fad5bb5399f63b57d8789ec2e7ca17f7ceda5c62",
+  "gzip_sha256": "47b244db458909c9199cb541eecf31a94eda8e06a949c75be8adee89ffa9c36b",
+  "runtime_source_sha256": "feecdf9a90f7f5f5a9a778ecaa6a0b98fb15a337fc109870bdd2acc65f044158",
+  "started_at": "2026-11-08T15:23:45.705096+00:00",
+  "finished_at": "2026-11-08T15:29:21.785198+00:00",
+  "aggregation": "Useful burst work sums successful critical requests completed within 100 ms of schedule over three bursts in each run; charts show medians with observed min/max, not confidence intervals. Burst p95 is the median of each run's worst-burst successful p95. Table rates/p95 are medians; rejection/deadline percentages pool counts. Background outcomes retained. SQL wait covers all services/priorities and divides total wait time by acquisitions that waited.",
+  "deadline_scope": "The 20 ms client timeout with 80 ms SQL delay intentionally induces failures. Deadline errors remain a subset of transport_errors in raw output; other transport errors are zero. Queue cancellation counts a server-observed canceled waiting entry, not database-side termination.",
+  "body_scope": "Known small bodies are buffered before waiting so net/http observes HTTP/1.1 disconnects. Large/unknown bodies stay streaming and fail-fast; proxy upload timeout is explicit. Queue bounds do not cover metadata/upload preparation.",
+  "criteria": {
+    "burst_useful_ratio_min": 1.1,
+    "burst_successful_p95_ms_max": 100,
+    "sustained_useful_ratio_min": 0.95,
+    "recovery_useful_ratio_min": 0.95,
+    "nondeadline_extra_server_errors": 0,
+    "interpretation": "Median run-level outcomes for each deployment; useful work includes queue and scheduling delay. Short-burst improvement is tested separately from sustained overload. Caller-deadline failures are deliberately induced and shown, not silently removed."
+  },
+  "comparison_checks": [
+    {
+      "profile": "middleware-adaptive",
+      "name": "short bursts improve useful critical completions at least10%",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "name": "short burst successful critical p95 within100ms",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "name": "sustained useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "name": "sustained no extra critical server errors",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "name": "recovery useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "name": "recovery no extra critical server errors",
+      "pass": true
+    },
+    {
+      "profile": "middleware-fixed",
+      "name": "short bursts improve useful critical completions at least10%",
+      "pass": true
+    },
+    {
+      "profile": "middleware-fixed",
+      "name": "short burst successful critical p95 within100ms",
+      "pass": true
+    },
+    {
+      "profile": "middleware-fixed",
+      "name": "sustained useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "middleware-fixed",
+      "name": "sustained no extra critical server errors",
+      "pass": true
+    },
+    {
+      "profile": "middleware-fixed",
+      "name": "recovery useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "middleware-fixed",
+      "name": "recovery no extra critical server errors",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "name": "short bursts improve useful critical completions at least10%",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "name": "short burst successful critical p95 within100ms",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "name": "sustained useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "name": "sustained no extra critical server errors",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "name": "recovery useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "name": "recovery no extra critical server errors",
+      "pass": true
+    },
+    {
+      "profile": "proxy-fixed",
+      "name": "short bursts improve useful critical completions at least10%",
+      "pass": true
+    },
+    {
+      "profile": "proxy-fixed",
+      "name": "short burst successful critical p95 within100ms",
+      "pass": true
+    },
+    {
+      "profile": "proxy-fixed",
+      "name": "sustained useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "proxy-fixed",
+      "name": "sustained no extra critical server errors",
+      "pass": true
+    },
+    {
+      "profile": "proxy-fixed",
+      "name": "recovery useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "proxy-fixed",
+      "name": "recovery no extra critical server errors",
+      "pass": true
+    }
+  ],
+  "limitations": "Local short experiments, no durable queue, preemption, retries, distributed budget, production capacity or starvation guarantee. Aging changes scheduling preference, not hard priority reservations. Adaptive feedback excludes waiting; client useful-work measurement includes it.",
+  "matplotlib": "3.11.2",
+  "images": [
+    "queue-bursts.png",
+    "queue-costs.png",
+    "queue-trace.png"
+  ]
+}

@@ -9,6 +9,8 @@ import (
 )
 
 type Config struct {
+	QueueWaiting, QueueReserved                                     int
+	QueueWait, QueueAging                                           time.Duration
 	AdaptiveProfile                                                 string
 	RouteBudgets                                                    bool
 	OperationsMode, ReplicaURL                                      string
@@ -34,6 +36,10 @@ func Load(args []string) (Config, error) {
 		}
 		return d
 	}
+	f.IntVar(&c.QueueWaiting, "queue-waiting", 0, "optional waiting capacity; zero disables")
+	f.IntVar(&c.QueueReserved, "queue-reserved", 0, "waiting slots protected for critical requests")
+	f.DurationVar(&c.QueueWait, "queue-wait", 40*time.Millisecond, "maximum queue wait")
+	f.DurationVar(&c.QueueAging, "queue-aging", 20*time.Millisecond, "queue aging threshold")
 	f.StringVar(&c.AdaptiveProfile, "adaptive-profile", "legacy", "legacy or stable")
 	f.BoolVar(&c.RouteBudgets, "route-budgets", false, "example report latency budget500ms")
 	f.StringVar(&c.OperationsMode, "operations", "", "operation demo: disabled, fixed, pool or balanced")

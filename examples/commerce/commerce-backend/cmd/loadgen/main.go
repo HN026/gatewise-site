@@ -3,8 +3,10 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -22,19 +24,22 @@ type TenantWeight struct {
 	Weight int    `json:"weight"`
 }
 type Config struct {
-	OperationWork bool              `json:"operation_work"`
-	ResourceWork  string            `json:"resource_work"`
-	PriorityFlows bool              `json:"priority_flows"`
-	Tenants       []TenantWeight    `json:"tenants"`
-	UniqueNoisy   bool              `json:"unique_noisy"`
-	URLs          map[string]string `json:"urls"`
-	Seconds       float64           `json:"seconds"`
-	StartRPS      float64           `json:"start_rps"`
-	EndRPS        float64           `json:"end_rps"`
-	BusinessSlots int               `json:"business_slots"`
-	RunID         string            `json:"run_id"`
+	ClientTimeoutMS int               `json:"client_timeout_ms"`
+	OperationWork   bool              `json:"operation_work"`
+	ResourceWork    string            `json:"resource_work"`
+	PriorityFlows   bool              `json:"priority_flows"`
+	Tenants         []TenantWeight    `json:"tenants"`
+	UniqueNoisy     bool              `json:"unique_noisy"`
+	URLs            map[string]string `json:"urls"`
+	Seconds         float64           `json:"seconds"`
+	StartRPS        float64           `json:"start_rps"`
+	EndRPS          float64           `json:"end_rps"`
+	BusinessSlots   int               `json:"business_slots"`
+	RunID           string            `json:"run_id"`
 }
 type Row struct {
+	Deadline                                    bool
+	QueueWaitMS                                 float64
 	ScheduledSeconds                            float64
 	CompletionSeconds                           float64
 	Allocation                                  string
@@ -46,6 +51,8 @@ type Row struct {
 	Limit                                       int
 }
 type Traffic struct {
+	DeadlineErrors      int            `json:"client_deadline_errors"`
+	QueueP95            *float64       `json:"admitted_queue_wait_p95_ms"`
 	ScheduledTimely     float64        `json:"successful_within_100ms_from_schedule_per_offered_second"`
 	Allocations         map[string]int `json:"allocations"`
 	FirstSuccessSeconds *float64       `json:"first_success_seconds"`
@@ -76,9 +83,15 @@ func percentile(v []float64) *float64 {
 }
 func summarize(rows []Row, seconds float64) Traffic {
 	t := Traffic{Allocations: map[string]int{}, RejectionReasons: map[string]int{}, Statuses: map[string]int{}}
-	var lat, lag, arrival []float64
+	var lat, lag, arrival, queue []float64
 	for _, r := range rows {
 		t.Sent++
+		if r.Deadline {
+			t.DeadlineErrors++
+		}
+		if r.Code >= 200 && r.Code < 300 {
+			queue = append(queue, r.QueueWaitMS)
+		}
 		if r.ChainVerified {
 			t.ChainVerified++
 		}
@@ -119,6 +132,7 @@ func summarize(rows []Row, seconds float64) Traffic {
 			t.Other++
 		}
 	}
+	t.QueueP95 = percentile(queue)
 	t.P95 = percentile(lat)
 	t.Dispatch = percentile(lag)
 	t.Arrival = percentile(arrival)
@@ -153,7 +167,11 @@ func main() {
 	}
 	transport := &http.Transport{MaxIdleConns: 4096, MaxIdleConnsPerHost: 2048, MaxConnsPerHost: 4096, IdleConnTimeout: 30 * time.Second, DialContext: (&net.Dialer{Timeout: time.Second}).DialContext}
 	defer transport.CloseIdleConnections()
-	client := &http.Client{Transport: transport, Timeout: 3 * time.Second}
+	timeout := 3 * time.Second
+	if c.ClientTimeoutMS > 0 {
+		timeout = time.Duration(c.ClientTimeoutMS) * time.Millisecond
+	}
+	client := &http.Client{Transport: transport, Timeout: timeout}
 	count := int(math.Round(c.Seconds * (c.StartRPS + c.EndRPS) / 2))
 	rows := make([]Row, 0, count)
 	var mu sync.Mutex
@@ -300,6 +318,7 @@ func main() {
 			}
 			sent := time.Now()
 			code, limit := 0, 0
+			queueWait := 0.
 			chainVerified, epochMatched, cohortMismatch := false, false, false
 			allocation := ""
 			reason := ""
@@ -313,7 +332,7 @@ func main() {
 					}
 					_ = json.Unmarshal(body, &rejection)
 					switch rejection.Reason {
-					case "write_bytes_limit", "hot_key_limit", "resource_key_registry_full", "resource_accounting_exhausted", "signal_pressure", "signal_unavailable", "signal_concurrency_limit", "tenant_concurrency_limit", "tenant_registry_full", "concurrency_limit", "critical_capacity_reserved", "tier_capacity_reserved", "cohort_limited", "tenant_share_reserved":
+					case "queue_full", "queue_reserved", "queue_timeout", "queue_deadline", "queue_canceled", "write_bytes_limit", "hot_key_limit", "resource_key_registry_full", "resource_accounting_exhausted", "signal_pressure", "signal_unavailable", "signal_concurrency_limit", "tenant_concurrency_limit", "tenant_registry_full", "concurrency_limit", "critical_capacity_reserved", "tier_capacity_reserved", "cohort_limited", "tenant_share_reserved":
 						reason = rejection.Reason
 					default:
 						reason = "other_503"
@@ -346,9 +365,10 @@ func main() {
 				}
 				limit, _ = strconv.Atoi(resp.Header.Get("X-Gatewise-Limit"))
 				allocation = resp.Header.Get("X-Gatewise-Tenant-Admission")
+				queueWait, _ = strconv.ParseFloat(resp.Header.Get("X-Gatewise-Queue-Wait-Ms"), 64)
 			}
 			end := time.Now()
-			r := Row{ScheduledSeconds: due.Sub(start).Seconds(), CompletionSeconds: end.Sub(start).Seconds(), Allocation: allocation, ChainVerified: chainVerified, EpochMatched: epochMatched, CohortMismatch: cohortMismatch, Role: role, Priority: priority, Tenant: tenantGroup, Reason: reason, Code: code, Latency: float64(end.Sub(sent)) / 1e6, Lag: float64(sent.Sub(due)) / 1e6, Arrival: float64(end.Sub(due)) / 1e6, Limit: limit}
+			r := Row{Deadline: errors.Is(e, context.DeadlineExceeded), QueueWaitMS: queueWait, ScheduledSeconds: due.Sub(start).Seconds(), CompletionSeconds: end.Sub(start).Seconds(), Allocation: allocation, ChainVerified: chainVerified, EpochMatched: epochMatched, CohortMismatch: cohortMismatch, Role: role, Priority: priority, Tenant: tenantGroup, Reason: reason, Code: code, Latency: float64(end.Sub(sent)) / 1e6, Lag: float64(sent.Sub(due)) / 1e6, Arrival: float64(end.Sub(due)) / 1e6, Limit: limit}
 			mu.Lock()
 			rows = append(rows, r)
 			mu.Unlock()

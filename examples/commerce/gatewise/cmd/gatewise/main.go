@@ -42,5 +42,5 @@ func run(path, envFile string, logger *slog.Logger) error {
 	defer closeIdle()
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	return server.Run(ctx, c.ListenAddr, h, c.ShutdownTimeout, logger)
+	return server.RunWithReadTimeout(ctx, c.ListenAddr, h, c.ShutdownTimeout, logger, c.ReadTimeout)
 }

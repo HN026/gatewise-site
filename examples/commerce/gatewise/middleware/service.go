@@ -16,6 +16,8 @@ import (
 	"time"
 )
 
+type QueueConfig = operation.QueueConfig
+
 type Priority = operation.Priority
 
 const (
@@ -24,6 +26,8 @@ const (
 )
 
 type ServiceConfig struct {
+	// QueueBodyMaxBytes defaults to 64KiB; -1 disables buffering. Larger/unknown bodies never wait.
+	QueueBodyMaxBytes               int64
 	Name                            string
 	MaxConcurrent, ReservedCritical int
 	Logger                          *slog.Logger
@@ -31,18 +35,26 @@ type ServiceConfig struct {
 	Tenants                         *TenantConfig
 	Priorities                      *prioritypkg.Config
 	Decisions                       *decision.Engine
+	Queue                           *QueueConfig
 	CostResolver                    CostResolver
 }
 type Service struct {
 	*operation.Engine
-	costResolver   CostResolver
-	tenantResolver TenantResolver
-	policy         *prioritypkg.Policy
-	logger         *slog.Logger
-	name           string
+	queueBodyMaxBytes int64
+	costResolver      CostResolver
+	tenantResolver    TenantResolver
+	policy            *prioritypkg.Policy
+	logger            *slog.Logger
+	name              string
 }
 
 func NewService(c ServiceConfig) (*Service, error) {
+	if c.QueueBodyMaxBytes < -1 || c.QueueBodyMaxBytes > 1<<20 {
+		return nil, fmt.Errorf("gatewise: QueueBodyMaxBytes must be -1 or 0..1048576")
+	}
+	if c.QueueBodyMaxBytes == 0 {
+		c.QueueBodyMaxBytes = 64 << 10
+	}
 	if c.Decisions != nil && c.Decisions.HasBudgets() && c.CostResolver == nil {
 		return nil, fmt.Errorf("gatewise: resource budgets require a trusted CostResolver")
 	}
@@ -59,11 +71,11 @@ func NewService(c ServiceConfig) (*Service, error) {
 	if c.Decisions != nil && c.Decisions.HasActorRules() && tenants == nil {
 		return nil, fmt.Errorf("gatewise: actor rules require a trusted tenant resolver")
 	}
-	engine, err := operation.New(operation.Config{Name: c.Name, MaxConcurrent: c.MaxConcurrent, ReservedCritical: c.ReservedCritical, Logger: c.Logger, Adaptive: c.Adaptive, Tenants: tenants, Priorities: c.Priorities, Decisions: c.Decisions})
+	engine, err := operation.New(operation.Config{Queue: c.Queue, Name: c.Name, MaxConcurrent: c.MaxConcurrent, ReservedCritical: c.ReservedCritical, Logger: c.Logger, Adaptive: c.Adaptive, Tenants: tenants, Priorities: c.Priorities, Decisions: c.Decisions})
 	if err != nil {
 		return nil, err
 	}
-	s := &Service{Engine: engine, costResolver: c.CostResolver, logger: c.Logger, name: c.Name}
+	s := &Service{Engine: engine, queueBodyMaxBytes: c.QueueBodyMaxBytes, costResolver: c.CostResolver, logger: c.Logger, name: c.Name}
 	if s.name == "" {
 		s.name = "service"
 	}
@@ -130,11 +142,18 @@ func (s *Service) Middleware(priority Priority, next http.Handler, options ...Ha
 				return
 			}
 		}
+		noWait, err := s.prepareQueueBody(w, r)
+		if err != nil {
+			if r.Context().Err() == nil {
+				http.Error(w, "gatewise: invalid request body", http.StatusBadRequest)
+			}
+			return
+		}
 		var resolveCost func(context.Context) (decision.Cost, error)
 		if s.costResolver != nil && s.Engine.NeedsCost(o.resource) {
 			resolveCost = func(ctx context.Context) (decision.Cost, error) { return s.costResolver(r.WithContext(ctx)) }
 		}
-		permit, err := s.Engine.Begin(r.Context(), operation.Request{Kind: "http", Priority: resolvedPriority, Tenant: id, Resource: o.resource, ResolveCost: resolveCost, LatencyTarget: o.targetLatency})
+		permit, err := s.Engine.Begin(r.Context(), operation.Request{NoWait: noWait, Kind: "http", Priority: resolvedPriority, Tenant: id, Resource: o.resource, ResolveCost: resolveCost, LatencyTarget: o.targetLatency})
 		if err != nil {
 			var rejection *operation.Rejection
 			if errors.As(err, &rejection) {
@@ -150,6 +169,9 @@ func (s *Service) Middleware(priority Priority, next http.Handler, options ...Ha
 				http.Error(w, "gatewise: same-engine nested admission", http.StatusInternalServerError)
 			}
 			return
+		}
+		if s.QueueEnabled() {
+			w.Header().Set("X-Gatewise-Queue-Wait-Ms", strconv.FormatFloat(float64(permit.QueueWait())/float64(time.Millisecond), 'f', 3, 64))
 		}
 		trace := permit.Decision()
 		s.signalHeaders(w, trace)
