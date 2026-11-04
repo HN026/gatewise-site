@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"github.com/HN026/gatewise-examples/commerce/internal/baseline"
 	"github.com/HN026/gatewise-examples/commerce/internal/config"
 	"github.com/HN026/gatewise-examples/commerce/internal/handler"
 	"github.com/HN026/gatewise-examples/commerce/internal/operations"
@@ -41,7 +42,7 @@ func Run(ctx context.Context, c config.Config) error {
 	var g *middleware.Service
 	var engine *decision.Engine
 	var collectors []decision.Collector
-	if c.Mode != "direct" && c.Mode != "semaphore" {
+	if c.Mode != "direct" && c.Mode != "semaphore" && c.Mode != "rate" {
 		cfg := middleware.ServiceConfig{Name: c.Role, MaxConcurrent: c.MaxConcurrent, ReservedCritical: c.Reserved}
 		if c.QueueWaiting > 0 {
 			reserved := middleware.Critical
@@ -89,21 +90,12 @@ func Run(ctx context.Context, c config.Config) error {
 	}
 	a := handler.New(s, g, c.Mode)
 	mux := http.NewServeMux()
-	referenceSlots := make(chan struct{}, c.MaxConcurrent)
+	reference := baseline.New(c.Mode, c.MaxConcurrent, c.RatePerSecond, c.RateBurst)
 	protect := func(p middleware.Priority, h http.HandlerFunc) http.Handler {
-		if c.Mode == "semaphore" {
-			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.Context().Err() != nil {
-					return
-				}
-				select {
-				case referenceSlots <- struct{}{}:
-					defer func() { <-referenceSlots }()
-					h.ServeHTTP(w, r)
-				default:
-					handler.JSON(w, 503, map[string]string{"error": "service_overloaded", "reason": "concurrency_limit"})
-				}
-			})
+		observed := reference.Wrap(h)
+		h = observed.ServeHTTP
+		if c.Mode == "semaphore" || c.Mode == "rate" {
+			return h
 		}
 		if g != nil {
 			if c.RouteBudgets && p == middleware.Background {
@@ -190,6 +182,7 @@ func Run(ctx context.Context, c config.Config) error {
 	registry.MustRegister(prometheus.NewCounterFunc(prometheus.CounterOpts{Name: "commerce_db_pool_wait_seconds_total", ConstLabels: prometheus.Labels{"service": c.Role}, Help: "Accumulated SQL pool wait seconds."}, func() float64 { return s.DB.Stats().WaitDuration.Seconds() }))
 	mux.Handle("GET /metrics", promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
 	admin := http.NewServeMux()
+	admin.HandleFunc("GET /reference/state", func(w http.ResponseWriter, r *http.Request) { handler.JSON(w, 200, reference.Snapshot()) })
 	admin.HandleFunc("GET /state", a.State)
 	admin.HandleFunc("PUT /control", a.Update)
 	if ops != nil {

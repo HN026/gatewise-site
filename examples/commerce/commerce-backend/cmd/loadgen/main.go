@@ -63,6 +63,7 @@ type Traffic struct {
 	Statuses            map[string]int `json:"statuses"`
 	Sent                int            `json:"sent"`
 	Successful          int            `json:"successful"`
+	RateRejected        int            `json:"rejected_429"`
 	Rejected            int            `json:"rejected_503"`
 	Errors              int            `json:"backend_5xx"`
 	Transport           int            `json:"transport_errors"`
@@ -102,7 +103,7 @@ func summarize(rows []Row, seconds float64) Traffic {
 			t.CohortMismatches++
 		}
 		t.Statuses[strconv.Itoa(r.Code)]++
-		if r.Code == 503 {
+		if r.Code == 503 || r.Code == 429 {
 			t.RejectionReasons[r.Reason]++
 		}
 		lag = append(lag, r.Lag)
@@ -122,6 +123,8 @@ func summarize(rows []Row, seconds float64) Traffic {
 			if r.Latency <= 100 {
 				t.Timely += 1 / seconds
 			}
+		case r.Code == 429:
+			t.RateRejected++
 		case r.Code == 503:
 			t.Rejected++
 		case r.Code >= 500:
@@ -324,7 +327,7 @@ func main() {
 			reason := ""
 			resp, e := client.Do(req)
 			if e == nil {
-				if resp.StatusCode == 503 {
+				if resp.StatusCode == 503 || resp.StatusCode == 429 {
 					body, err := io.ReadAll(io.LimitReader(resp.Body, 4096))
 					e = err
 					var rejection struct {
@@ -332,7 +335,7 @@ func main() {
 					}
 					_ = json.Unmarshal(body, &rejection)
 					switch rejection.Reason {
-					case "queue_full", "queue_reserved", "queue_timeout", "queue_deadline", "queue_canceled", "write_bytes_limit", "hot_key_limit", "resource_key_registry_full", "resource_accounting_exhausted", "signal_pressure", "signal_unavailable", "signal_concurrency_limit", "tenant_concurrency_limit", "tenant_registry_full", "concurrency_limit", "critical_capacity_reserved", "tier_capacity_reserved", "cohort_limited", "tenant_share_reserved":
+					case "static_rate_limit", "queue_full", "queue_reserved", "queue_timeout", "queue_deadline", "queue_canceled", "write_bytes_limit", "hot_key_limit", "resource_key_registry_full", "resource_accounting_exhausted", "signal_pressure", "signal_unavailable", "signal_concurrency_limit", "tenant_concurrency_limit", "tenant_registry_full", "concurrency_limit", "critical_capacity_reserved", "tier_capacity_reserved", "cohort_limited", "tenant_share_reserved":
 						reason = rejection.Reason
 					default:
 						reason = "other_503"

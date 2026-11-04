@@ -1,6 +1,59 @@
 // Newest published release first. Keep notes and downloads tied to its Git tag.
 export const releases = [
 {
+  "version": "v0.11.0",
+  "publishedAt": "2026-11-08T16:24:52Z",
+  "date": "8 November 2026",
+  "summary": "Compare simple limiters and Gatewise against the same PostgreSQL workload, then choose and tune the policy your service needs.",
+  "requirements": "Library: Go 1.22+; commerce example: Go 1.25+",
+  "changes": [
+    "No production controller, public API or default behavior changes. This release publishes comparative evidence and practical adoption guidance.",
+    "683,340 requests in 42 fixed-code PostgreSQL runs compare unprotected traffic, a semaphore, three token-bucket rates, unreserved fixed admission and reserved fixed/adaptive Gatewise, with and without waiting, in both HTTP integrations.",
+    "Both priorities and individual services retain useful successes, latency, refusals, server errors and caller deadlines. Original protocol: 385/393 checks passed; 8 proxy remote-handler bounds failed under cancellation. All failures and post-hoc lifetime analysis remain explicit.",
+    "Five-repeat no-op handler overhead, practical quota/concurrency/reservation/adaptive/queue tuning, and explicit limits on local and Cinnamon comparisons.",
+    "Exact source-only ZIP passed 2,256 Postman assertions across 65 profiles, including all 63 existing profiles. Core race tests, vet, build and GitHub CI passed."
+  ],
+  "upgrade": "No migration required; admission code and defaults are unchanged from v0.10.0. Update the module/tag to v0.11.0. The demo adds independent semaphore/rate references and comparison_benchmark.py; reference policies are not Gatewise APIs. Compare end-to-end timely successes with refusal/error rates before adopting optional policies. Cinnamon remains unbenchmarked without an official runnable implementation. Local experiments do not establish production capacity.",
+  "downloads": [
+    {
+      "name": "Source ZIP",
+      "path": "archive/refs/tags/v0.11.0.zip"
+    },
+    {
+      "name": "Source tar.gz",
+      "path": "archive/refs/tags/v0.11.0.tar.gz"
+    },
+    {
+      "name": "Demo example",
+      "path": "releases/download/v0.11.0/gatewise-demo.zip"
+    },
+    {
+      "name": "Demo SHA-256",
+      "path": "releases/download/v0.11.0/gatewise-demo.sha256"
+    },
+    {
+      "name": "Postman bundle",
+      "path": "releases/download/v0.11.0/postman.zip"
+    },
+    {
+      "name": "Policy comparison \u00b7 gzip",
+      "path": "releases/download/v0.11.0/comparison-results.json.gz"
+    },
+    {
+      "name": "Criteria and calculations",
+      "path": "releases/download/v0.11.0/comparison-provenance.json"
+    },
+    {
+      "name": "Handler overhead",
+      "path": "releases/download/v0.11.0/comparison-overhead.txt"
+    },
+    {
+      "name": "Postman results",
+      "path": "releases/download/v0.11.0/commerce-contract-results.json"
+    }
+  ]
+},
+{
   "version": "v0.10.0",
   "publishedAt": "2026-11-08T15:41:03Z",
   "date": "8 November 2026",

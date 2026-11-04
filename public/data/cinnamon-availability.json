@@ -1,14 +1,41 @@
 {
-  "checked_at": "2026-11-07T11:28:25.708226+00:00",
+  "checked_at": "2026-11-08T16:05:35.821837+00:00",
   "status": "official_public_implementation_not_identified",
-  "scope": "Read-only repository search in the official uber GitHub organization for cinnamon; official architecture articles used as references. This does not prove no usable implementation exists elsewhere.",
+  "scope": "Read official Cinnamon architecture/PID articles and follow the RPC middleware link to yarpc. GitHub repository searches for cinnamon in uber, uber-go and yarpc, and code searches in uber, uber-go and yarpc/yarpc-go returned zero matches. This bounded search covers GitHub-indexed public repositories/code, not private code, unindexed files or every organization; it does not prove no usable implementation exists elsewhere.",
   "repository_query": "https://api.github.com/search/repositories?q=cinnamon+org:uber&per_page=100",
   "repository_matches": 0,
   "sources": [
     "https://www.uber.com/us/en/blog/cinnamon-using-century-old-tech-to-build-a-mean-load-shedder/",
     "https://www.uber.com/us/en/blog/pid-controller-for-cinnamon/",
-    "https://www.uber.com/us/en/blog/cinnamon-auto-tuner-adaptive-concurrency-in-the-wild/"
+    "https://www.uber.com/us/en/blog/cinnamon-auto-tuner-adaptive-concurrency-in-the-wild/",
+    "https://github.com/yarpc"
   ],
-  "direct_comparison": "pending access to an actual implementation and permission to run/publish it",
-  "reference_policy": "No independent reimplementation is presented as Uber Cinnamon."
+  "direct_comparison": "Not performed: an official runnable implementation was not identified in the bounded search. No recreated approximation is labeled Cinnamon.",
+  "reference_policy": "No independent reimplementation is presented as Uber Cinnamon.",
+  "queries": [
+    {
+      "url": "https://api.github.com/search/repositories?q=cinnamon+org:uber&per_page=100",
+      "matches": 0
+    },
+    {
+      "url": "https://api.github.com/search/repositories?q=cinnamon+org:uber-go&per_page=100",
+      "matches": 0
+    },
+    {
+      "url": "https://api.github.com/search/repositories?q=cinnamon+org:yarpc&per_page=100",
+      "matches": 0
+    },
+    {
+      "url": "https://api.github.com/search/code?q=cinnamon+org:uber&per_page=100",
+      "matches": 0
+    },
+    {
+      "url": "https://api.github.com/search/code?q=cinnamon+org:uber-go&per_page=100",
+      "matches": 0
+    },
+    {
+      "url": "https://api.github.com/search/code?q=cinnamon+repo:yarpc/yarpc-go&per_page=100",
+      "matches": 0
+    }
+  ]
 }

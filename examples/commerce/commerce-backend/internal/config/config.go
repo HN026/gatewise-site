@@ -9,6 +9,8 @@ import (
 )
 
 type Config struct {
+	RatePerSecond                                                   float64
+	RateBurst                                                       int
 	QueueWaiting, QueueReserved                                     int
 	QueueWait, QueueAging                                           time.Duration
 	AdaptiveProfile                                                 string
@@ -36,6 +38,8 @@ func Load(args []string) (Config, error) {
 		}
 		return d
 	}
+	f.Float64Var(&c.RatePerSecond, "rate-per-second", 300, "reference per-service token refill rate")
+	f.IntVar(&c.RateBurst, "rate-burst", 4, "reference token bucket burst")
 	f.IntVar(&c.QueueWaiting, "queue-waiting", 0, "optional waiting capacity; zero disables")
 	f.IntVar(&c.QueueReserved, "queue-reserved", 0, "waiting slots protected for critical requests")
 	f.DurationVar(&c.QueueWait, "queue-wait", 40*time.Millisecond, "maximum queue wait")
@@ -51,7 +55,7 @@ func Load(args []string) (Config, error) {
 	f.StringVar(&c.CatalogURL, "catalog-url", "", "optional downstream catalog base URL")
 	f.StringVar(&c.Listen, "listen", env("COMMERCE_LISTEN_ADDR", "127.0.0.1:9195"), "business HTTP address")
 	f.StringVar(&c.AdminListen, "admin-listen", env("COMMERCE_ADMIN_ADDR", "127.0.0.1:9196"), "loopback-only benchmark controls")
-	f.StringVar(&c.Mode, "mode", env("COMMERCE_MODE", "direct"), "direct, fixed or adaptive")
+	f.StringVar(&c.Mode, "mode", env("COMMERCE_MODE", "direct"), "direct, semaphore, rate, fixed or adaptive")
 	f.StringVar(&c.Role, "role", env("COMMERCE_ROLE", "orders"), "orders, catalog or inventory")
 	f.IntVar(&c.SharingCeiling, "tenant-sharing-ceiling", 0, "opt-in tenant borrowing ceiling; tenant-limit becomes a share")
 	f.IntVar(&c.TenantLimit, "tenant-limit", 0, "optional per-tenant concurrency limit; demo loopback identity only")
@@ -91,8 +95,14 @@ func Load(args []string) (Config, error) {
 	if err != nil || net.ParseIP(h) == nil || !net.ParseIP(h).IsLoopback() {
 		return c, fmt.Errorf("admin-listen must bind numeric loopback")
 	}
-	if c.Mode != "direct" && c.Mode != "fixed" && c.Mode != "adaptive" && c.Mode != "semaphore" {
+	if c.Mode != "direct" && c.Mode != "fixed" && c.Mode != "adaptive" && c.Mode != "semaphore" && c.Mode != "rate" {
 		return c, fmt.Errorf("invalid mode")
+	}
+	if c.Mode == "rate" && (!(c.RatePerSecond > 0) || c.RatePerSecond > 1e6 || c.RateBurst < 1 || c.RateBurst > 65536) {
+		return c, fmt.Errorf("invalid reference rate or burst")
+	}
+	if (c.Mode == "rate" || c.Mode == "semaphore") && (c.QueueWaiting > 0 || c.TenantLimit > 0 || c.Priorities || c.DecisionMode != "" || c.ResourceMode != "" || c.OperationsMode != "") {
+		return c, fmt.Errorf("reference policies do not implement Gatewise extensions")
 	}
 	if c.Mode == "semaphore" && c.MaxConcurrent < 1 {
 		return c, fmt.Errorf("reference semaphore requires a positive limit")
