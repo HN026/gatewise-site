@@ -1,0 +1,11 @@
+{
+  "image": "ghcr.io/hn026/gatewise:v0.11.1",
+  "anonymous": true,
+  "verified_at": "2026-11-08T22:31:35.401706+00:00",
+  "digest": "sha256:b12a02d7324941c3acd1f3eaddb6e7e2b5706317f387b1d01d6f7b7c54e07f58",
+  "configuration_digest": "sha256:b5bb5bc40730dc1748ff9f20641c6beeb93289cd6c0ae52c2cb531488064f7e8",
+  "platform": "linux/amd64",
+  "user": "65532:65532",
+  "compressed_layer_bytes": 5001867,
+  "verification": "OCI manifest and configuration fetched using a token issued without credentials; no cookies or auth-file fallback."
+}

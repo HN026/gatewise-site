@@ -1,0 +1,41 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/HN026/gatewise-examples/commerce/tests/baseline
+cpu: Apple M4 Pro
+BenchmarkSuccessfulHandler/direct-12         	151192426	         7.909 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSuccessfulHandler/direct-12         	144430408	         8.128 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSuccessfulHandler/direct-12         	152520439	         7.884 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSuccessfulHandler/direct-12         	153469399	         7.862 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSuccessfulHandler/direct-12         	152701285	         7.836 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSuccessfulHandler/semaphore-12      	47434266	        25.21 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSuccessfulHandler/semaphore-12      	48480276	        25.25 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSuccessfulHandler/semaphore-12      	46870651	        25.35 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSuccessfulHandler/semaphore-12      	47209166	        25.06 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSuccessfulHandler/semaphore-12      	48590455	        25.30 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSuccessfulHandler/rate-12           	22048808	        54.51 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSuccessfulHandler/rate-12           	21916839	        54.51 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSuccessfulHandler/rate-12           	22183178	        54.42 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSuccessfulHandler/rate-12           	21883350	        54.53 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSuccessfulHandler/rate-12           	22160528	        54.52 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSuccessfulHandler/fixed-12          	 1825532	       651.0 ns/op	    1873 B/op	      20 allocs/op
+BenchmarkSuccessfulHandler/fixed-12          	 1849069	       650.2 ns/op	    1873 B/op	      20 allocs/op
+BenchmarkSuccessfulHandler/fixed-12          	 1836201	       650.4 ns/op	    1873 B/op	      20 allocs/op
+BenchmarkSuccessfulHandler/fixed-12          	 1842418	       649.9 ns/op	    1873 B/op	      20 allocs/op
+BenchmarkSuccessfulHandler/fixed-12          	 1846561	       655.6 ns/op	    1873 B/op	      20 allocs/op
+BenchmarkSuccessfulHandler/adaptive-12       	 1568571	       758.5 ns/op	    1889 B/op	      21 allocs/op
+BenchmarkSuccessfulHandler/adaptive-12       	 1575157	       761.7 ns/op	    1889 B/op	      21 allocs/op
+BenchmarkSuccessfulHandler/adaptive-12       	 1576624	       759.6 ns/op	    1889 B/op	      21 allocs/op
+BenchmarkSuccessfulHandler/adaptive-12       	 1570906	       761.0 ns/op	    1889 B/op	      21 allocs/op
+BenchmarkSuccessfulHandler/adaptive-12       	 1568469	       760.8 ns/op	    1889 B/op	      21 allocs/op
+BenchmarkSuccessfulHandler/fixed-queue-12    	 1541500	       775.9 ns/op	    1912 B/op	      23 allocs/op
+BenchmarkSuccessfulHandler/fixed-queue-12    	 1551064	       769.7 ns/op	    1912 B/op	      23 allocs/op
+BenchmarkSuccessfulHandler/fixed-queue-12    	 1553385	       773.9 ns/op	    1912 B/op	      23 allocs/op
+BenchmarkSuccessfulHandler/fixed-queue-12    	 1551003	       774.8 ns/op	    1912 B/op	      23 allocs/op
+BenchmarkSuccessfulHandler/fixed-queue-12    	 1539681	       781.1 ns/op	    1912 B/op	      23 allocs/op
+BenchmarkSuccessfulHandler/adaptive-queue-12 	 1347600	       888.7 ns/op	    1928 B/op	      24 allocs/op
+BenchmarkSuccessfulHandler/adaptive-queue-12 	 1358770	       912.0 ns/op	    1928 B/op	      24 allocs/op
+BenchmarkSuccessfulHandler/adaptive-queue-12 	 1275387	       887.3 ns/op	    1928 B/op	      24 allocs/op
+BenchmarkSuccessfulHandler/adaptive-queue-12 	 1353652	       892.7 ns/op	    1928 B/op	      24 allocs/op
+BenchmarkSuccessfulHandler/adaptive-queue-12 	 1336952	       892.2 ns/op	    1928 B/op	      24 allocs/op
+PASS
+ok  	github.com/HN026/gatewise-examples/commerce/tests/baseline	62.910s

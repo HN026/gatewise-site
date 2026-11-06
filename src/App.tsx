@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import Layout from './components/Layout';
 import { navigation, type PageId } from './data/content';
 import Overview from './pages/Overview';
 import Problem from './pages/Problem';
 import Installation from './pages/Installation';
 import Examples from './pages/Examples';
-import Benchmarks from './pages/Benchmarks';
+const Benchmarks=lazy(()=>import('./pages/Benchmarks'));
 import Metrics from './pages/Metrics';
 import Reference from './pages/Reference';
 import Versions from './pages/Versions';
@@ -29,5 +29,5 @@ export default function App() {
     return () => cancelAnimationFrame(frame);
   }, [route, page]);
   const pages = { overview: <Overview />, problem: <Problem />, installation: <Installation />, examples: <Examples />, benchmarks: <Benchmarks />, metrics: <Metrics />, reference: <Reference />, versions: <Versions /> };
-  return <Layout page={page}>{pages[page]}</Layout>;
+  return <Layout page={page}><Suspense fallback={<div className="container"><p>Loading benchmark results…</p></div>}>{pages[page]}</Suspense></Layout>;
 }

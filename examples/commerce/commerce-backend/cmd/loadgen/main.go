@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/HN026/gatewise-examples/commerce/internal/loadplan"
 	"io"
 	"math"
 	"net"
@@ -24,6 +25,7 @@ type TenantWeight struct {
 	Weight int    `json:"weight"`
 }
 type Config struct {
+	TrafficSeed     int64             `json:"traffic_seed"`
 	ClientTimeoutMS int               `json:"client_timeout_ms"`
 	OperationWork   bool              `json:"operation_work"`
 	ResourceWork    string            `json:"resource_work"`
@@ -181,14 +183,11 @@ func main() {
 	var wg sync.WaitGroup
 	slots := make(chan struct{}, 4096)
 	dropped := 0
+	plan := loadplan.New(count, c.Seconds, c.StartRPS, c.EndRPS, c.BusinessSlots, c.TrafficSeed)
+	planDigest := loadplan.Digest(plan)
 	start := time.Now()
-	slope := (c.EndRPS - c.StartRPS) / c.Seconds
-	roles := []string{"orders", "catalog", "orders", "inventory", "orders"}
 	for i := 0; i < count; i++ {
-		dueSeconds := float64(i) / c.StartRPS
-		if math.Abs(slope) > 1e-9 {
-			dueSeconds = 2 * float64(i) / (c.StartRPS + math.Sqrt(c.StartRPS*c.StartRPS+2*slope*float64(i)))
-		}
+		dueSeconds := plan[i].Seconds
 		due := start.Add(time.Duration(dueSeconds * float64(time.Second)))
 		if d := time.Until(due); d > 0 {
 			time.Sleep(d)
@@ -203,7 +202,7 @@ func main() {
 		go func(i int, due time.Time) {
 			defer wg.Done()
 			defer func() { <-slots }()
-			role := roles[(i/5)%5]
+			role := plan[i].Role
 			tenantID, tenantGroup := "", ""
 			if weightTotal > 0 {
 				slot := (i * stride) % weightTotal
@@ -224,7 +223,7 @@ func main() {
 			method := "POST"
 			path := "/" + role + "/reports/rebuild"
 			body := []byte("{}")
-			if i%5 < c.BusinessSlots {
+			if plan[i].Critical {
 				priority = "critical"
 				switch role {
 				case "orders":
@@ -452,7 +451,7 @@ func main() {
 		}
 		timeline = append(timeline, map[string]any{"start_seconds": second, "seconds": duration, "traffic": group})
 	}
-	out := map[string]any{"timeline": timeline, "tenant_traffic": tenantTraffic, "tenant_services": tenantServices, "scheduled": count, "sent": len(rows), "dropped_schedules": dropped, "offered_seconds": c.Seconds, "elapsed_including_drain_seconds": elapsed, "start_rps": c.StartRPS, "end_rps": c.EndRPS, "traffic": traffic, "services": services, "observed_min_limit": min, "observed_max_limit": max}
+	out := map[string]any{"traffic_seed": c.TrafficSeed, "traffic_plan_sha256": planDigest, "timeline": timeline, "tenant_traffic": tenantTraffic, "tenant_services": tenantServices, "scheduled": count, "sent": len(rows), "dropped_schedules": dropped, "offered_seconds": c.Seconds, "elapsed_including_drain_seconds": elapsed, "start_rps": c.StartRPS, "end_rps": c.EndRPS, "traffic": traffic, "services": services, "observed_min_limit": min, "observed_max_limit": max}
 	if e := json.NewEncoder(os.Stdout).Encode(out); e != nil {
 		panic(e)
 	}

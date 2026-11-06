@@ -1,6 +1,71 @@
 // Newest published release first. Keep notes and downloads tied to its Git tag.
 export const releases = [
 {
+  "version": "v0.11.1",
+  "publishedAt": "2026-11-08T22:28:41Z",
+  "date": "9 November 2026",
+  "summary": "Seeded policy comparisons, controlled cancellation validation, lower request allocation and a non-root Docker proxy.",
+  "requirements": "Library: Go 1.22+; commerce example: Go 1.25+; published image: linux/amd64",
+  "changes": [
+    "New Dockerfile and restricted build context produce a static non-root proxy with CA roots and runtime-configured upstreams. Versioned GHCR publication builds and validates the image; local native ARM64 image passed real PostgreSQL integration and shutdown checks.",
+    "829,770 requests across 51 runs and three paired seeds. All 579 checks passed, including 45 matching per-seed/phase plan hashes. Reservation sweeps retain critical/background and service-level outcomes without a win gate.",
+    "Four controlled real-SQL cases distinguish cooperative cancellation from deliberately continued work. Middleware holds executing handlers through return; proxy request slots do not hard-cap remote cleanup. All actual work drained and healthy checkout recovered.",
+    "Profiling removed three redundant allocations and 720 allocated bytes per successful middleware request in the four tested configurations (signals disabled) while preserving detached public diagnostic views. Five-repeat unchanged no-op benchmarks report timings separately from traffic performance.",
+    "Exact demo ZIP passed 2,288 Postman assertions across 69 profiles, plus 74 Commerce assertions through the native container. Core/demo race tests, vet, build, fresh public module consumer and GitHub CI passed."
+  ],
+  "upgrade": "No public API or policy configuration migration. Update the module/tag to v0.11.1. The proxy image is ghcr.io/hn026/gatewise:v0.11.1 (linux/amd64); build locally for native ARM64. Configure upstreams at runtime, mount config read-only and bind 0.0.0.0 inside the container. Give Docker longer than shutdown_timeout on stop. Middleware users retain their own application images. The seeded protocol differs from v0.11.0, so traffic throughput is not a direct version-speed comparison. Earlier tags and reports remain unchanged.",
+  "downloads": [
+    {
+      "name": "Source ZIP",
+      "path": "archive/refs/tags/v0.11.1.zip"
+    },
+    {
+      "name": "Source tar.gz",
+      "path": "archive/refs/tags/v0.11.1.tar.gz"
+    },
+    {
+      "name": "Demo example",
+      "path": "releases/download/v0.11.1/gatewise-demo.zip"
+    },
+    {
+      "name": "Demo SHA-256",
+      "path": "releases/download/v0.11.1/gatewise-demo.sha256"
+    },
+    {
+      "name": "Postman bundle",
+      "path": "releases/download/v0.11.1/postman.zip"
+    },
+    {
+      "name": "Seeded results \u00b7 gzip",
+      "path": "releases/download/v0.11.1/hardening-results.json.gz"
+    },
+    {
+      "name": "Protocol and calculations",
+      "path": "releases/download/v0.11.1/hardening-provenance.json"
+    },
+    {
+      "name": "Cancellation validation",
+      "path": "releases/download/v0.11.1/cancellation-validation.json"
+    },
+    {
+      "name": "Container validation",
+      "path": "releases/download/v0.11.1/container-validation.json"
+    },
+    {
+      "name": "Before overhead",
+      "path": "releases/download/v0.11.1/hardening-overhead-before.txt"
+    },
+    {
+      "name": "After overhead",
+      "path": "releases/download/v0.11.1/hardening-overhead-after.txt"
+    },
+    {
+      "name": "Postman results",
+      "path": "releases/download/v0.11.1/commerce-contract-results.json"
+    }
+  ]
+},
+{
   "version": "v0.11.0",
   "publishedAt": "2026-11-08T16:24:52Z",
   "date": "8 November 2026",

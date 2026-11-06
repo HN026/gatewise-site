@@ -1,0 +1,125 @@
+{
+  "info": {
+    "name": "Cancellation fixture controls",
+    "description": "Verifies bounded checkout fixture controls and normal completion. Actual client deadline and remote lifetime validation is performed by cancellation_check.py with real SQL; this collection does not claim to cancel a request.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Enable bounded uncancelable SQL fixture",
+      "request": {
+        "method": "PUT",
+        "url": "{{orders_admin}}/control",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"work_multiplier\": 1, \"sql_delay_ms\": 100, \"failure_every\": 0, \"ignore_cancellation\": true}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"control accepted\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"fixture explicitly enabled\",()=>pm.expect(pm.response.json().ignore_cancellation).to.eql(true));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Complete a checkout normally",
+      "request": {
+        "method": "POST",
+        "url": "{{orders_url}}/orders/checkout",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{$guid}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"amount_cents\": 1000}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"checkout committed\",()=>pm.response.to.have.status(201));",
+              "pm.test(\"order persisted\",()=>pm.expect(pm.response.json().id).to.be.a(\"string\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Verify resources released",
+      "request": {
+        "method": "GET",
+        "url": "{{orders_admin}}/state",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"state available\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"SQL and handler resources released\",()=>{const s=pm.response.json();pm.expect(s.pool.InUse).to.eql(0);if(s.guard)pm.expect(s.guard.Active).to.eql(0);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Restore cooperative SQL",
+      "request": {
+        "method": "PUT",
+        "url": "{{orders_admin}}/control",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"work_multiplier\": 1, \"sql_delay_ms\": 0, \"failure_every\": 0, \"ignore_cancellation\": false}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"healthy control restored\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"cancellation honored by default\",()=>pm.expect(pm.response.json().ignore_cancellation).to.eql(false));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

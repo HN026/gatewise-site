@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"github.com/HN026/gatewise/internal/decisioncontext"
 	"math"
 	"regexp"
 	"sync"
@@ -88,13 +89,11 @@ func (r Result) Clone() Result {
 	return r
 }
 
-type resultKey struct{}
-
 func WithResult(ctx context.Context, r Result) context.Context {
-	return context.WithValue(ctx, resultKey{}, r.Clone())
+	return decisioncontext.WithOwned(ctx, r.Clone())
 }
 func FromContext(ctx context.Context) (Result, bool) {
-	r, ok := ctx.Value(resultKey{}).(Result)
+	r, ok := decisioncontext.Value(ctx).(Result)
 	return r.Clone(), ok
 }
 func NewResult(priority, resource string) Result {

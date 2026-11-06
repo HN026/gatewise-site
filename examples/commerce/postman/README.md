@@ -27,3 +27,9 @@ For bounded waiting, use `python3 run.py --queue --profile middleware-fixed`, or
 `Reference.postman_collection.json` uses the environment printed by `run.py --profile semaphore --max-concurrent 4` or `run.py --profile rate --rate-per-second 1 --rate-burst 1`. It runs 20 concurrent checkouts against isolated local data, verifies explicit reference refusals, execution accounting and cleanup, then restores healthy SQL. These policies are demo references, not Gatewise library APIs. `--verify` chooses this collection automatically for those two profiles.
 
 For the fixed open-loop policy comparison, use `python3 comparison_benchmark.py --output results/comparison-results.json`. Postman assertions are functional checks; the Go load generator measures overload independently so refused traffic does not reduce the offered rate.
+
+## v0.11.1 cancellation controls and containers
+
+`Cancellation.postman_collection.json` verifies the loopback fixture control, a normal committed checkout, SQL cleanup and resetting cancellation behavior. It does not claim to force a caller timeout. Use `python3 cancellation_check.py` for actual 40 ms client deadlines against 300 ms SQL work in middleware/proxy modes. The ignored-cancellation fixture retains the one-second SQL timeout.
+
+Use `python3 hardening_benchmark.py` for the seeded policy/reservation matrix. Each policy gets identical per-seed request plans; the report stores their hashes. For a locally built Podman image, `python3 container_check.py --image localhost/gatewise:v0.11.1` runs the existing Commerce collection through the non-root proxy with real PostgreSQL, validates configuration and checks SIGTERM shutdown. Docker users can pass `--engine docker --image gatewise:v0.11.1`.
