@@ -1,0 +1,40 @@
+{
+  "services": {
+    "users": {
+      "upstream_url": "${GATEWISE_SERVICE_USERS_URL}",
+      "max_concurrent": 2,
+      "reserved_critical": 1
+    },
+    "catalog": {
+      "upstream_url": "${GATEWISE_SERVICE_CATALOG_URL}",
+      "max_concurrent": 2,
+      "reserved_critical": 1
+    }
+  },
+  "routes": [
+    {
+      "path_prefix": "/users",
+      "service": "users",
+      "strip_prefix": true,
+      "priority": "critical"
+    },
+    {
+      "path_prefix": "/catalog",
+      "service": "catalog",
+      "strip_prefix": true,
+      "priority": "critical"
+    },
+    {
+      "path_prefix": "/users/background",
+      "service": "users",
+      "strip_prefix": true,
+      "priority": "background"
+    },
+    {
+      "path_prefix": "/catalog/background",
+      "service": "catalog",
+      "strip_prefix": true,
+      "priority": "background"
+    }
+  ]
+}

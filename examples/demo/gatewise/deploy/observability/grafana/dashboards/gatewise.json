@@ -1,0 +1,739 @@
+{
+  "id": null,
+  "uid": "gatewise-overview",
+  "title": "Gatewise Overview",
+  "tags": [
+    "gatewise",
+    "admission-control"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Scrape target availability",
+      "type": "timeseries",
+      "description": "1 means Prometheus can scrape the target. Service health and overload are separate signals.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "up{job=\"gatewise\",instance=~\"$instance\"}",
+          "legendFormat": "{{instance}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gatewise-prometheus"
+          },
+          "range": true,
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Admission limit and configured bounds",
+      "type": "timeseries",
+      "description": "Active work can temporarily exceed a reduced limit while draining.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "gatewise_concurrency_limit{service=~\"$service\",instance=~\"$instance\",job=\"gatewise\"}",
+          "legendFormat": "{{instance}} {{service}} current",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gatewise-prometheus"
+          },
+          "range": true,
+          "editorMode": "code"
+        },
+        {
+          "refId": "B",
+          "expr": "gatewise_concurrency_min_limit{service=~\"$service\",instance=~\"$instance\",job=\"gatewise\"}",
+          "legendFormat": "{{instance}} {{service}} minimum",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gatewise-prometheus"
+          },
+          "range": true,
+          "editorMode": "code"
+        },
+        {
+          "refId": "C",
+          "expr": "gatewise_concurrency_max_limit{service=~\"$service\",instance=~\"$instance\",job=\"gatewise\"}",
+          "legendFormat": "{{instance}} {{service}} maximum",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gatewise-prometheus"
+          },
+          "range": true,
+          "editorMode": "code"
+        },
+        {
+          "refId": "D",
+          "expr": "gatewise_concurrency_reserved_critical{service=~\"$service\",instance=~\"$instance\",job=\"gatewise\"}",
+          "legendFormat": "{{instance}} {{service}} reserved",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gatewise-prometheus"
+          },
+          "range": true,
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Admitted work in flight",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "gatewise_requests_in_flight{service=~\"$service\",instance=~\"$instance\",job=\"gatewise\"}",
+          "legendFormat": "{{instance}} {{service}} {{priority}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gatewise-prometheus"
+          },
+          "range": true,
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Admitted request rate",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(gatewise_requests_admitted_total{service=~\"$service\",instance=~\"$instance\",job=\"gatewise\"}[$__rate_interval])",
+          "legendFormat": "{{instance}} {{service}} {{priority}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gatewise-prometheus"
+          },
+          "range": true,
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Rejection rate by reason",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(gatewise_requests_rejected_total{service=~\"$service\",instance=~\"$instance\",job=\"gatewise\"}[$__rate_interval])",
+          "legendFormat": "{{instance}} {{service}} {{priority}} {{reason}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gatewise-prometheus"
+          },
+          "range": true,
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "Rejected share of admission attempts",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * sum by(instance,service) (rate(gatewise_requests_rejected_total{service=~\"$service\",instance=~\"$instance\",job=\"gatewise\"}[$__rate_interval])) / clamp_min(sum by(instance,service) (rate(gatewise_requests_rejected_total{service=~\"$service\",instance=~\"$instance\",job=\"gatewise\"}[$__rate_interval])) + sum by(instance,service) (rate(gatewise_requests_admitted_total{service=~\"$service\",instance=~\"$instance\",job=\"gatewise\"}[$__rate_interval])), 1e-9)",
+          "legendFormat": "{{instance}} {{service}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gatewise-prometheus"
+          },
+          "range": true,
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "title": "Admitted completed work \u2014 p95 latency",
+      "type": "timeseries",
+      "description": "Admission rejections and canceled/panicked work are excluded; HTTP errors returned by handlers remain included.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 24,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by(le,instance,service,priority) (rate(gatewise_request_duration_seconds_bucket{service=~\"$service\",instance=~\"$instance\",job=\"gatewise\",outcome=\"completed\"}[$__rate_interval])))",
+          "legendFormat": "{{instance}} {{service}} {{priority}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gatewise-prometheus"
+          },
+          "range": true,
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 8,
+      "title": "Completed requests by status class",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 24,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(gatewise_requests_completed_total{service=~\"$service\",instance=~\"$instance\",job=\"gatewise\",outcome=\"completed\"}[$__rate_interval])",
+          "legendFormat": "{{instance}} {{service}} {{priority}} {{status_class}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gatewise-prometheus"
+          },
+          "range": true,
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "title": "Adaptive limit adjustment rate",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(gatewise_limit_adjustments_total{service=~\"$service\",instance=~\"$instance\",job=\"gatewise\"}[$__rate_interval])",
+          "legendFormat": "{{instance}} {{service}} {{direction}} {{reason}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gatewise-prometheus"
+          },
+          "range": true,
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 10,
+      "title": "Canceled and panicked work",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 32,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(gatewise_requests_completed_total{service=~\"$service\",instance=~\"$instance\",job=\"gatewise\",outcome!=\"completed\"}[$__rate_interval])",
+          "legendFormat": "{{instance}} {{service}} {{priority}} {{outcome}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gatewise-prometheus"
+          },
+          "range": true,
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 11,
+      "title": "Service mode",
+      "type": "timeseries",
+      "description": "A constant 1 identifies the configured fixed/adaptive mode.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 40,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "gatewise_service_info{service=~\"$service\",instance=~\"$instance\",job=\"gatewise\"}",
+          "legendFormat": "{{instance}} {{service}} {{mode}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gatewise-prometheus"
+          },
+          "range": true,
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 12,
+      "title": "Mean admitted handler duration",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 40,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(gatewise_request_duration_seconds_sum{service=~\"$service\",instance=~\"$instance\",job=\"gatewise\",outcome=\"completed\"}[$__rate_interval]) / clamp_min(rate(gatewise_request_duration_seconds_count{service=~\"$service\",instance=~\"$instance\",job=\"gatewise\",outcome=\"completed\"}[$__rate_interval]), 1e-9)",
+          "legendFormat": "{{instance}} {{service}} {{priority}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "gatewise-prometheus"
+          },
+          "range": true,
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "instance",
+        "label": "Instance",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "gatewise-prometheus"
+        },
+        "query": {
+          "query": "label_values(gatewise_service_info, instance)",
+          "refId": "instance"
+        },
+        "definition": "label_values(gatewise_service_info, instance)",
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
+      },
+      {
+        "name": "service",
+        "label": "Service",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "gatewise-prometheus"
+        },
+        "query": {
+          "query": "label_values(gatewise_service_info{instance=~\"$instance\"}, service)",
+          "refId": "service"
+        },
+        "definition": "label_values(gatewise_service_info{instance=~\"$instance\"}, service)",
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
+      }
+    ]
+  },
+  "annotations": {
+    "list": []
+  }
+}

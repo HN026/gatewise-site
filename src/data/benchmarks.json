@@ -1,0 +1,593 @@
+{
+  "date": "2026-11-06",
+  "cpu": "Apple M4 Pro",
+  "go": "go1.27.3",
+  "os": "darwin",
+  "arch": "arm64",
+  "repeats": 3,
+  "sent": 74990,
+  "scheduled": 75000,
+  "dropped": 10,
+  "deployments": [
+    {
+      "name": "direct",
+      "phases": {
+        "baseline": {
+          "samples": [
+            {
+              "repeat": 1,
+              "timely": 199.3591599802435,
+              "p95": 21.350959,
+              "active": 6,
+              "rejected": 0.0,
+              "goodput": 199.3591599802435,
+              "limit": 0
+            },
+            {
+              "repeat": 2,
+              "timely": 199.35551515753815,
+              "p95": 20.908875,
+              "active": 5,
+              "rejected": 0.0,
+              "goodput": 199.35551515753815,
+              "limit": 0
+            },
+            {
+              "repeat": 3,
+              "timely": 199.3458151312696,
+              "p95": 21.200958,
+              "active": 6,
+              "rejected": 0.0,
+              "goodput": 199.3458151312696,
+              "limit": 0
+            }
+          ],
+          "timely": 199.35551515753815,
+          "p95": 21.200958,
+          "active": 6,
+          "rejected": 0.0,
+          "goodput": 199.35551515753815,
+          "limit": 0
+        },
+        "pressure": {
+          "samples": [
+            {
+              "repeat": 1,
+              "timely": 0.5557513807295709,
+              "p95": 400.775583,
+              "active": 162,
+              "rejected": 0.0,
+              "goodput": 370.5009204863806,
+              "limit": 0
+            },
+            {
+              "repeat": 2,
+              "timely": 0.5557137839412571,
+              "p95": 400.804792,
+              "active": 163,
+              "rejected": 0.0,
+              "goodput": 370.4758559608381,
+              "limit": 0
+            },
+            {
+              "repeat": 3,
+              "timely": 0.5556977257762531,
+              "p95": 400.765417,
+              "active": 161,
+              "rejected": 0.0,
+              "goodput": 370.4651505175021,
+              "limit": 0
+            }
+          ],
+          "timely": 0.5557137839412571,
+          "p95": 400.775583,
+          "active": 162,
+          "rejected": 0.0,
+          "goodput": 370.4758559608381,
+          "limit": 0
+        },
+        "recovery": {
+          "samples": [
+            {
+              "repeat": 1,
+              "timely": 398.53253346857537,
+              "p95": 20.542125,
+              "active": 162,
+              "rejected": 0.0,
+              "goodput": 398.53253346857537,
+              "limit": 0
+            },
+            {
+              "repeat": 2,
+              "timely": 398.52200812364157,
+              "p95": 20.716917,
+              "active": 163,
+              "rejected": 0.0,
+              "goodput": 398.52200812364157,
+              "limit": 0
+            },
+            {
+              "repeat": 3,
+              "timely": 398.53566701438115,
+              "p95": 20.483583,
+              "active": 161,
+              "rejected": 0.0,
+              "goodput": 398.53566701438115,
+              "limit": 0
+            }
+          ],
+          "timely": 398.53253346857537,
+          "p95": 20.542125,
+          "active": 162,
+          "rejected": 0.0,
+          "goodput": 398.53253346857537,
+          "limit": 0
+        }
+      }
+    },
+    {
+      "name": "proxy-fixed",
+      "phases": {
+        "baseline": {
+          "samples": [
+            {
+              "repeat": 1,
+              "timely": 199.31821546074102,
+              "p95": 21.314042,
+              "active": 5,
+              "rejected": 0.0,
+              "goodput": 199.31821546074102,
+              "limit": 6
+            },
+            {
+              "repeat": 2,
+              "timely": 199.11413475671168,
+              "p95": 21.825458,
+              "active": 5,
+              "rejected": 0.1,
+              "goodput": 199.11413475671168,
+              "limit": 6
+            },
+            {
+              "repeat": 3,
+              "timely": 199.21342733705248,
+              "p95": 21.557917,
+              "active": 6,
+              "rejected": 0.0,
+              "goodput": 199.21342733705248,
+              "limit": 6
+            }
+          ],
+          "timely": 199.21342733705248,
+          "p95": 21.557917,
+          "active": 5,
+          "rejected": 0.0,
+          "goodput": 199.21342733705248,
+          "limit": 6
+        },
+        "pressure": {
+          "samples": [
+            {
+              "repeat": 1,
+              "timely": 0.5789324084724463,
+              "p95": 222.204375,
+              "active": 6,
+              "rejected": 93.0,
+              "goodput": 27.016845728714163,
+              "limit": 6
+            },
+            {
+              "repeat": 2,
+              "timely": 0.575342006662029,
+              "p95": 223.014167,
+              "active": 6,
+              "rejected": 92.95,
+              "goodput": 27.04107431311536,
+              "limit": 6
+            },
+            {
+              "repeat": 3,
+              "timely": 0.5774523110777916,
+              "p95": 222.807042,
+              "active": 6,
+              "rejected": 93.0,
+              "goodput": 26.947774516963605,
+              "limit": 6
+            }
+          ],
+          "timely": 0.5774523110777916,
+          "p95": 222.807042,
+          "active": 6,
+          "rejected": 93.0,
+          "goodput": 27.016845728714163,
+          "limit": 6
+        },
+        "recovery": {
+          "samples": [
+            {
+              "repeat": 1,
+              "timely": 255.78186461978504,
+              "p95": 21.188584,
+              "active": 6,
+              "rejected": 35.85,
+              "goodput": 255.78186461978504,
+              "limit": 6
+            },
+            {
+              "repeat": 2,
+              "timely": 255.2430512772692,
+              "p95": 21.934916,
+              "active": 6,
+              "rejected": 35.95,
+              "goodput": 255.2430512772692,
+              "limit": 6
+            },
+            {
+              "repeat": 3,
+              "timely": 255.3505635827139,
+              "p95": 21.723375,
+              "active": 6,
+              "rejected": 35.91795897948975,
+              "goodput": 255.3505635827139,
+              "limit": 6
+            }
+          ],
+          "timely": 255.3505635827139,
+          "p95": 21.723375,
+          "active": 6,
+          "rejected": 35.91795897948975,
+          "goodput": 255.3505635827139,
+          "limit": 6
+        }
+      }
+    },
+    {
+      "name": "proxy-adaptive",
+      "phases": {
+        "baseline": {
+          "samples": [
+            {
+              "repeat": 1,
+              "timely": 199.32251107666687,
+              "p95": 21.076542,
+              "active": 5,
+              "rejected": 0.0,
+              "goodput": 199.32251107666687,
+              "limit": 6
+            },
+            {
+              "repeat": 2,
+              "timely": 199.1495179295866,
+              "p95": 21.429917,
+              "active": 5,
+              "rejected": 0.0,
+              "goodput": 199.1495179295866,
+              "limit": 6
+            },
+            {
+              "repeat": 3,
+              "timely": 199.33095891185422,
+              "p95": 21.240375,
+              "active": 5,
+              "rejected": 0.0,
+              "goodput": 199.33095891185422,
+              "limit": 6
+            }
+          ],
+          "timely": 199.32251107666687,
+          "p95": 21.240375,
+          "active": 5,
+          "rejected": 0.0,
+          "goodput": 199.32251107666687,
+          "limit": 6
+        },
+        "pressure": {
+          "samples": [
+            {
+              "repeat": 1,
+              "timely": 18.224191207822233,
+              "p95": 221.099958,
+              "active": 6,
+              "rejected": 90.94547273636819,
+              "goodput": 35.46858718941747,
+              "limit": 4
+            },
+            {
+              "repeat": 2,
+              "timely": 19.151071745057404,
+              "p95": 221.709959,
+              "active": 6,
+              "rejected": 90.7,
+              "goodput": 36.3479524957212,
+              "limit": 4
+            },
+            {
+              "repeat": 3,
+              "timely": 19.04283979403921,
+              "p95": 221.049709,
+              "active": 6,
+              "rejected": 90.75,
+              "goodput": 36.31881816388921,
+              "limit": 4
+            }
+          ],
+          "timely": 19.04283979403921,
+          "p95": 221.099958,
+          "active": 6,
+          "rejected": 90.75,
+          "goodput": 36.31881816388921,
+          "limit": 4
+        },
+        "recovery": {
+          "samples": [
+            {
+              "repeat": 1,
+              "timely": 226.6656053426808,
+              "p95": 21.761042,
+              "active": 6,
+              "rejected": 43.15,
+              "goodput": 226.6656053426808,
+              "limit": 6
+            },
+            {
+              "repeat": 2,
+              "timely": 226.37754099440474,
+              "p95": 22.107417,
+              "active": 6,
+              "rejected": 43.25,
+              "goodput": 226.37754099440474,
+              "limit": 6
+            },
+            {
+              "repeat": 3,
+              "timely": 226.15612104991436,
+              "p95": 21.985083,
+              "active": 6,
+              "rejected": 43.25,
+              "goodput": 226.15612104991436,
+              "limit": 6
+            }
+          ],
+          "timely": 226.37754099440474,
+          "p95": 21.985083,
+          "active": 6,
+          "rejected": 43.25,
+          "goodput": 226.37754099440474,
+          "limit": 6
+        }
+      }
+    },
+    {
+      "name": "middleware-fixed",
+      "phases": {
+        "baseline": {
+          "samples": [
+            {
+              "repeat": 1,
+              "timely": 199.33682798141797,
+              "p95": 20.992958,
+              "active": 5,
+              "rejected": 0.0,
+              "goodput": 199.33682798141797,
+              "limit": 6
+            },
+            {
+              "repeat": 2,
+              "timely": 199.12335395284896,
+              "p95": 20.997666,
+              "active": 5,
+              "rejected": 0.0,
+              "goodput": 199.12335395284896,
+              "limit": 6
+            },
+            {
+              "repeat": 3,
+              "timely": 199.12585940299118,
+              "p95": 21.262209,
+              "active": 6,
+              "rejected": 0.0,
+              "goodput": 199.12585940299118,
+              "limit": 6
+            }
+          ],
+          "timely": 199.12585940299118,
+          "p95": 20.997666,
+          "active": 5,
+          "rejected": 0.0,
+          "goodput": 199.12585940299118,
+          "limit": 6
+        },
+        "pressure": {
+          "samples": [
+            {
+              "repeat": 1,
+              "timely": 0.5761404215157822,
+              "p95": 221.642125,
+              "active": 6,
+              "rejected": 92.95,
+              "goodput": 27.078599811241762,
+              "limit": 6
+            },
+            {
+              "repeat": 2,
+              "timely": 0.576766083746162,
+              "p95": 220.778208,
+              "active": 6,
+              "rejected": 92.9,
+              "goodput": 27.300261297318333,
+              "limit": 6
+            },
+            {
+              "repeat": 3,
+              "timely": 0.578939977663141,
+              "p95": 221.276125,
+              "active": 6,
+              "rejected": 92.93587174348697,
+              "goodput": 27.210178950167624,
+              "limit": 6
+            }
+          ],
+          "timely": 0.576766083746162,
+          "p95": 221.276125,
+          "active": 6,
+          "rejected": 92.93587174348697,
+          "goodput": 27.210178950167624,
+          "limit": 6
+        },
+        "recovery": {
+          "samples": [
+            {
+              "repeat": 1,
+              "timely": 256.4661030112755,
+              "p95": 20.853708,
+              "active": 6,
+              "rejected": 35.7,
+              "goodput": 256.4661030112755,
+              "limit": 6
+            },
+            {
+              "repeat": 2,
+              "timely": 255.97306406770238,
+              "p95": 20.725416,
+              "active": 6,
+              "rejected": 35.8,
+              "goodput": 255.97306406770238,
+              "limit": 6
+            },
+            {
+              "repeat": 3,
+              "timely": 256.0214561425215,
+              "p95": 20.848,
+              "active": 6,
+              "rejected": 35.75,
+              "goodput": 256.0214561425215,
+              "limit": 6
+            }
+          ],
+          "timely": 256.0214561425215,
+          "p95": 20.848,
+          "active": 6,
+          "rejected": 35.75,
+          "goodput": 256.0214561425215,
+          "limit": 6
+        }
+      }
+    },
+    {
+      "name": "middleware-adaptive",
+      "phases": {
+        "baseline": {
+          "samples": [
+            {
+              "repeat": 1,
+              "timely": 199.12237163514772,
+              "p95": 21.067583,
+              "active": 5,
+              "rejected": 0.0,
+              "goodput": 199.12237163514772,
+              "limit": 6
+            },
+            {
+              "repeat": 2,
+              "timely": 199.34563137944045,
+              "p95": 20.873083,
+              "active": 6,
+              "rejected": 0.0,
+              "goodput": 199.34563137944045,
+              "limit": 6
+            },
+            {
+              "repeat": 3,
+              "timely": 199.3230060672809,
+              "p95": 21.024542,
+              "active": 5,
+              "rejected": 0.0,
+              "goodput": 199.3230060672809,
+              "limit": 6
+            }
+          ],
+          "timely": 199.3230060672809,
+          "p95": 21.024542,
+          "active": 5,
+          "rejected": 0.0,
+          "goodput": 199.3230060672809,
+          "limit": 6
+        },
+        "pressure": {
+          "samples": [
+            {
+              "repeat": 1,
+              "timely": 19.1822507013208,
+              "p95": 220.325209,
+              "active": 6,
+              "rejected": 90.7,
+              "goodput": 36.40712888209866,
+              "limit": 4
+            },
+            {
+              "repeat": 2,
+              "timely": 20.38529165211579,
+              "p95": 220.324625,
+              "active": 6,
+              "rejected": 90.5,
+              "goodput": 37.2423597490577,
+              "limit": 4
+            },
+            {
+              "repeat": 3,
+              "timely": 19.16882710692978,
+              "p95": 220.373042,
+              "active": 6,
+              "rejected": 90.65,
+              "goodput": 36.577251724447635,
+              "limit": 4
+            }
+          ],
+          "timely": 19.1822507013208,
+          "p95": 220.325209,
+          "active": 6,
+          "rejected": 90.65,
+          "goodput": 36.577251724447635,
+          "limit": 4
+        },
+        "recovery": {
+          "samples": [
+            {
+              "repeat": 1,
+              "timely": 225.9719990503796,
+              "p95": 20.52725,
+              "active": 6,
+              "rejected": 43.3,
+              "goodput": 225.9719990503796,
+              "limit": 6
+            },
+            {
+              "repeat": 2,
+              "timely": 225.76509431187168,
+              "p95": 20.895458,
+              "active": 6,
+              "rejected": 43.35,
+              "goodput": 225.76509431187168,
+              "limit": 6
+            },
+            {
+              "repeat": 3,
+              "timely": 227.54483345243062,
+              "p95": 21.170458,
+              "active": 6,
+              "rejected": 42.9,
+              "goodput": 227.54483345243062,
+              "limit": 6
+            }
+          ],
+          "timely": 225.9719990503796,
+          "p95": 20.895458,
+          "active": 6,
+          "rejected": 43.3,
+          "goodput": 225.9719990503796,
+          "limit": 6
+        }
+      }
+    }
+  ]
+}

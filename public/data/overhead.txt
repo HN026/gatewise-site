@@ -1,0 +1,24 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/hunaseer/gatewise/tests/benchmark
+cpu: Apple M4 Pro
+BenchmarkHandler/bare-12         	321999976	         1.733 ns/op	       0 B/op	       0 allocs/op
+BenchmarkHandler/bare-12         	346407572	         1.732 ns/op	       0 B/op	       0 allocs/op
+BenchmarkHandler/bare-12         	346990376	         1.736 ns/op	       0 B/op	       0 allocs/op
+BenchmarkHandler/fixed-12        	 2244582	       264.5 ns/op	     297 B/op	      11 allocs/op
+BenchmarkHandler/fixed-12        	 2304576	       260.9 ns/op	     297 B/op	      11 allocs/op
+BenchmarkHandler/fixed-12        	 2266754	       260.7 ns/op	     297 B/op	      11 allocs/op
+BenchmarkHandler/adaptive-12     	 1900736	       313.4 ns/op	     297 B/op	      11 allocs/op
+BenchmarkHandler/adaptive-12     	 1913618	       311.9 ns/op	     297 B/op	      11 allocs/op
+BenchmarkHandler/adaptive-12     	 1932715	       317.1 ns/op	     297 B/op	      11 allocs/op
+BenchmarkHTTP/direct-12          	    8522	     71081 ns/op	    5731 B/op	      64 allocs/op
+BenchmarkHTTP/direct-12          	    8428	     67168 ns/op	    5741 B/op	      64 allocs/op
+BenchmarkHTTP/direct-12          	    8200	     67557 ns/op	    5743 B/op	      64 allocs/op
+BenchmarkHTTP/proxy-fixed-12     	    3901	    147281 ns/op	   46151 B/op	     160 allocs/op
+BenchmarkHTTP/proxy-fixed-12     	    3860	    147906 ns/op	   46150 B/op	     160 allocs/op
+BenchmarkHTTP/proxy-fixed-12     	    3978	    149183 ns/op	   46207 B/op	     160 allocs/op
+BenchmarkHTTP/proxy-adaptive-12  	    3882	    155617 ns/op	   46156 B/op	     160 allocs/op
+BenchmarkHTTP/proxy-adaptive-12  	    3753	    149502 ns/op	   46184 B/op	     160 allocs/op
+BenchmarkHTTP/proxy-adaptive-12  	    3956	    148443 ns/op	   46185 B/op	     160 allocs/op
+PASS
+ok  	github.com/hunaseer/gatewise/tests/benchmark	14.256s

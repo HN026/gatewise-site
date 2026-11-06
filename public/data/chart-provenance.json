@@ -1,0 +1,13 @@
+{
+  "source": "Original M6 experiment report",
+  "source_sha256": "2025466699609fbde53cc89d6ad181e047deebd89e2c89f4e7b2d5adb2a3976f",
+  "runs": 15,
+  "repetitions_per_deployment": 3,
+  "matplotlib": "3.11.2",
+  "images": [
+    "benchmark-overload.png",
+    "benchmark-concurrency.png",
+    "benchmark-resources.png"
+  ],
+  "aggregation": "Median of run-level values; no pooled percentile calculation"
+}

@@ -1,0 +1,5036 @@
+{
+  "started_at": "2026-11-06T16:46:54.505633Z",
+  "finished_at": "2026-11-06T16:51:00.00422Z",
+  "go_version": "go1.27.3",
+  "os": "darwin",
+  "arch": "arm64",
+  "logical_cpus": 12,
+  "config": {
+    "repeats": 3,
+    "phase_duration_ns": 5000000000,
+    "baseline_rps": 200,
+    "pressure_rps": 400,
+    "generator_max_in_flight": 256,
+    "max_dropped_schedule_percent": 1
+  },
+  "binary_sha256": {
+    "benchmark-backend": "24fe925ce26ed901973624cfd1621a1e15d87d3439b3700d0baf75c4a2617900",
+    "gatewise": "6dca910620bbb95733e6483ab7d3e47f445d0565f0d2cecaaa88d90973cf5056"
+  },
+  "methodology": [
+    "Loopback synthetic service: base 20ms, +50ms per active request above capacity, capped at 400ms. Delay is chosen at admission. This does not model all production bottlenecks.",
+    "All guards: max/initial 6, reservation 1. Adaptive: min 2, 500ms interval, 10 samples, 100ms target. Backend capacity changes 12 -> 2 -> 12.",
+    "Scheduled open-loop arrivals, one critical for every seven background requests, no retries. Warm-up 1s excluded. Runs isolated and sequential; deployment order rotates each repeat.",
+    "Generator drops dispatches >5ms late or above in-flight ceiling; late/dropped schedules must be checked before capacity claims. 2s client timeout, keep-alive enabled, redirects disabled.",
+    "Success and 503 latency are separate. Nearest-rank percentiles. Successful/second uses actual elapsed time including drain; successful/offered-second uses configured arrival duration. Arrival latency includes dispatch lag and all HTTP outcomes; timeouts are reported as errors.",
+    "Child CPU is OS user+system time over entire child lifetime, including startup/warm-up/control/scrapes/logging. RSS sampled with ps every 250ms; observed peak is a lower bound. Resource CSV includes generator RSS. Go/proxy CPU is separated from backend CPU.",
+    "All processes share this host; resource contention, client CPU and loopback networking affect results. No production capacity, multi-host scaling, leak or zero-overhead claims. Proxy uses normal access logging; middleware fixture disables optional library logging."
+  ],
+  "results": [
+    {
+      "deployment": "direct",
+      "repeat": 1,
+      "phases": [
+        {
+          "name": "baseline",
+          "backend_capacity": 12,
+          "offered_rps": 200,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.0160725,
+          "traffic": {
+            "background": {
+              "scheduled": 875,
+              "sent": 875,
+              "dropped_schedules": 0,
+              "successful_2xx": 875,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 875,
+                "mean_ms": 20.63402061028574,
+                "p50_ms": 20.500084,
+                "p95_ms": 21.3515,
+                "p99_ms": 22.666417
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 875,
+                "mean_ms": 21.150116859428547,
+                "p50_ms": 20.996291,
+                "p95_ms": 21.903333,
+                "p99_ms": 23.277375
+              },
+              "dispatch_lag": {
+                "count": 875,
+                "mean_ms": 0.5160402902857144,
+                "p50_ms": 0.541958,
+                "p95_ms": 0.616833,
+                "p99_ms": 0.861291
+              },
+              "successful_per_second": 174.43926498271307,
+              "successful_within_100ms_per_second": 174.43926498271307,
+              "successful_per_offered_second": 175,
+              "observed_header_limit_min": 0,
+              "observed_header_limit_max": 0
+            },
+            "critical": {
+              "scheduled": 125,
+              "sent": 125,
+              "dropped_schedules": 0,
+              "successful_2xx": 125,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 125,
+                "mean_ms": 20.641231391999995,
+                "p50_ms": 20.504792,
+                "p95_ms": 21.350959,
+                "p99_ms": 21.557
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 125,
+                "mean_ms": 21.141885656000007,
+                "p50_ms": 21.001166,
+                "p95_ms": 21.810208,
+                "p99_ms": 22.119041
+              },
+              "dispatch_lag": {
+                "count": 125,
+                "mean_ms": 0.5006103359999998,
+                "p50_ms": 0.543041,
+                "p95_ms": 0.607375,
+                "p99_ms": 0.644833
+              },
+              "successful_per_second": 24.919894997530438,
+              "successful_within_100ms_per_second": 24.919894997530438,
+              "successful_per_offered_second": 25,
+              "observed_header_limit_min": 0,
+              "observed_header_limit_max": 0
+            }
+          },
+          "end_limit": 0,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 6
+        },
+        {
+          "name": "pressure",
+          "backend_capacity": 2,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.39809725,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1750,
+              "dropped_schedules": 0,
+              "successful_2xx": 1750,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 1748,
+              "success_latency": {
+                "count": 1750,
+                "mean_ms": 399.48975504400005,
+                "p50_ms": 400.378334,
+                "p95_ms": 400.77525,
+                "p99_ms": 401.047167
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1750,
+                "mean_ms": 399.7444009045708,
+                "p50_ms": 400.635625,
+                "p95_ms": 401.0425,
+                "p99_ms": 401.443083
+              },
+              "dispatch_lag": {
+                "count": 1750,
+                "mean_ms": 0.254596853714286,
+                "p50_ms": 0.266583,
+                "p95_ms": 0.30975,
+                "p99_ms": 0.391583
+              },
+              "successful_per_second": 324.18830542558305,
+              "successful_within_100ms_per_second": 0.3705009204863806,
+              "successful_per_offered_second": 350,
+              "observed_header_limit_min": 0,
+              "observed_header_limit_max": 0
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 250,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 249,
+              "success_latency": {
+                "count": 250,
+                "mean_ms": 398.6194443559999,
+                "p50_ms": 400.363542,
+                "p95_ms": 400.775583,
+                "p99_ms": 401.864125
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 398.89779830000026,
+                "p50_ms": 400.631583,
+                "p95_ms": 401.021083,
+                "p99_ms": 403.263042
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.27831948399999995,
+                "p50_ms": 0.267,
+                "p95_ms": 0.305583,
+                "p99_ms": 0.437042
+              },
+              "successful_per_second": 46.312615060797576,
+              "successful_within_100ms_per_second": 0.1852504602431903,
+              "successful_per_offered_second": 50,
+              "observed_header_limit_min": 0,
+              "observed_header_limit_max": 0
+            }
+          },
+          "end_limit": 0,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 162
+        },
+        {
+          "name": "recovery",
+          "backend_capacity": 12,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.018410875,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1750,
+              "dropped_schedules": 0,
+              "successful_2xx": 1750,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 1750,
+                "mean_ms": 20.341531592571442,
+                "p50_ms": 20.306417,
+                "p95_ms": 20.558,
+                "p99_ms": 20.899542
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1750,
+                "mean_ms": 20.601902885714246,
+                "p50_ms": 20.571584,
+                "p95_ms": 20.816625,
+                "p99_ms": 21.217917
+              },
+              "dispatch_lag": {
+                "count": 1750,
+                "mean_ms": 0.2603352577142855,
+                "p50_ms": 0.272167,
+                "p95_ms": 0.308792,
+                "p99_ms": 0.3545
+              },
+              "successful_per_second": 348.71596678500345,
+              "successful_within_100ms_per_second": 348.71596678500345,
+              "successful_per_offered_second": 350,
+              "observed_header_limit_min": 0,
+              "observed_header_limit_max": 0
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 250,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 250,
+                "mean_ms": 20.331066623999988,
+                "p50_ms": 20.299959,
+                "p95_ms": 20.542125,
+                "p99_ms": 20.742584
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 20.579309000000002,
+                "p50_ms": 20.561875,
+                "p95_ms": 20.77775,
+                "p99_ms": 21.043542
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.2482073840000001,
+                "p50_ms": 0.269542,
+                "p95_ms": 0.300875,
+                "p99_ms": 0.31575
+              },
+              "successful_per_second": 49.81656668357192,
+              "successful_within_100ms_per_second": 49.81656668357192,
+              "successful_per_offered_second": 50,
+              "observed_header_limit_min": 0,
+              "observed_header_limit_max": 0
+            }
+          },
+          "end_limit": 0,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 162
+        }
+      ],
+      "resources": [
+        {
+          "role": "backend",
+          "cpu_seconds_entire_child_lifetime": 0.888083,
+          "observed_peak_rss_kib": 25536
+        }
+      ],
+      "checks": [
+        {
+          "name": "all scheduled and HTTP outcomes accounted for",
+          "pass": true
+        },
+        {
+          "name": "generator dropped at most 1.00% of schedules per priority/phase",
+          "pass": true
+        },
+        {
+          "name": "both priorities complete work without unexpected errors in every phase",
+          "pass": true
+        },
+        {
+          "name": "unguarded baseline has no admission rejections",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "deployment": "proxy-fixed",
+      "repeat": 1,
+      "phases": [
+        {
+          "name": "baseline",
+          "backend_capacity": 12,
+          "offered_rps": 200,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.017102916,
+          "traffic": {
+            "background": {
+              "scheduled": 875,
+              "sent": 875,
+              "dropped_schedules": 0,
+              "successful_2xx": 875,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 875,
+                "mean_ms": 20.84320986285713,
+                "p50_ms": 20.711375,
+                "p95_ms": 21.611167,
+                "p99_ms": 22.773167
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 875,
+                "mean_ms": 21.310420050285714,
+                "p50_ms": 21.186291,
+                "p95_ms": 22.078791,
+                "p99_ms": 23.388958
+              },
+              "dispatch_lag": {
+                "count": 875,
+                "mean_ms": 0.467160757714286,
+                "p50_ms": 0.512166,
+                "p95_ms": 0.578416,
+                "p99_ms": 0.692125
+              },
+              "successful_per_second": 174.4034385281484,
+              "successful_within_100ms_per_second": 174.4034385281484,
+              "successful_per_offered_second": 175,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 125,
+              "sent": 125,
+              "dropped_schedules": 0,
+              "successful_2xx": 125,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 125,
+                "mean_ms": 20.78721335200001,
+                "p50_ms": 20.683708,
+                "p95_ms": 21.314042,
+                "p99_ms": 22.780958
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 125,
+                "mean_ms": 21.260289672,
+                "p50_ms": 21.167625,
+                "p95_ms": 21.7395,
+                "p99_ms": 23.250166
+              },
+              "dispatch_lag": {
+                "count": 125,
+                "mean_ms": 0.4730276639999999,
+                "p50_ms": 0.514791,
+                "p95_ms": 0.556333,
+                "p99_ms": 0.6055
+              },
+              "successful_per_second": 24.914776932592627,
+              "successful_within_100ms_per_second": 24.914776932592627,
+              "successful_per_offered_second": 25,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 5
+        },
+        {
+          "name": "pressure",
+          "backend_capacity": 2,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.181952083,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1750,
+              "dropped_schedules": 0,
+              "successful_2xx": 109,
+              "rejected_503": 1641,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 107,
+              "success_latency": {
+                "count": 109,
+                "mean_ms": 215.33098782568808,
+                "p50_ms": 221.309958,
+                "p95_ms": 222.02175,
+                "p99_ms": 222.21525
+              },
+              "rejection_latency": {
+                "count": 1641,
+                "mean_ms": 0.29867501584399747,
+                "p50_ms": 0.26025,
+                "p95_ms": 0.511833,
+                "p99_ms": 0.772292
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1750,
+                "mean_ms": 13.959209241142856,
+                "p50_ms": 0.539958,
+                "p95_ms": 220.871875,
+                "p99_ms": 221.977625
+              },
+              "dispatch_lag": {
+                "count": 1750,
+                "mean_ms": 0.2670426668571428,
+                "p50_ms": 0.278083,
+                "p95_ms": 0.331167,
+                "p99_ms": 0.4195
+              },
+              "successful_per_second": 21.034544174498883,
+              "successful_within_100ms_per_second": 0.3859549389816309,
+              "successful_per_offered_second": 21.8,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 31,
+              "rejected_503": 219,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 30,
+              "success_latency": {
+                "count": 31,
+                "mean_ms": 213.43777154838702,
+                "p50_ms": 221.519,
+                "p95_ms": 222.204375,
+                "p99_ms": 222.699333
+              },
+              "rejection_latency": {
+                "count": 219,
+                "mean_ms": 0.29178709132420094,
+                "p50_ms": 0.258208,
+                "p95_ms": 0.495333,
+                "p99_ms": 0.702041
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 26.985951319999998,
+                "p50_ms": 0.553542,
+                "p95_ms": 221.849917,
+                "p99_ms": 222.453167
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.2640138600000001,
+                "p50_ms": 0.278292,
+                "p95_ms": 0.3255,
+                "p99_ms": 0.366375
+              },
+              "successful_per_second": 5.982301554215279,
+              "successful_within_100ms_per_second": 0.19297746949081546,
+              "successful_per_offered_second": 6.2,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 6
+        },
+        {
+          "name": "recovery",
+          "backend_capacity": 12,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.015992834,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1750,
+              "dropped_schedules": 0,
+              "successful_2xx": 1095,
+              "rejected_503": 655,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 1095,
+                "mean_ms": 20.658404273972614,
+                "p50_ms": 20.549708,
+                "p95_ms": 21.362209,
+                "p99_ms": 21.829709
+              },
+              "rejection_latency": {
+                "count": 655,
+                "mean_ms": 0.28912321068702274,
+                "p50_ms": 0.24275,
+                "p95_ms": 0.533541,
+                "p99_ms": 0.927959
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1750,
+                "mean_ms": 13.288491336,
+                "p50_ms": 20.664084,
+                "p95_ms": 21.4295,
+                "p99_ms": 22.010709
+              },
+              "dispatch_lag": {
+                "count": 1750,
+                "mean_ms": 0.25397473428571427,
+                "p50_ms": 0.25775,
+                "p95_ms": 0.333625,
+                "p99_ms": 0.426917
+              },
+              "successful_per_second": 218.3017472787721,
+              "successful_within_100ms_per_second": 218.3017472787721,
+              "successful_per_offered_second": 219,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 188,
+              "rejected_503": 62,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 188,
+                "mean_ms": 20.622654925531922,
+                "p50_ms": 20.540292,
+                "p95_ms": 21.188584,
+                "p99_ms": 21.489334
+              },
+              "rejection_latency": {
+                "count": 62,
+                "mean_ms": 0.27738099999999993,
+                "p50_ms": 0.254083,
+                "p95_ms": 0.485,
+                "p99_ms": 0.669417
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 15.81349500000001,
+                "p50_ms": 20.688459,
+                "p95_ms": 21.323459,
+                "p99_ms": 21.770167
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.23642448800000002,
+                "p50_ms": 0.250917,
+                "p95_ms": 0.331209,
+                "p99_ms": 0.371959
+              },
+              "successful_per_second": 37.48011734101293,
+              "successful_within_100ms_per_second": 37.48011734101293,
+              "successful_per_offered_second": 37.6,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 6
+        }
+      ],
+      "resources": [
+        {
+          "role": "proxy",
+          "cpu_seconds_entire_child_lifetime": 1.5516320000000001,
+          "observed_peak_rss_kib": 23136
+        },
+        {
+          "role": "backend",
+          "cpu_seconds_entire_child_lifetime": 0.571486,
+          "observed_peak_rss_kib": 20016
+        }
+      ],
+      "checks": [
+        {
+          "name": "all scheduled and HTTP outcomes accounted for",
+          "pass": true
+        },
+        {
+          "name": "generator dropped at most 1.00% of schedules per priority/phase",
+          "pass": true
+        },
+        {
+          "name": "both priorities complete work without unexpected errors in every phase",
+          "pass": true
+        },
+        {
+          "name": "observed admission limits remain within configured bounds",
+          "pass": true
+        },
+        {
+          "name": "overload produces deliberate 503 shedding",
+          "pass": true
+        },
+        {
+          "name": "backend work never exceeds maximum admission limit",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "repeat": 1,
+      "phases": [
+        {
+          "name": "baseline",
+          "backend_capacity": 12,
+          "offered_rps": 200,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.016994792,
+          "traffic": {
+            "background": {
+              "scheduled": 875,
+              "sent": 875,
+              "dropped_schedules": 0,
+              "successful_2xx": 875,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 875,
+                "mean_ms": 20.69606999999998,
+                "p50_ms": 20.621583,
+                "p95_ms": 21.283834,
+                "p99_ms": 21.979416
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 875,
+                "mean_ms": 21.177199671999976,
+                "p50_ms": 21.093917,
+                "p95_ms": 21.744542,
+                "p99_ms": 22.48125
+              },
+              "dispatch_lag": {
+                "count": 875,
+                "mean_ms": 0.481080102857143,
+                "p50_ms": 0.520417,
+                "p95_ms": 0.563959,
+                "p99_ms": 0.648709
+              },
+              "successful_per_second": 174.40719719208352,
+              "successful_within_100ms_per_second": 174.40719719208352,
+              "successful_per_offered_second": 175,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 125,
+              "sent": 125,
+              "dropped_schedules": 0,
+              "successful_2xx": 125,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 125,
+                "mean_ms": 20.668796687999993,
+                "p50_ms": 20.599917,
+                "p95_ms": 21.076542,
+                "p99_ms": 21.310459
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 125,
+                "mean_ms": 21.146607352000007,
+                "p50_ms": 21.092125,
+                "p95_ms": 21.609959,
+                "p99_ms": 21.807542
+              },
+              "dispatch_lag": {
+                "count": 125,
+                "mean_ms": 0.47775698400000005,
+                "p50_ms": 0.522167,
+                "p95_ms": 0.581542,
+                "p99_ms": 0.618167
+              },
+              "successful_per_second": 24.91531388458336,
+              "successful_within_100ms_per_second": 24.91531388458336,
+              "successful_per_offered_second": 25,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 5
+        },
+        {
+          "name": "pressure",
+          "backend_capacity": 2,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.103107125,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1749,
+              "dropped_schedules": 1,
+              "successful_2xx": 125,
+              "rejected_503": 1624,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 64,
+              "success_latency": {
+                "count": 125,
+                "mean_ms": 104.90772431199994,
+                "p50_ms": 120.519625,
+                "p95_ms": 220.779208,
+                "p99_ms": 221.572042
+              },
+              "rejection_latency": {
+                "count": 1624,
+                "mean_ms": 0.3341792044334979,
+                "p50_ms": 0.282834,
+                "p95_ms": 0.580667,
+                "p99_ms": 1.216417
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1749,
+                "mean_ms": 8.08537271126358,
+                "p50_ms": 0.57125,
+                "p95_ms": 71.798791,
+                "p99_ms": 122.257083
+              },
+              "dispatch_lag": {
+                "count": 1749,
+                "mean_ms": 0.27734043910806166,
+                "p50_ms": 0.278708,
+                "p95_ms": 0.355416,
+                "p99_ms": 0.662791
+              },
+              "successful_per_second": 24.494880655675047,
+              "successful_within_100ms_per_second": 11.953501759969422,
+              "successful_per_offered_second": 25,
+              "observed_header_limit_min": 3,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 56,
+              "rejected_503": 194,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 24,
+              "success_latency": {
+                "count": 56,
+                "mean_ms": 98.22649255357143,
+                "p50_ms": 71.811042,
+                "p95_ms": 221.099958,
+                "p99_ms": 221.572292
+              },
+              "rejection_latency": {
+                "count": 194,
+                "mean_ms": 0.31892957216494844,
+                "p50_ms": 0.28525,
+                "p95_ms": 0.604917,
+                "p99_ms": 0.983958
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 22.524186484,
+                "p50_ms": 0.601333,
+                "p95_ms": 122.002375,
+                "p99_ms": 221.398583
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.27391698800000003,
+                "p50_ms": 0.277458,
+                "p95_ms": 0.338625,
+                "p99_ms": 0.454958
+              },
+              "successful_per_second": 10.97370653374242,
+              "successful_within_100ms_per_second": 6.270689447852812,
+              "successful_per_offered_second": 11.2,
+              "observed_header_limit_min": 3,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 4,
+          "cumulative_limit_decreases": 5,
+          "cumulative_limit_increases": 4,
+          "cumulative_peak_backend_active": 6
+        },
+        {
+          "name": "recovery",
+          "backend_capacity": 12,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.016199958,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1750,
+              "dropped_schedules": 0,
+              "successful_2xx": 957,
+              "rejected_503": 793,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 957,
+                "mean_ms": 20.77260629362594,
+                "p50_ms": 20.632583,
+                "p95_ms": 21.616084,
+                "p99_ms": 22.064792
+              },
+              "rejection_latency": {
+                "count": 793,
+                "mean_ms": 0.3368154035308953,
+                "p50_ms": 0.294,
+                "p95_ms": 0.608583,
+                "p99_ms": 1.125875
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1750,
+                "mean_ms": 11.769148200571426,
+                "p50_ms": 20.724208,
+                "p95_ms": 21.660083,
+                "p99_ms": 22.158625
+              },
+              "dispatch_lag": {
+                "count": 1750,
+                "mean_ms": 0.2568198274285715,
+                "p50_ms": 0.259291,
+                "p95_ms": 0.328625,
+                "p99_ms": 0.404041
+              },
+              "successful_per_second": 190.78186834911656,
+              "successful_within_100ms_per_second": 190.78186834911656,
+              "successful_per_offered_second": 191.4,
+              "observed_header_limit_min": 3,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 180,
+              "rejected_503": 70,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 180,
+                "mean_ms": 20.81639791111111,
+                "p50_ms": 20.636709,
+                "p95_ms": 21.761042,
+                "p99_ms": 22.379
+              },
+              "rejection_latency": {
+                "count": 70,
+                "mean_ms": 0.3486286285714285,
+                "p50_ms": 0.289583,
+                "p95_ms": 0.631292,
+                "p99_ms": 2.219209
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 15.342779992000008,
+                "p50_ms": 20.803333,
+                "p95_ms": 21.918833,
+                "p99_ms": 22.182125
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.257311672,
+                "p50_ms": 0.262916,
+                "p95_ms": 0.337166,
+                "p99_ms": 0.555958
+              },
+              "successful_per_second": 35.88373699356425,
+              "successful_within_100ms_per_second": 35.88373699356425,
+              "successful_per_offered_second": 36,
+              "observed_header_limit_min": 3,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 6,
+          "cumulative_limit_increases": 7,
+          "cumulative_peak_backend_active": 6
+        }
+      ],
+      "resources": [
+        {
+          "role": "proxy",
+          "cpu_seconds_entire_child_lifetime": 1.4624519999999999,
+          "observed_peak_rss_kib": 23056
+        },
+        {
+          "role": "backend",
+          "cpu_seconds_entire_child_lifetime": 0.544175,
+          "observed_peak_rss_kib": 20288
+        }
+      ],
+      "checks": [
+        {
+          "name": "all scheduled and HTTP outcomes accounted for",
+          "pass": true
+        },
+        {
+          "name": "generator dropped at most 1.00% of schedules per priority/phase",
+          "pass": true
+        },
+        {
+          "name": "both priorities complete work without unexpected errors in every phase",
+          "pass": true
+        },
+        {
+          "name": "observed admission limits remain within configured bounds",
+          "pass": true
+        },
+        {
+          "name": "overload produces deliberate 503 shedding",
+          "pass": true
+        },
+        {
+          "name": "backend work never exceeds maximum admission limit",
+          "pass": true
+        },
+        {
+          "name": "adaptive limit decreases under pressure",
+          "pass": true
+        },
+        {
+          "name": "adaptive capacity grows during recovery",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "deployment": "middleware-fixed",
+      "repeat": 1,
+      "phases": [
+        {
+          "name": "baseline",
+          "backend_capacity": 12,
+          "offered_rps": 200,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.016634458,
+          "traffic": {
+            "background": {
+              "scheduled": 875,
+              "sent": 875,
+              "dropped_schedules": 0,
+              "successful_2xx": 875,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 875,
+                "mean_ms": 20.503759792000018,
+                "p50_ms": 20.445875,
+                "p95_ms": 20.967917,
+                "p99_ms": 21.464
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 875,
+                "mean_ms": 21.018203706285693,
+                "p50_ms": 20.959208,
+                "p95_ms": 21.54425,
+                "p99_ms": 22.160666
+              },
+              "dispatch_lag": {
+                "count": 875,
+                "mean_ms": 0.5143882502857142,
+                "p50_ms": 0.54575,
+                "p95_ms": 0.606625,
+                "p99_ms": 0.792541
+              },
+              "successful_per_second": 174.4197244837407,
+              "successful_within_100ms_per_second": 174.4197244837407,
+              "successful_per_offered_second": 175,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 125,
+              "sent": 125,
+              "dropped_schedules": 0,
+              "successful_2xx": 125,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 125,
+                "mean_ms": 20.516836720000008,
+                "p50_ms": 20.43975,
+                "p95_ms": 20.992958,
+                "p99_ms": 21.432792
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 125,
+                "mean_ms": 21.032509287999996,
+                "p50_ms": 20.94725,
+                "p95_ms": 21.549166,
+                "p99_ms": 22.005166
+              },
+              "dispatch_lag": {
+                "count": 125,
+                "mean_ms": 0.5156243199999999,
+                "p50_ms": 0.54425,
+                "p95_ms": 0.592666,
+                "p99_ms": 0.646583
+              },
+              "successful_per_second": 24.917103497677246,
+              "successful_within_100ms_per_second": 24.917103497677246,
+              "successful_per_offered_second": 25,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 5
+        },
+        {
+          "name": "pressure",
+          "backend_capacity": 2,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.207063917,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1750,
+              "dropped_schedules": 0,
+              "successful_2xx": 110,
+              "rejected_503": 1640,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 108,
+              "success_latency": {
+                "count": 110,
+                "mean_ms": 215.0867477636364,
+                "p50_ms": 220.460125,
+                "p95_ms": 221.069542,
+                "p99_ms": 221.884541
+              },
+              "rejection_latency": {
+                "count": 1640,
+                "mean_ms": 0.35517695304878083,
+                "p50_ms": 0.321458,
+                "p95_ms": 0.632958,
+                "p99_ms": 1.149
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1750,
+                "mean_ms": 14.130310618285709,
+                "p50_ms": 0.608167,
+                "p95_ms": 220.59325,
+                "p99_ms": 220.972167
+              },
+              "dispatch_lag": {
+                "count": 1750,
+                "mean_ms": 0.2776683548571429,
+                "p50_ms": 0.278209,
+                "p95_ms": 0.327417,
+                "p99_ms": 0.479125
+              },
+              "successful_per_second": 21.125148788912014,
+              "successful_within_100ms_per_second": 0.3840936143438548,
+              "successful_per_offered_second": 22,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 31,
+              "rejected_503": 219,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 30,
+              "success_latency": {
+                "count": 31,
+                "mean_ms": 212.44794090322583,
+                "p50_ms": 220.403417,
+                "p95_ms": 221.642125,
+                "p99_ms": 221.828709
+              },
+              "rejection_latency": {
+                "count": 219,
+                "mean_ms": 0.3342871689497715,
+                "p50_ms": 0.308459,
+                "p95_ms": 0.57475,
+                "p99_ms": 0.922667
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 26.907917464,
+                "p50_ms": 0.603625,
+                "p95_ms": 220.739625,
+                "p99_ms": 221.226375
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.2714882920000001,
+                "p50_ms": 0.278542,
+                "p95_ms": 0.325417,
+                "p99_ms": 0.342542
+              },
+              "successful_per_second": 5.953451022329749,
+              "successful_within_100ms_per_second": 0.1920468071719274,
+              "successful_per_offered_second": 6.2,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 6
+        },
+        {
+          "name": "recovery",
+          "backend_capacity": 12,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.014307875,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1750,
+              "dropped_schedules": 0,
+              "successful_2xx": 1100,
+              "rejected_503": 650,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 1100,
+                "mean_ms": 20.565878986363632,
+                "p50_ms": 20.493708,
+                "p95_ms": 21.158084,
+                "p99_ms": 21.947667
+              },
+              "rejection_latency": {
+                "count": 650,
+                "mean_ms": 0.4336740707692306,
+                "p50_ms": 0.398875,
+                "p95_ms": 0.730167,
+                "p99_ms": 1.3035
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1750,
+                "mean_ms": 13.365930046285715,
+                "p50_ms": 20.629833,
+                "p95_ms": 21.24225,
+                "p99_ms": 22.149208
+              },
+              "dispatch_lag": {
+                "count": 1750,
+                "mean_ms": 0.27766649314285713,
+                "p50_ms": 0.27325,
+                "p95_ms": 0.354125,
+                "p99_ms": 0.586291
+              },
+              "successful_per_second": 219.37224985412368,
+              "successful_within_100ms_per_second": 219.37224985412368,
+              "successful_per_offered_second": 220,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 186,
+              "rejected_503": 64,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 186,
+                "mean_ms": 20.539930327956988,
+                "p50_ms": 20.499167,
+                "p95_ms": 20.853708,
+                "p99_ms": 21.67575
+              },
+              "rejection_latency": {
+                "count": 64,
+                "mean_ms": 0.4380651406249999,
+                "p50_ms": 0.438,
+                "p95_ms": 0.651917,
+                "p99_ms": 0.847625
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 15.678172836000003,
+                "p50_ms": 20.692458,
+                "p95_ms": 21.156,
+                "p99_ms": 22.226958
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.28426081999999997,
+                "p50_ms": 0.273625,
+                "p95_ms": 0.364666,
+                "p99_ms": 1.103333
+              },
+              "successful_per_second": 37.09385315715182,
+              "successful_within_100ms_per_second": 37.09385315715182,
+              "successful_per_offered_second": 37.2,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 6
+        }
+      ],
+      "resources": [
+        {
+          "role": "backend",
+          "cpu_seconds_entire_child_lifetime": 1.203557,
+          "observed_peak_rss_kib": 22144
+        }
+      ],
+      "checks": [
+        {
+          "name": "all scheduled and HTTP outcomes accounted for",
+          "pass": true
+        },
+        {
+          "name": "generator dropped at most 1.00% of schedules per priority/phase",
+          "pass": true
+        },
+        {
+          "name": "both priorities complete work without unexpected errors in every phase",
+          "pass": true
+        },
+        {
+          "name": "observed admission limits remain within configured bounds",
+          "pass": true
+        },
+        {
+          "name": "overload produces deliberate 503 shedding",
+          "pass": true
+        },
+        {
+          "name": "backend work never exceeds maximum admission limit",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "repeat": 1,
+      "phases": [
+        {
+          "name": "baseline",
+          "backend_capacity": 12,
+          "offered_rps": 200,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.017015375,
+          "traffic": {
+            "background": {
+              "scheduled": 875,
+              "sent": 874,
+              "dropped_schedules": 1,
+              "successful_2xx": 874,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 874,
+                "mean_ms": 20.52748665675055,
+                "p50_ms": 20.447708,
+                "p95_ms": 21.008583,
+                "p99_ms": 21.888583
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 874,
+                "mean_ms": 21.024923188787177,
+                "p50_ms": 20.93475,
+                "p95_ms": 21.558584,
+                "p99_ms": 22.298709
+              },
+              "dispatch_lag": {
+                "count": 874,
+                "mean_ms": 0.4973808627002286,
+                "p50_ms": 0.544125,
+                "p95_ms": 0.607292,
+                "p99_ms": 0.886709
+              },
+              "successful_per_second": 174.2071599690882,
+              "successful_within_100ms_per_second": 174.2071599690882,
+              "successful_per_offered_second": 174.8,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 125,
+              "sent": 125,
+              "dropped_schedules": 0,
+              "successful_2xx": 125,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 125,
+                "mean_ms": 20.491809328000013,
+                "p50_ms": 20.41625,
+                "p95_ms": 21.067583,
+                "p99_ms": 21.646583
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 125,
+                "mean_ms": 20.99464701599999,
+                "p50_ms": 20.935417,
+                "p95_ms": 21.547834,
+                "p99_ms": 22.311209
+              },
+              "dispatch_lag": {
+                "count": 125,
+                "mean_ms": 0.5027813440000002,
+                "p50_ms": 0.547167,
+                "p95_ms": 0.598875,
+                "p99_ms": 0.626584
+              },
+              "successful_per_second": 24.915211666059527,
+              "successful_within_100ms_per_second": 24.915211666059527,
+              "successful_per_offered_second": 25,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 5
+        },
+        {
+          "name": "pressure",
+          "backend_capacity": 2,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.108889542,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1750,
+              "dropped_schedules": 0,
+              "successful_2xx": 129,
+              "rejected_503": 1621,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 65,
+              "success_latency": {
+                "count": 129,
+                "mean_ms": 100.72295247286823,
+                "p50_ms": 120.256583,
+                "p95_ms": 220.40025,
+                "p99_ms": 220.524
+              },
+              "rejection_latency": {
+                "count": 1621,
+                "mean_ms": 0.3814976064157922,
+                "p50_ms": 0.324584,
+                "p95_ms": 0.716,
+                "p99_ms": 1.252375
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1750,
+                "mean_ms": 8.060405600571428,
+                "p50_ms": 0.611,
+                "p95_ms": 70.720833,
+                "p99_ms": 121.041708
+              },
+              "dispatch_lag": {
+                "count": 1750,
+                "mean_ms": 0.28225392514285685,
+                "p50_ms": 0.278333,
+                "p95_ms": 0.340417,
+                "p99_ms": 0.500167
+              },
+              "successful_per_second": 25.25010551500391,
+              "successful_within_100ms_per_second": 12.527184131474808,
+              "successful_per_offered_second": 25.8,
+              "observed_header_limit_min": 3,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 57,
+              "rejected_503": 193,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 23,
+              "success_latency": {
+                "count": 57,
+                "mean_ms": 95.10573977192983,
+                "p50_ms": 70.646334,
+                "p95_ms": 220.325209,
+                "p99_ms": 220.975166
+              },
+              "rejection_latency": {
+                "count": 193,
+                "mean_ms": 0.39228995336787575,
+                "p50_ms": 0.308166,
+                "p95_ms": 0.889167,
+                "p99_ms": 1.859125
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 22.277131647999997,
+                "p50_ms": 0.661792,
+                "p95_ms": 120.834333,
+                "p99_ms": 220.587792
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.290125496,
+                "p50_ms": 0.275875,
+                "p95_ms": 0.366042,
+                "p99_ms": 0.81875
+              },
+              "successful_per_second": 11.157023367094752,
+              "successful_within_100ms_per_second": 6.655066569845991,
+              "successful_per_offered_second": 11.4,
+              "observed_header_limit_min": 3,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 4,
+          "cumulative_limit_decreases": 5,
+          "cumulative_limit_increases": 4,
+          "cumulative_peak_backend_active": 6
+        },
+        {
+          "name": "recovery",
+          "backend_capacity": 12,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.018320875,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1750,
+              "dropped_schedules": 0,
+              "successful_2xx": 958,
+              "rejected_503": 792,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 958,
+                "mean_ms": 20.37692541649267,
+                "p50_ms": 20.320625,
+                "p95_ms": 20.710875,
+                "p99_ms": 21.283
+              },
+              "rejection_latency": {
+                "count": 792,
+                "mean_ms": 0.2947741944444444,
+                "p50_ms": 0.266625,
+                "p95_ms": 0.500167,
+                "p99_ms": 0.894416
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1750,
+                "mean_ms": 11.568552655428574,
+                "p50_ms": 20.506042,
+                "p95_ms": 20.86025,
+                "p99_ms": 21.487375
+              },
+              "dispatch_lag": {
+                "count": 1750,
+                "mean_ms": 0.2801947851428571,
+                "p50_ms": 0.277292,
+                "p95_ms": 0.327292,
+                "p99_ms": 0.431333
+              },
+              "successful_per_second": 190.9005071342713,
+              "successful_within_100ms_per_second": 190.9005071342713,
+              "successful_per_offered_second": 191.6,
+              "observed_header_limit_min": 3,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 176,
+              "rejected_503": 74,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 176,
+                "mean_ms": 20.335495960227277,
+                "p50_ms": 20.318083,
+                "p95_ms": 20.52725,
+                "p99_ms": 20.635375
+              },
+              "rejection_latency": {
+                "count": 74,
+                "mean_ms": 0.269465081081081,
+                "p50_ms": 0.25825,
+                "p95_ms": 0.48625,
+                "p99_ms": 0.58725
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 14.672301459999998,
+                "p50_ms": 20.562667,
+                "p95_ms": 20.778833,
+                "p99_ms": 20.921917
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.27631384000000014,
+                "p50_ms": 0.277833,
+                "p95_ms": 0.321875,
+                "p99_ms": 0.360208
+              },
+              "successful_per_second": 35.07149191610829,
+              "successful_within_100ms_per_second": 35.07149191610829,
+              "successful_per_offered_second": 35.2,
+              "observed_header_limit_min": 3,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 6,
+          "cumulative_limit_increases": 7,
+          "cumulative_peak_backend_active": 6
+        }
+      ],
+      "resources": [
+        {
+          "role": "backend",
+          "cpu_seconds_entire_child_lifetime": 1.031524,
+          "observed_peak_rss_kib": 21488
+        }
+      ],
+      "checks": [
+        {
+          "name": "all scheduled and HTTP outcomes accounted for",
+          "pass": true
+        },
+        {
+          "name": "generator dropped at most 1.00% of schedules per priority/phase",
+          "pass": true
+        },
+        {
+          "name": "both priorities complete work without unexpected errors in every phase",
+          "pass": true
+        },
+        {
+          "name": "observed admission limits remain within configured bounds",
+          "pass": true
+        },
+        {
+          "name": "overload produces deliberate 503 shedding",
+          "pass": true
+        },
+        {
+          "name": "backend work never exceeds maximum admission limit",
+          "pass": true
+        },
+        {
+          "name": "adaptive limit decreases under pressure",
+          "pass": true
+        },
+        {
+          "name": "adaptive capacity grows during recovery",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "deployment": "proxy-fixed",
+      "repeat": 2,
+      "phases": [
+        {
+          "name": "baseline",
+          "backend_capacity": 12,
+          "offered_rps": 200,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.017222917,
+          "traffic": {
+            "background": {
+              "scheduled": 875,
+              "sent": 875,
+              "dropped_schedules": 0,
+              "successful_2xx": 874,
+              "rejected_503": 1,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 874,
+                "mean_ms": 20.93509296453087,
+                "p50_ms": 20.775833,
+                "p95_ms": 21.885375,
+                "p99_ms": 23.157
+              },
+              "rejection_latency": {
+                "count": 1,
+                "mean_ms": 0.793208,
+                "p50_ms": 0.793208,
+                "p95_ms": 0.793208,
+                "p99_ms": 0.793208
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 875,
+                "mean_ms": 21.39889172571427,
+                "p50_ms": 21.252209,
+                "p95_ms": 22.353042,
+                "p99_ms": 23.532
+              },
+              "dispatch_lag": {
+                "count": 875,
+                "mean_ms": 0.4867631428571431,
+                "p50_ms": 0.514042,
+                "p95_ms": 0.57375,
+                "p99_ms": 0.650792
+              },
+              "successful_per_second": 174.1999537310971,
+              "successful_within_100ms_per_second": 174.1999537310971,
+              "successful_per_offered_second": 174.8,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 125,
+              "sent": 125,
+              "dropped_schedules": 0,
+              "successful_2xx": 125,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 125,
+                "mean_ms": 20.957807360000007,
+                "p50_ms": 20.8065,
+                "p95_ms": 21.825458,
+                "p99_ms": 23.158625
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 125,
+                "mean_ms": 21.501461631999987,
+                "p50_ms": 21.30875,
+                "p95_ms": 22.734084,
+                "p99_ms": 24.790834
+              },
+              "dispatch_lag": {
+                "count": 125,
+                "mean_ms": 0.5436020000000001,
+                "p50_ms": 0.5235,
+                "p95_ms": 1.017584,
+                "p99_ms": 1.691959
+              },
+              "successful_per_second": 24.914181025614575,
+              "successful_within_100ms_per_second": 24.914181025614575,
+              "successful_per_offered_second": 25,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 5
+        },
+        {
+          "name": "pressure",
+          "backend_capacity": 2,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.214289875,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1750,
+              "dropped_schedules": 0,
+              "successful_2xx": 111,
+              "rejected_503": 1639,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 109,
+              "success_latency": {
+                "count": 111,
+                "mean_ms": 214.93832137837836,
+                "p50_ms": 221.7225,
+                "p95_ms": 222.608292,
+                "p99_ms": 223.456833
+              },
+              "rejection_latency": {
+                "count": 1639,
+                "mean_ms": 0.4599756369737646,
+                "p50_ms": 0.422375,
+                "p95_ms": 0.788875,
+                "p99_ms": 1.498291
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1750,
+                "mean_ms": 14.33455405257143,
+                "p50_ms": 0.7055,
+                "p95_ms": 221.195708,
+                "p99_ms": 222.422083
+              },
+              "dispatch_lag": {
+                "count": 1750,
+                "mean_ms": 0.27046066914285694,
+                "p50_ms": 0.272083,
+                "p95_ms": 0.353208,
+                "p99_ms": 0.682
+              },
+              "successful_per_second": 21.28765424649507,
+              "successful_within_100ms_per_second": 0.38356133777468593,
+              "successful_per_offered_second": 22.2,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 30,
+              "rejected_503": 220,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 29,
+              "success_latency": {
+                "count": 30,
+                "mean_ms": 211.70543750000004,
+                "p50_ms": 221.331083,
+                "p95_ms": 223.014167,
+                "p99_ms": 224.355416
+              },
+              "rejection_latency": {
+                "count": 220,
+                "mean_ms": 0.5087930136363635,
+                "p50_ms": 0.438916,
+                "p95_ms": 1.026583,
+                "p99_ms": 2.137042
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 26.141596815999996,
+                "p50_ms": 0.745375,
+                "p95_ms": 222.21575,
+                "p99_ms": 222.691583
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.289144988,
+                "p50_ms": 0.275583,
+                "p95_ms": 0.500958,
+                "p99_ms": 0.630333
+              },
+              "successful_per_second": 5.753420066620289,
+              "successful_within_100ms_per_second": 0.19178066888734296,
+              "successful_per_offered_second": 6,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 6
+        },
+        {
+          "name": "recovery",
+          "backend_capacity": 12,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.018745833,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1750,
+              "dropped_schedules": 0,
+              "successful_2xx": 1093,
+              "rejected_503": 657,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 1093,
+                "mean_ms": 20.987992043915817,
+                "p50_ms": 20.911625,
+                "p95_ms": 21.896875,
+                "p99_ms": 22.535458
+              },
+              "rejection_latency": {
+                "count": 657,
+                "mean_ms": 0.46642371080669676,
+                "p50_ms": 0.434666,
+                "p95_ms": 0.8135,
+                "p99_ms": 1.545791
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1750,
+                "mean_ms": 13.530195265714271,
+                "p50_ms": 20.853875,
+                "p95_ms": 21.909125,
+                "p99_ms": 22.676916
+              },
+              "dispatch_lag": {
+                "count": 1750,
+                "mean_ms": 0.24652333200000012,
+                "p50_ms": 0.2455,
+                "p95_ms": 0.344375,
+                "p99_ms": 0.646625
+              },
+              "successful_per_second": 217.7834934005115,
+              "successful_within_100ms_per_second": 217.7834934005115,
+              "successful_per_offered_second": 218.6,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 188,
+              "rejected_503": 62,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 188,
+                "mean_ms": 21.043562042553187,
+                "p50_ms": 20.909167,
+                "p95_ms": 21.934916,
+                "p99_ms": 22.949208
+              },
+              "rejection_latency": {
+                "count": 62,
+                "mean_ms": 0.4642526774193549,
+                "p50_ms": 0.434333,
+                "p95_ms": 0.772542,
+                "p99_ms": 1.664625
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 16.170143512,
+                "p50_ms": 20.964833,
+                "p95_ms": 22.061083,
+                "p99_ms": 23.172208
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.23017900399999988,
+                "p50_ms": 0.241541,
+                "p95_ms": 0.321916,
+                "p99_ms": 0.58275
+              },
+              "successful_per_second": 37.45955787675769,
+              "successful_within_100ms_per_second": 37.45955787675769,
+              "successful_per_offered_second": 37.6,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 6
+        }
+      ],
+      "resources": [
+        {
+          "role": "proxy",
+          "cpu_seconds_entire_child_lifetime": 1.943304,
+          "observed_peak_rss_kib": 22912
+        },
+        {
+          "role": "backend",
+          "cpu_seconds_entire_child_lifetime": 0.686575,
+          "observed_peak_rss_kib": 19984
+        }
+      ],
+      "checks": [
+        {
+          "name": "all scheduled and HTTP outcomes accounted for",
+          "pass": true
+        },
+        {
+          "name": "generator dropped at most 1.00% of schedules per priority/phase",
+          "pass": true
+        },
+        {
+          "name": "both priorities complete work without unexpected errors in every phase",
+          "pass": true
+        },
+        {
+          "name": "observed admission limits remain within configured bounds",
+          "pass": true
+        },
+        {
+          "name": "overload produces deliberate 503 shedding",
+          "pass": true
+        },
+        {
+          "name": "backend work never exceeds maximum admission limit",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "repeat": 2,
+      "phases": [
+        {
+          "name": "baseline",
+          "backend_capacity": 12,
+          "offered_rps": 200,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.0163315,
+          "traffic": {
+            "background": {
+              "scheduled": 875,
+              "sent": 874,
+              "dropped_schedules": 1,
+              "successful_2xx": 874,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 874,
+                "mean_ms": 20.976862557208264,
+                "p50_ms": 20.914416,
+                "p95_ms": 21.629208,
+                "p99_ms": 22.851834
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 874,
+                "mean_ms": 21.45416333638446,
+                "p50_ms": 21.371333,
+                "p95_ms": 22.295917,
+                "p99_ms": 23.655542
+              },
+              "dispatch_lag": {
+                "count": 874,
+                "mean_ms": 0.4772333089244853,
+                "p50_ms": 0.503542,
+                "p95_ms": 0.565958,
+                "p99_ms": 0.902333
+              },
+              "successful_per_second": 174.23090958003874,
+              "successful_within_100ms_per_second": 174.23090958003874,
+              "successful_per_offered_second": 174.8,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 125,
+              "sent": 125,
+              "dropped_schedules": 0,
+              "successful_2xx": 125,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 125,
+                "mean_ms": 20.928217951999997,
+                "p50_ms": 20.932,
+                "p95_ms": 21.429917,
+                "p99_ms": 22.031334
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 125,
+                "mean_ms": 21.38883632800001,
+                "p50_ms": 21.340875,
+                "p95_ms": 21.960833,
+                "p99_ms": 22.65925
+              },
+              "dispatch_lag": {
+                "count": 125,
+                "mean_ms": 0.460551024,
+                "p50_ms": 0.502833,
+                "p95_ms": 0.583,
+                "p99_ms": 0.711417
+              },
+              "successful_per_second": 24.918608349547874,
+              "successful_within_100ms_per_second": 24.918608349547874,
+              "successful_per_offered_second": 25,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 5
+        },
+        {
+          "name": "pressure",
+          "backend_capacity": 2,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.117207084,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1750,
+              "dropped_schedules": 0,
+              "successful_2xx": 128,
+              "rejected_503": 1622,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 63,
+              "success_latency": {
+                "count": 128,
+                "mean_ms": 102.14261392968753,
+                "p50_ms": 73.053416,
+                "p95_ms": 221.663917,
+                "p99_ms": 222.200583
+              },
+              "rejection_latency": {
+                "count": 1622,
+                "mean_ms": 0.48539349753390787,
+                "p50_ms": 0.4165,
+                "p95_ms": 0.924125,
+                "p99_ms": 1.779208
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1750,
+                "mean_ms": 8.201363474857146,
+                "p50_ms": 0.702625,
+                "p95_ms": 72.196125,
+                "p99_ms": 122.366334
+              },
+              "dispatch_lag": {
+                "count": 1750,
+                "mean_ms": 0.2803988022857142,
+                "p50_ms": 0.270375,
+                "p95_ms": 0.370459,
+                "p99_ms": 0.989834
+              },
+              "successful_per_second": 25.013644728238244,
+              "successful_within_100ms_per_second": 12.702241463558483,
+              "successful_per_offered_second": 25.6,
+              "observed_header_limit_min": 3,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 58,
+              "rejected_503": 192,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 25,
+              "success_latency": {
+                "count": 58,
+                "mean_ms": 95.09775731034482,
+                "p50_ms": 72.22525,
+                "p95_ms": 221.709959,
+                "p99_ms": 222.176959
+              },
+              "rejection_latency": {
+                "count": 192,
+                "mean_ms": 0.4896618489583335,
+                "p50_ms": 0.421541,
+                "p95_ms": 0.7985,
+                "p99_ms": 1.881542
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 22.705627179999997,
+                "p50_ms": 0.782625,
+                "p95_ms": 122.285042,
+                "p99_ms": 221.86675
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.26682983599999993,
+                "p50_ms": 0.271542,
+                "p95_ms": 0.3575,
+                "p99_ms": 0.588459
+              },
+              "successful_per_second": 11.334307767482954,
+              "successful_within_100ms_per_second": 6.448830281498922,
+              "successful_per_offered_second": 11.6,
+              "observed_header_limit_min": 3,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 4,
+          "cumulative_limit_decreases": 5,
+          "cumulative_limit_increases": 4,
+          "cumulative_peak_backend_active": 6
+        },
+        {
+          "name": "recovery",
+          "backend_capacity": 12,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.01374825,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1750,
+              "dropped_schedules": 0,
+              "successful_2xx": 956,
+              "rejected_503": 794,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 956,
+                "mean_ms": 20.96738785460252,
+                "p50_ms": 20.869125,
+                "p95_ms": 21.952833,
+                "p99_ms": 22.604875
+              },
+              "rejection_latency": {
+                "count": 794,
+                "mean_ms": 0.4300966687657432,
+                "p50_ms": 0.367625,
+                "p95_ms": 0.732875,
+                "p99_ms": 1.617833
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1750,
+                "mean_ms": 11.913973246285705,
+                "p50_ms": 20.768875,
+                "p95_ms": 21.902875,
+                "p99_ms": 22.695958
+              },
+              "dispatch_lag": {
+                "count": 1750,
+                "mean_ms": 0.264589714857143,
+                "p50_ms": 0.251917,
+                "p95_ms": 0.358375,
+                "p99_ms": 0.838917
+              },
+              "successful_per_second": 190.67570853801845,
+              "successful_within_100ms_per_second": 190.67570853801845,
+              "successful_per_offered_second": 191.2,
+              "observed_header_limit_min": 3,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 179,
+              "rejected_503": 71,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 179,
+                "mean_ms": 21.071506508379894,
+                "p50_ms": 20.9045,
+                "p95_ms": 22.107417,
+                "p99_ms": 23.963792
+              },
+              "rejection_latency": {
+                "count": 71,
+                "mean_ms": 0.4251542816901409,
+                "p50_ms": 0.357,
+                "p95_ms": 0.852459,
+                "p99_ms": 1.236083
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 15.456536016000006,
+                "p50_ms": 20.917333,
+                "p95_ms": 22.272583,
+                "p99_ms": 24.030542
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.24853733200000003,
+                "p50_ms": 0.250542,
+                "p95_ms": 0.339583,
+                "p99_ms": 0.481792
+              },
+              "successful_per_second": 35.7018324563863,
+              "successful_within_100ms_per_second": 35.7018324563863,
+              "successful_per_offered_second": 35.8,
+              "observed_header_limit_min": 3,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 6,
+          "cumulative_limit_increases": 7,
+          "cumulative_peak_backend_active": 6
+        }
+      ],
+      "resources": [
+        {
+          "role": "proxy",
+          "cpu_seconds_entire_child_lifetime": 1.9677959999999999,
+          "observed_peak_rss_kib": 22816
+        },
+        {
+          "role": "backend",
+          "cpu_seconds_entire_child_lifetime": 0.704341,
+          "observed_peak_rss_kib": 19904
+        }
+      ],
+      "checks": [
+        {
+          "name": "all scheduled and HTTP outcomes accounted for",
+          "pass": true
+        },
+        {
+          "name": "generator dropped at most 1.00% of schedules per priority/phase",
+          "pass": true
+        },
+        {
+          "name": "both priorities complete work without unexpected errors in every phase",
+          "pass": true
+        },
+        {
+          "name": "observed admission limits remain within configured bounds",
+          "pass": true
+        },
+        {
+          "name": "overload produces deliberate 503 shedding",
+          "pass": true
+        },
+        {
+          "name": "backend work never exceeds maximum admission limit",
+          "pass": true
+        },
+        {
+          "name": "adaptive limit decreases under pressure",
+          "pass": true
+        },
+        {
+          "name": "adaptive capacity grows during recovery",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "deployment": "middleware-fixed",
+      "repeat": 2,
+      "phases": [
+        {
+          "name": "baseline",
+          "backend_capacity": 12,
+          "offered_rps": 200,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.016990625,
+          "traffic": {
+            "background": {
+              "scheduled": 875,
+              "sent": 874,
+              "dropped_schedules": 1,
+              "successful_2xx": 874,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 874,
+                "mean_ms": 20.688719457665897,
+                "p50_ms": 20.60575,
+                "p95_ms": 21.335458,
+                "p99_ms": 22.318
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 874,
+                "mean_ms": 21.20601015903888,
+                "p50_ms": 21.098541,
+                "p95_ms": 21.920166,
+                "p99_ms": 23.629
+              },
+              "dispatch_lag": {
+                "count": 874,
+                "mean_ms": 0.5172211430205951,
+                "p50_ms": 0.540291,
+                "p95_ms": 0.614291,
+                "p99_ms": 0.836833
+              },
+              "successful_per_second": 174.20801937416417,
+              "successful_within_100ms_per_second": 174.20801937416417,
+              "successful_per_offered_second": 174.8,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 125,
+              "sent": 125,
+              "dropped_schedules": 0,
+              "successful_2xx": 125,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 125,
+                "mean_ms": 20.620706359999996,
+                "p50_ms": 20.585583,
+                "p95_ms": 20.997666,
+                "p99_ms": 21.511125
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 125,
+                "mean_ms": 21.11847304000001,
+                "p50_ms": 21.08,
+                "p95_ms": 21.469458,
+                "p99_ms": 22.044041
+              },
+              "dispatch_lag": {
+                "count": 125,
+                "mean_ms": 0.4976959519999998,
+                "p50_ms": 0.534708,
+                "p95_ms": 0.600416,
+                "p99_ms": 0.789791
+              },
+              "successful_per_second": 24.915334578684806,
+              "successful_within_100ms_per_second": 24.915334578684806,
+              "successful_per_offered_second": 25,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 5
+        },
+        {
+          "name": "pressure",
+          "backend_capacity": 2,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.201415417,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1750,
+              "dropped_schedules": 0,
+              "successful_2xx": 112,
+              "rejected_503": 1638,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 110,
+              "success_latency": {
+                "count": 112,
+                "mean_ms": 212.4783724553572,
+                "p50_ms": 220.374333,
+                "p95_ms": 221.162417,
+                "p99_ms": 221.558542
+              },
+              "rejection_latency": {
+                "count": 1638,
+                "mean_ms": 0.3163913473748474,
+                "p50_ms": 0.277209,
+                "p95_ms": 0.533416,
+                "p99_ms": 0.997458
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1750,
+                "mean_ms": 14.170095694857144,
+                "p50_ms": 0.561333,
+                "p95_ms": 220.58225,
+                "p99_ms": 220.831625
+              },
+              "dispatch_lag": {
+                "count": 1750,
+                "mean_ms": 0.27528391885714243,
+                "p50_ms": 0.277167,
+                "p95_ms": 0.32025,
+                "p99_ms": 0.405667
+              },
+              "successful_per_second": 21.532600459856713,
+              "successful_within_100ms_per_second": 0.38451072249744134,
+              "successful_per_offered_second": 22.4,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 30,
+              "rejected_503": 220,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 29,
+              "success_latency": {
+                "count": 30,
+                "mean_ms": 212.11734853333328,
+                "p50_ms": 220.35725,
+                "p95_ms": 220.778208,
+                "p99_ms": 221.126292
+              },
+              "rejection_latency": {
+                "count": 220,
+                "mean_ms": 0.3141668272727274,
+                "p50_ms": 0.278708,
+                "p95_ms": 0.557167,
+                "p99_ms": 0.8105
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 26.005301663999997,
+                "p50_ms": 0.565792,
+                "p95_ms": 220.662083,
+                "p99_ms": 221.00275
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.2747086959999999,
+                "p50_ms": 0.278042,
+                "p95_ms": 0.315875,
+                "p99_ms": 0.353542
+              },
+              "successful_per_second": 5.76766083746162,
+              "successful_within_100ms_per_second": 0.19225536124872067,
+              "successful_per_offered_second": 6,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 6
+        },
+        {
+          "name": "recovery",
+          "backend_capacity": 12,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.016152792,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1750,
+              "dropped_schedules": 0,
+              "successful_2xx": 1098,
+              "rejected_503": 652,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 1098,
+                "mean_ms": 20.356775806921675,
+                "p50_ms": 20.2955,
+                "p95_ms": 20.675667,
+                "p99_ms": 21.132417
+              },
+              "rejection_latency": {
+                "count": 652,
+                "mean_ms": 0.28737607515337427,
+                "p50_ms": 0.253,
+                "p95_ms": 0.547083,
+                "p99_ms": 0.885625
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1750,
+                "mean_ms": 13.157360314285727,
+                "p50_ms": 20.520834,
+                "p95_ms": 20.852459,
+                "p99_ms": 21.384125
+              },
+              "dispatch_lag": {
+                "count": 1750,
+                "mean_ms": 0.27783335428571443,
+                "p50_ms": 0.276584,
+                "p95_ms": 0.324125,
+                "p99_ms": 0.408042
+              },
+              "successful_per_second": 218.89285385228754,
+              "successful_within_100ms_per_second": 218.89285385228754,
+              "successful_per_offered_second": 219.6,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 186,
+              "rejected_503": 64,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 186,
+                "mean_ms": 20.38982237634409,
+                "p50_ms": 20.305209,
+                "p95_ms": 20.725416,
+                "p99_ms": 21.515917
+              },
+              "rejection_latency": {
+                "count": 64,
+                "mean_ms": 0.30949804687500004,
+                "p50_ms": 0.249875,
+                "p95_ms": 0.660875,
+                "p99_ms": 1.292333
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 15.528654655999995,
+                "p50_ms": 20.554834,
+                "p95_ms": 20.966917,
+                "p99_ms": 21.81025
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.2793543559999998,
+                "p50_ms": 0.276167,
+                "p95_ms": 0.327542,
+                "p99_ms": 0.486584
+              },
+              "successful_per_second": 37.08021021541483,
+              "successful_within_100ms_per_second": 37.08021021541483,
+              "successful_per_offered_second": 37.2,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 6
+        }
+      ],
+      "resources": [
+        {
+          "role": "backend",
+          "cpu_seconds_entire_child_lifetime": 0.964108,
+          "observed_peak_rss_kib": 21840
+        }
+      ],
+      "checks": [
+        {
+          "name": "all scheduled and HTTP outcomes accounted for",
+          "pass": true
+        },
+        {
+          "name": "generator dropped at most 1.00% of schedules per priority/phase",
+          "pass": true
+        },
+        {
+          "name": "both priorities complete work without unexpected errors in every phase",
+          "pass": true
+        },
+        {
+          "name": "observed admission limits remain within configured bounds",
+          "pass": true
+        },
+        {
+          "name": "overload produces deliberate 503 shedding",
+          "pass": true
+        },
+        {
+          "name": "backend work never exceeds maximum admission limit",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "repeat": 2,
+      "phases": [
+        {
+          "name": "baseline",
+          "backend_capacity": 12,
+          "offered_rps": 200,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.016412916,
+          "traffic": {
+            "background": {
+              "scheduled": 875,
+              "sent": 875,
+              "dropped_schedules": 0,
+              "successful_2xx": 875,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 875,
+                "mean_ms": 20.46481652571431,
+                "p50_ms": 20.397083,
+                "p95_ms": 20.871833,
+                "p99_ms": 21.458584
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 875,
+                "mean_ms": 20.973017732571453,
+                "p50_ms": 20.905125,
+                "p95_ms": 21.392958,
+                "p99_ms": 22.028791
+              },
+              "dispatch_lag": {
+                "count": 875,
+                "mean_ms": 0.5081558102857138,
+                "p50_ms": 0.543958,
+                "p95_ms": 0.599291,
+                "p99_ms": 0.646791
+              },
+              "successful_per_second": 174.4274274570104,
+              "successful_within_100ms_per_second": 174.4274274570104,
+              "successful_per_offered_second": 175,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 125,
+              "sent": 125,
+              "dropped_schedules": 0,
+              "successful_2xx": 125,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 125,
+                "mean_ms": 20.49485468,
+                "p50_ms": 20.398042,
+                "p95_ms": 20.873083,
+                "p99_ms": 21.337875
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 125,
+                "mean_ms": 21.007260984,
+                "p50_ms": 20.914333,
+                "p95_ms": 21.395041,
+                "p99_ms": 21.956291
+              },
+              "dispatch_lag": {
+                "count": 125,
+                "mean_ms": 0.5123636879999999,
+                "p50_ms": 0.550541,
+                "p95_ms": 0.608208,
+                "p99_ms": 0.636583
+              },
+              "successful_per_second": 24.918203922430056,
+              "successful_within_100ms_per_second": 24.918203922430056,
+              "successful_per_offered_second": 25,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 6
+        },
+        {
+          "name": "pressure",
+          "backend_capacity": 2,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.101717541,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1750,
+              "dropped_schedules": 0,
+              "successful_2xx": 136,
+              "rejected_503": 1614,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 62,
+              "success_latency": {
+                "count": 136,
+                "mean_ms": 98.06763655882351,
+                "p50_ms": 70.730958,
+                "p95_ms": 220.453792,
+                "p99_ms": 220.759083
+              },
+              "rejection_latency": {
+                "count": 1614,
+                "mean_ms": 0.3483333302354403,
+                "p50_ms": 0.307458,
+                "p95_ms": 0.644042,
+                "p99_ms": 1.098125
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1750,
+                "mean_ms": 8.21845563314286,
+                "p50_ms": 0.596083,
+                "p95_ms": 70.760125,
+                "p99_ms": 121.131375
+              },
+              "dispatch_lag": {
+                "count": 1750,
+                "mean_ms": 0.27588423600000045,
+                "p50_ms": 0.278125,
+                "p95_ms": 0.328791,
+                "p99_ms": 0.434375
+              },
+              "successful_per_second": 26.657689083536035,
+              "successful_within_100ms_per_second": 14.504919060159311,
+              "successful_per_offered_second": 27.2,
+              "observed_header_limit_min": 3,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 54,
+              "rejected_503": 196,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 24,
+              "success_latency": {
+                "count": 54,
+                "mean_ms": 93.65882792592593,
+                "p50_ms": 70.774542,
+                "p95_ms": 220.324625,
+                "p99_ms": 220.558666
+              },
+              "rejection_latency": {
+                "count": 196,
+                "mean_ms": 0.3406914234693877,
+                "p50_ms": 0.294125,
+                "p95_ms": 0.646916,
+                "p99_ms": 0.94025
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 20.77641566400001,
+                "p50_ms": 0.641791,
+                "p95_ms": 120.760916,
+                "p99_ms": 220.632416
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.27895714800000004,
+                "p50_ms": 0.277541,
+                "p95_ms": 0.332875,
+                "p99_ms": 0.848208
+              },
+              "successful_per_second": 10.58467066552166,
+              "successful_within_100ms_per_second": 5.880372591956478,
+              "successful_per_offered_second": 10.8,
+              "observed_header_limit_min": 3,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 4,
+          "cumulative_limit_decreases": 5,
+          "cumulative_limit_increases": 4,
+          "cumulative_peak_backend_active": 6
+        },
+        {
+          "name": "recovery",
+          "backend_capacity": 12,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.018490584,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1750,
+              "dropped_schedules": 0,
+              "successful_2xx": 957,
+              "rejected_503": 793,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 957,
+                "mean_ms": 20.460606873563208,
+                "p50_ms": 20.3865,
+                "p95_ms": 20.869375,
+                "p99_ms": 21.361542
+              },
+              "rejection_latency": {
+                "count": 793,
+                "mean_ms": 0.33958511853720064,
+                "p50_ms": 0.301,
+                "p95_ms": 0.59325,
+                "p99_ms": 0.933
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1750,
+                "mean_ms": 11.626540050285714,
+                "p50_ms": 20.533667,
+                "p95_ms": 21.004375,
+                "p99_ms": 21.587209
+              },
+              "dispatch_lag": {
+                "count": 1750,
+                "mean_ms": 0.2835804074285712,
+                "p50_ms": 0.280584,
+                "p95_ms": 0.345875,
+                "p99_ms": 0.507542
+              },
+              "successful_per_second": 190.6947883993479,
+              "successful_within_100ms_per_second": 190.6947883993479,
+              "successful_per_offered_second": 191.4,
+              "observed_header_limit_min": 3,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 176,
+              "rejected_503": 74,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 176,
+                "mean_ms": 20.465201931818186,
+                "p50_ms": 20.368041,
+                "p95_ms": 20.895458,
+                "p99_ms": 22.666208
+              },
+              "rejection_latency": {
+                "count": 74,
+                "mean_ms": 0.33473248648648646,
+                "p50_ms": 0.293875,
+                "p95_ms": 0.544625,
+                "p99_ms": 1.144916
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 14.792250484000006,
+                "p50_ms": 20.597959,
+                "p95_ms": 21.07025,
+                "p99_ms": 22.953459
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.28561919199999997,
+                "p50_ms": 0.280542,
+                "p95_ms": 0.338667,
+                "p99_ms": 0.838209
+              },
+              "successful_per_second": 35.07030591252376,
+              "successful_within_100ms_per_second": 35.07030591252376,
+              "successful_per_offered_second": 35.2,
+              "observed_header_limit_min": 3,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 6,
+          "cumulative_limit_increases": 7,
+          "cumulative_peak_backend_active": 6
+        }
+      ],
+      "resources": [
+        {
+          "role": "backend",
+          "cpu_seconds_entire_child_lifetime": 1.033097,
+          "observed_peak_rss_kib": 21696
+        }
+      ],
+      "checks": [
+        {
+          "name": "all scheduled and HTTP outcomes accounted for",
+          "pass": true
+        },
+        {
+          "name": "generator dropped at most 1.00% of schedules per priority/phase",
+          "pass": true
+        },
+        {
+          "name": "both priorities complete work without unexpected errors in every phase",
+          "pass": true
+        },
+        {
+          "name": "observed admission limits remain within configured bounds",
+          "pass": true
+        },
+        {
+          "name": "overload produces deliberate 503 shedding",
+          "pass": true
+        },
+        {
+          "name": "backend work never exceeds maximum admission limit",
+          "pass": true
+        },
+        {
+          "name": "adaptive limit decreases under pressure",
+          "pass": true
+        },
+        {
+          "name": "adaptive capacity grows during recovery",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "deployment": "direct",
+      "repeat": 2,
+      "phases": [
+        {
+          "name": "baseline",
+          "backend_capacity": 12,
+          "offered_rps": 200,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.016164209,
+          "traffic": {
+            "background": {
+              "scheduled": 875,
+              "sent": 875,
+              "dropped_schedules": 0,
+              "successful_2xx": 875,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 875,
+                "mean_ms": 20.539132462857154,
+                "p50_ms": 20.475167,
+                "p95_ms": 21.06225,
+                "p99_ms": 21.812333
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 875,
+                "mean_ms": 21.064610329142877,
+                "p50_ms": 20.980042,
+                "p95_ms": 21.621834,
+                "p99_ms": 22.659334
+              },
+              "dispatch_lag": {
+                "count": 875,
+                "mean_ms": 0.5254223942857137,
+                "p50_ms": 0.546834,
+                "p95_ms": 0.634875,
+                "p99_ms": 1.043959
+              },
+              "successful_per_second": 174.4360757628459,
+              "successful_within_100ms_per_second": 174.4360757628459,
+              "successful_per_offered_second": 175,
+              "observed_header_limit_min": 0,
+              "observed_header_limit_max": 0
+            },
+            "critical": {
+              "scheduled": 125,
+              "sent": 125,
+              "dropped_schedules": 0,
+              "successful_2xx": 125,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 125,
+                "mean_ms": 20.52597297599999,
+                "p50_ms": 20.466292,
+                "p95_ms": 20.908875,
+                "p99_ms": 21.337042
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 125,
+                "mean_ms": 21.074537320000005,
+                "p50_ms": 20.993625,
+                "p95_ms": 21.6735,
+                "p99_ms": 22.753
+              },
+              "dispatch_lag": {
+                "count": 125,
+                "mean_ms": 0.5485100319999999,
+                "p50_ms": 0.550334,
+                "p95_ms": 0.616542,
+                "p99_ms": 1.072084
+              },
+              "successful_per_second": 24.919439394692272,
+              "successful_within_100ms_per_second": 24.919439394692272,
+              "successful_per_offered_second": 25,
+              "observed_header_limit_min": 0,
+              "observed_header_limit_max": 0
+            }
+          },
+          "end_limit": 0,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 5
+        },
+        {
+          "name": "pressure",
+          "backend_capacity": 2,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.398462458,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1750,
+              "dropped_schedules": 0,
+              "successful_2xx": 1750,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 1748,
+              "success_latency": {
+                "count": 1750,
+                "mean_ms": 399.527747300572,
+                "p50_ms": 400.39725,
+                "p95_ms": 400.840458,
+                "p99_ms": 401.340791
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1750,
+                "mean_ms": 399.7954219154284,
+                "p50_ms": 400.658708,
+                "p95_ms": 401.117625,
+                "p99_ms": 401.68925
+              },
+              "dispatch_lag": {
+                "count": 1750,
+                "mean_ms": 0.26762542742857154,
+                "p50_ms": 0.269583,
+                "p95_ms": 0.316291,
+                "p99_ms": 0.406916
+              },
+              "successful_per_second": 324.1663739657333,
+              "successful_within_100ms_per_second": 0.3704758559608381,
+              "successful_per_offered_second": 350,
+              "observed_header_limit_min": 0,
+              "observed_header_limit_max": 0
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 250,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 249,
+              "success_latency": {
+                "count": 250,
+                "mean_ms": 398.63314319599976,
+                "p50_ms": 400.408792,
+                "p95_ms": 400.804792,
+                "p99_ms": 401.133333
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 398.90052100799977,
+                "p50_ms": 400.67375,
+                "p95_ms": 401.111083,
+                "p99_ms": 401.524291
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.26732797999999997,
+                "p50_ms": 0.27125,
+                "p95_ms": 0.331833,
+                "p99_ms": 0.390875
+              },
+              "successful_per_second": 46.30948199510476,
+              "successful_within_100ms_per_second": 0.18523792798041905,
+              "successful_per_offered_second": 50,
+              "observed_header_limit_min": 0,
+              "observed_header_limit_max": 0
+            }
+          },
+          "end_limit": 0,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 163
+        },
+        {
+          "name": "recovery",
+          "backend_capacity": 12,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.018543416,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1750,
+              "dropped_schedules": 0,
+              "successful_2xx": 1750,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 1750,
+                "mean_ms": 20.407977957714337,
+                "p50_ms": 20.348125,
+                "p95_ms": 20.70525,
+                "p99_ms": 21.594875
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1750,
+                "mean_ms": 20.677867592000034,
+                "p50_ms": 20.611666,
+                "p95_ms": 21.006125,
+                "p99_ms": 21.940291
+              },
+              "dispatch_lag": {
+                "count": 1750,
+                "mean_ms": 0.2698421822857144,
+                "p50_ms": 0.272416,
+                "p95_ms": 0.316583,
+                "p99_ms": 0.434875
+              },
+              "successful_per_second": 348.70675710818637,
+              "successful_within_100ms_per_second": 348.70675710818637,
+              "successful_per_offered_second": 350,
+              "observed_header_limit_min": 0,
+              "observed_header_limit_max": 0
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 250,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 250,
+                "mean_ms": 20.38879383999999,
+                "p50_ms": 20.346375,
+                "p95_ms": 20.716917,
+                "p99_ms": 20.923125
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 20.654211675999996,
+                "p50_ms": 20.606875,
+                "p95_ms": 20.990666,
+                "p99_ms": 21.296125
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.26537066,
+                "p50_ms": 0.270541,
+                "p95_ms": 0.314333,
+                "p99_ms": 0.42675
+              },
+              "successful_per_second": 49.815251015455196,
+              "successful_within_100ms_per_second": 49.815251015455196,
+              "successful_per_offered_second": 50,
+              "observed_header_limit_min": 0,
+              "observed_header_limit_max": 0
+            }
+          },
+          "end_limit": 0,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 163
+        }
+      ],
+      "resources": [
+        {
+          "role": "backend",
+          "cpu_seconds_entire_child_lifetime": 1.013084,
+          "observed_peak_rss_kib": 25600
+        }
+      ],
+      "checks": [
+        {
+          "name": "all scheduled and HTTP outcomes accounted for",
+          "pass": true
+        },
+        {
+          "name": "generator dropped at most 1.00% of schedules per priority/phase",
+          "pass": true
+        },
+        {
+          "name": "both priorities complete work without unexpected errors in every phase",
+          "pass": true
+        },
+        {
+          "name": "unguarded baseline has no admission rejections",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "repeat": 3,
+      "phases": [
+        {
+          "name": "baseline",
+          "backend_capacity": 12,
+          "offered_rps": 200,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.016782167,
+          "traffic": {
+            "background": {
+              "scheduled": 875,
+              "sent": 875,
+              "dropped_schedules": 0,
+              "successful_2xx": 875,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 875,
+                "mean_ms": 20.88266531199999,
+                "p50_ms": 20.79525,
+                "p95_ms": 21.482083,
+                "p99_ms": 22.769167
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 875,
+                "mean_ms": 21.363761718857127,
+                "p50_ms": 21.262583,
+                "p95_ms": 21.968583,
+                "p99_ms": 23.122708
+              },
+              "dispatch_lag": {
+                "count": 875,
+                "mean_ms": 0.4810434800000007,
+                "p50_ms": 0.509667,
+                "p95_ms": 0.579958,
+                "p99_ms": 0.659833
+              },
+              "successful_per_second": 174.41458904787245,
+              "successful_within_100ms_per_second": 174.41458904787245,
+              "successful_per_offered_second": 175,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 125,
+              "sent": 125,
+              "dropped_schedules": 0,
+              "successful_2xx": 125,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 125,
+                "mean_ms": 20.816077639999996,
+                "p50_ms": 20.751542,
+                "p95_ms": 21.240375,
+                "p99_ms": 21.717125
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 125,
+                "mean_ms": 21.287758032000006,
+                "p50_ms": 21.228125,
+                "p95_ms": 21.74725,
+                "p99_ms": 22.180667
+              },
+              "dispatch_lag": {
+                "count": 125,
+                "mean_ms": 0.47162970399999987,
+                "p50_ms": 0.506833,
+                "p95_ms": 0.577792,
+                "p99_ms": 0.604417
+              },
+              "successful_per_second": 24.916369863981778,
+              "successful_within_100ms_per_second": 24.916369863981778,
+              "successful_per_offered_second": 25,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 5
+        },
+        {
+          "name": "pressure",
+          "backend_capacity": 2,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.093778084,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1750,
+              "dropped_schedules": 0,
+              "successful_2xx": 131,
+              "rejected_503": 1619,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 64,
+              "success_latency": {
+                "count": 131,
+                "mean_ms": 100.7871539389313,
+                "p50_ms": 72.625125,
+                "p95_ms": 220.76575,
+                "p99_ms": 221.99075
+              },
+              "rejection_latency": {
+                "count": 1619,
+                "mean_ms": 0.43132395120444705,
+                "p50_ms": 0.352167,
+                "p95_ms": 0.880083,
+                "p99_ms": 1.568083
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1750,
+                "mean_ms": 8.218306995428565,
+                "p50_ms": 0.641584,
+                "p95_ms": 71.834125,
+                "p99_ms": 122.24325
+              },
+              "dispatch_lag": {
+                "count": 1750,
+                "mean_ms": 0.27457586171428605,
+                "p50_ms": 0.274334,
+                "p95_ms": 0.354542,
+                "p99_ms": 0.682709
+              },
+              "successful_per_second": 25.717649618753985,
+              "successful_within_100ms_per_second": 13.153301713408526,
+              "successful_per_offered_second": 26.2,
+              "observed_header_limit_min": 3,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 54,
+              "rejected_503": 196,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 24,
+              "success_latency": {
+                "count": 54,
+                "mean_ms": 97.5944551851852,
+                "p50_ms": 72.379,
+                "p95_ms": 221.049709,
+                "p99_ms": 221.752792
+              },
+              "rejection_latency": {
+                "count": 196,
+                "mean_ms": 0.41434137755102046,
+                "p50_ms": 0.347875,
+                "p95_ms": 0.807792,
+                "p99_ms": 1.40125
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 21.680253208000003,
+                "p50_ms": 0.708709,
+                "p95_ms": 121.921959,
+                "p99_ms": 221.276625
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.27495802400000025,
+                "p50_ms": 0.275167,
+                "p95_ms": 0.33975,
+                "p99_ms": 0.428417
+              },
+              "successful_per_second": 10.601168545135229,
+              "successful_within_100ms_per_second": 5.889538080630683,
+              "successful_per_offered_second": 10.8,
+              "observed_header_limit_min": 3,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 4,
+          "cumulative_limit_decreases": 5,
+          "cumulative_limit_increases": 4,
+          "cumulative_peak_backend_active": 6
+        },
+        {
+          "name": "recovery",
+          "backend_capacity": 12,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.018657,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1750,
+              "dropped_schedules": 0,
+              "successful_2xx": 957,
+              "rejected_503": 793,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 957,
+                "mean_ms": 21.028131373040768,
+                "p50_ms": 20.910542,
+                "p95_ms": 22.026333,
+                "p99_ms": 22.756291
+              },
+              "rejection_latency": {
+                "count": 793,
+                "mean_ms": 0.4539634993694827,
+                "p50_ms": 0.396541,
+                "p95_ms": 0.797792,
+                "p99_ms": 1.528667
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1750,
+                "mean_ms": 11.952804527428569,
+                "p50_ms": 20.781542,
+                "p95_ms": 21.972625,
+                "p99_ms": 22.63175
+              },
+              "dispatch_lag": {
+                "count": 1750,
+                "mean_ms": 0.24765555771428627,
+                "p50_ms": 0.249834,
+                "p95_ms": 0.341459,
+                "p99_ms": 0.529417
+              },
+              "successful_per_second": 190.68846506146963,
+              "successful_within_100ms_per_second": 190.68846506146963,
+              "successful_per_offered_second": 191.4,
+              "observed_header_limit_min": 3,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 178,
+              "rejected_503": 72,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 178,
+                "mean_ms": 21.047980775280898,
+                "p50_ms": 20.937083,
+                "p95_ms": 21.985083,
+                "p99_ms": 22.5965
+              },
+              "rejection_latency": {
+                "count": 72,
+                "mean_ms": 0.45375988888888874,
+                "p50_ms": 0.393709,
+                "p95_ms": 0.877959,
+                "p99_ms": 1.16425
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 15.377006344000003,
+                "p50_ms": 20.922792,
+                "p95_ms": 22.10875,
+                "p99_ms": 22.858
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.26005667599999993,
+                "p50_ms": 0.248834,
+                "p95_ms": 0.381542,
+                "p99_ms": 0.770084
+              },
+              "successful_per_second": 35.46765598844472,
+              "successful_within_100ms_per_second": 35.46765598844472,
+              "successful_per_offered_second": 35.6,
+              "observed_header_limit_min": 3,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 6,
+          "cumulative_limit_increases": 7,
+          "cumulative_peak_backend_active": 6
+        }
+      ],
+      "resources": [
+        {
+          "role": "proxy",
+          "cpu_seconds_entire_child_lifetime": 1.814638,
+          "observed_peak_rss_kib": 22768
+        },
+        {
+          "role": "backend",
+          "cpu_seconds_entire_child_lifetime": 0.673762,
+          "observed_peak_rss_kib": 20768
+        }
+      ],
+      "checks": [
+        {
+          "name": "all scheduled and HTTP outcomes accounted for",
+          "pass": true
+        },
+        {
+          "name": "generator dropped at most 1.00% of schedules per priority/phase",
+          "pass": true
+        },
+        {
+          "name": "both priorities complete work without unexpected errors in every phase",
+          "pass": true
+        },
+        {
+          "name": "observed admission limits remain within configured bounds",
+          "pass": true
+        },
+        {
+          "name": "overload produces deliberate 503 shedding",
+          "pass": true
+        },
+        {
+          "name": "backend work never exceeds maximum admission limit",
+          "pass": true
+        },
+        {
+          "name": "adaptive limit decreases under pressure",
+          "pass": true
+        },
+        {
+          "name": "adaptive capacity grows during recovery",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "deployment": "middleware-fixed",
+      "repeat": 3,
+      "phases": [
+        {
+          "name": "baseline",
+          "backend_capacity": 12,
+          "offered_rps": 200,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.0169275,
+          "traffic": {
+            "background": {
+              "scheduled": 875,
+              "sent": 874,
+              "dropped_schedules": 1,
+              "successful_2xx": 874,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 874,
+                "mean_ms": 20.75973793707095,
+                "p50_ms": 20.667125,
+                "p95_ms": 21.567792,
+                "p99_ms": 22.657083
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 874,
+                "mean_ms": 21.271913005720844,
+                "p50_ms": 21.159708,
+                "p95_ms": 22.145125,
+                "p99_ms": 23.277042
+              },
+              "dispatch_lag": {
+                "count": 874,
+                "mean_ms": 0.5121147070938216,
+                "p50_ms": 0.542625,
+                "p95_ms": 0.6205,
+                "p99_ms": 0.915708
+              },
+              "successful_per_second": 174.21021132954382,
+              "successful_within_100ms_per_second": 174.21021132954382,
+              "successful_per_offered_second": 174.8,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 125,
+              "sent": 125,
+              "dropped_schedules": 0,
+              "successful_2xx": 125,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 125,
+                "mean_ms": 20.773889008,
+                "p50_ms": 20.639834,
+                "p95_ms": 21.262209,
+                "p99_ms": 23.753917
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 125,
+                "mean_ms": 21.28170836,
+                "p50_ms": 21.145417,
+                "p95_ms": 21.841333,
+                "p99_ms": 24.308583
+              },
+              "dispatch_lag": {
+                "count": 125,
+                "mean_ms": 0.5077589759999999,
+                "p50_ms": 0.539708,
+                "p95_ms": 0.603667,
+                "p99_ms": 0.918208
+              },
+              "successful_per_second": 24.915648073447343,
+              "successful_within_100ms_per_second": 24.915648073447343,
+              "successful_per_offered_second": 25,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 6
+        },
+        {
+          "name": "pressure",
+          "backend_capacity": 2,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.181884333,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1747,
+              "dropped_schedules": 3,
+              "successful_2xx": 112,
+              "rejected_503": 1635,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 110,
+              "success_latency": {
+                "count": 112,
+                "mean_ms": 213.01581248214293,
+                "p50_ms": 220.52575,
+                "p95_ms": 221.108208,
+                "p99_ms": 221.454792
+              },
+              "rejection_latency": {
+                "count": 1635,
+                "mean_ms": 0.42750579999999966,
+                "p50_ms": 0.387125,
+                "p95_ms": 0.772416,
+                "p99_ms": 1.298666
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1747,
+                "mean_ms": 14.334312575271893,
+                "p50_ms": 0.669166,
+                "p95_ms": 220.64075,
+                "p99_ms": 221.066416
+              },
+              "dispatch_lag": {
+                "count": 1747,
+                "mean_ms": 0.27770572581568426,
+                "p50_ms": 0.275791,
+                "p95_ms": 0.345166,
+                "p99_ms": 0.573583
+              },
+              "successful_per_second": 21.613759166090595,
+              "successful_within_100ms_per_second": 0.3859599851087606,
+              "successful_per_offered_second": 22.4,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 249,
+              "dropped_schedules": 1,
+              "successful_2xx": 29,
+              "rejected_503": 220,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 28,
+              "success_latency": {
+                "count": 29,
+                "mean_ms": 211.98829886206897,
+                "p50_ms": 220.520375,
+                "p95_ms": 221.276125,
+                "p99_ms": 221.620166
+              },
+              "rejection_latency": {
+                "count": 220,
+                "mean_ms": 0.4264324181818182,
+                "p50_ms": 0.403666,
+                "p95_ms": 0.77375,
+                "p99_ms": 0.950125
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 249,
+                "mean_ms": 25.343318289156635,
+                "p50_ms": 0.688083,
+                "p95_ms": 220.849666,
+                "p99_ms": 221.196708
+              },
+              "dispatch_lag": {
+                "count": 249,
+                "mean_ms": 0.27709067469879517,
+                "p50_ms": 0.276166,
+                "p95_ms": 0.326625,
+                "p99_ms": 0.373416
+              },
+              "successful_per_second": 5.596419784077029,
+              "successful_within_100ms_per_second": 0.1929799925543803,
+              "successful_per_offered_second": 5.8,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 6
+        },
+        {
+          "name": "recovery",
+          "backend_capacity": 12,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.019110583,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1750,
+              "dropped_schedules": 0,
+              "successful_2xx": 1103,
+              "rejected_503": 647,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 1103,
+                "mean_ms": 20.56532071441525,
+                "p50_ms": 20.504833,
+                "p95_ms": 21.050333,
+                "p99_ms": 21.743875
+              },
+              "rejection_latency": {
+                "count": 647,
+                "mean_ms": 0.44417099845440505,
+                "p50_ms": 0.379375,
+                "p95_ms": 0.860333,
+                "p99_ms": 1.330041
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1750,
+                "mean_ms": 13.403056113714271,
+                "p50_ms": 20.614167,
+                "p95_ms": 21.210042,
+                "p99_ms": 21.835417
+              },
+              "dispatch_lag": {
+                "count": 1750,
+                "mean_ms": 0.2767587165714285,
+                "p50_ms": 0.274125,
+                "p95_ms": 0.352333,
+                "p99_ms": 0.507458
+              },
+              "successful_per_second": 219.76005145930057,
+              "successful_within_100ms_per_second": 219.76005145930057,
+              "successful_per_offered_second": 220.6,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 182,
+              "rejected_503": 68,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 182,
+                "mean_ms": 20.53264311538461,
+                "p50_ms": 20.482208,
+                "p95_ms": 20.848,
+                "p99_ms": 21.384833
+              },
+              "rejection_latency": {
+                "count": 68,
+                "mean_ms": 0.40260113235294115,
+                "p50_ms": 0.35825,
+                "p95_ms": 0.745541,
+                "p99_ms": 0.904375
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 15.323329496,
+                "p50_ms": 20.66025,
+                "p95_ms": 21.128458,
+                "p99_ms": 21.522292
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.2660091400000001,
+                "p50_ms": 0.269458,
+                "p95_ms": 0.340458,
+                "p99_ms": 0.365333
+              },
+              "successful_per_second": 36.261404683220945,
+              "successful_within_100ms_per_second": 36.261404683220945,
+              "successful_per_offered_second": 36.4,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 6
+        }
+      ],
+      "resources": [
+        {
+          "role": "backend",
+          "cpu_seconds_entire_child_lifetime": 1.35514,
+          "observed_peak_rss_kib": 22192
+        }
+      ],
+      "checks": [
+        {
+          "name": "all scheduled and HTTP outcomes accounted for",
+          "pass": true
+        },
+        {
+          "name": "generator dropped at most 1.00% of schedules per priority/phase",
+          "pass": true
+        },
+        {
+          "name": "both priorities complete work without unexpected errors in every phase",
+          "pass": true
+        },
+        {
+          "name": "observed admission limits remain within configured bounds",
+          "pass": true
+        },
+        {
+          "name": "overload produces deliberate 503 shedding",
+          "pass": true
+        },
+        {
+          "name": "backend work never exceeds maximum admission limit",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "repeat": 3,
+      "phases": [
+        {
+          "name": "baseline",
+          "backend_capacity": 12,
+          "offered_rps": 200,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.016982333,
+          "traffic": {
+            "background": {
+              "scheduled": 875,
+              "sent": 875,
+              "dropped_schedules": 0,
+              "successful_2xx": 875,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 875,
+                "mean_ms": 20.64722217142856,
+                "p50_ms": 20.582875,
+                "p95_ms": 21.152917,
+                "p99_ms": 21.845958
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 875,
+                "mean_ms": 21.167577758857153,
+                "p50_ms": 21.096041,
+                "p95_ms": 21.7175,
+                "p99_ms": 22.414708
+              },
+              "dispatch_lag": {
+                "count": 875,
+                "mean_ms": 0.5202983337142858,
+                "p50_ms": 0.540541,
+                "p95_ms": 0.613541,
+                "p99_ms": 0.856541
+              },
+              "successful_per_second": 174.40763030887078,
+              "successful_within_100ms_per_second": 174.40763030887078,
+              "successful_per_offered_second": 175,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 125,
+              "sent": 125,
+              "dropped_schedules": 0,
+              "successful_2xx": 125,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 125,
+                "mean_ms": 20.622945008,
+                "p50_ms": 20.585167,
+                "p95_ms": 21.024542,
+                "p99_ms": 21.4995
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 125,
+                "mean_ms": 21.149731016,
+                "p50_ms": 21.089791,
+                "p95_ms": 21.614625,
+                "p99_ms": 22.391
+              },
+              "dispatch_lag": {
+                "count": 125,
+                "mean_ms": 0.5265906479999998,
+                "p50_ms": 0.537666,
+                "p95_ms": 0.597916,
+                "p99_ms": 0.870583
+              },
+              "successful_per_second": 24.91537575841011,
+              "successful_within_100ms_per_second": 24.91537575841011,
+              "successful_per_offered_second": 25,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 5
+        },
+        {
+          "name": "pressure",
+          "backend_capacity": 2,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.112467208,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1750,
+              "dropped_schedules": 0,
+              "successful_2xx": 134,
+              "rejected_503": 1616,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 64,
+              "success_latency": {
+                "count": 134,
+                "mean_ms": 99.41245647014922,
+                "p50_ms": 71.007375,
+                "p95_ms": 220.415583,
+                "p99_ms": 220.71
+              },
+              "rejection_latency": {
+                "count": 1616,
+                "mean_ms": 0.4676798025990095,
+                "p50_ms": 0.409917,
+                "p95_ms": 0.895667,
+                "p99_ms": 1.643334
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1750,
+                "mean_ms": 8.324491785142854,
+                "p50_ms": 0.6925,
+                "p95_ms": 70.941333,
+                "p99_ms": 121.867792
+              },
+              "dispatch_lag": {
+                "count": 1750,
+                "mean_ms": 0.2804112737142855,
+                "p50_ms": 0.27475,
+                "p95_ms": 0.353667,
+                "p99_ms": 0.658667
+              },
+              "successful_per_second": 26.21043706457745,
+              "successful_within_100ms_per_second": 13.692019362092699,
+              "successful_per_offered_second": 26.8,
+              "observed_header_limit_min": 3,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 53,
+              "rejected_503": 197,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 25,
+              "success_latency": {
+                "count": 53,
+                "mean_ms": 97.08345911320754,
+                "p50_ms": 71.032167,
+                "p95_ms": 220.373042,
+                "p99_ms": 220.601583
+              },
+              "rejection_latency": {
+                "count": 197,
+                "mean_ms": 0.449174736040609,
+                "p50_ms": 0.401167,
+                "p95_ms": 0.79725,
+                "p99_ms": 1.269167
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 21.225488987999995,
+                "p50_ms": 0.753333,
+                "p95_ms": 120.94675,
+                "p99_ms": 220.6635
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.28975217200000014,
+                "p50_ms": 0.278083,
+                "p95_ms": 0.34025,
+                "p99_ms": 0.621333
+              },
+              "successful_per_second": 10.366814659870187,
+              "successful_within_100ms_per_second": 5.476807744837079,
+              "successful_per_offered_second": 10.6,
+              "observed_header_limit_min": 3,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 4,
+          "cumulative_limit_decreases": 5,
+          "cumulative_limit_increases": 4,
+          "cumulative_peak_backend_active": 6
+        },
+        {
+          "name": "recovery",
+          "backend_capacity": 12,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.018791166,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1750,
+              "dropped_schedules": 0,
+              "successful_2xx": 965,
+              "rejected_503": 785,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 965,
+                "mean_ms": 20.61410829222802,
+                "p50_ms": 20.537583,
+                "p95_ms": 21.274167,
+                "p99_ms": 21.984584
+              },
+              "rejection_latency": {
+                "count": 785,
+                "mean_ms": 0.43150222547770706,
+                "p50_ms": 0.380916,
+                "p95_ms": 0.791334,
+                "p99_ms": 1.366417
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1750,
+                "mean_ms": 11.843836378285712,
+                "p50_ms": 20.577791,
+                "p95_ms": 21.359625,
+                "p99_ms": 22.1665
+              },
+              "dispatch_lag": {
+                "count": 1750,
+                "mean_ms": 0.28300985999999995,
+                "p50_ms": 0.275375,
+                "p95_ms": 0.377625,
+                "p99_ms": 0.721666
+              },
+              "successful_per_second": 192.27737677898034,
+              "successful_within_100ms_per_second": 192.27737677898034,
+              "successful_per_offered_second": 193,
+              "observed_header_limit_min": 3,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 177,
+              "rejected_503": 73,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 177,
+                "mean_ms": 20.607630186440673,
+                "p50_ms": 20.519458,
+                "p95_ms": 21.170458,
+                "p99_ms": 22.3145
+              },
+              "rejection_latency": {
+                "count": 73,
+                "mean_ms": 0.4242003835616439,
+                "p50_ms": 0.370917,
+                "p95_ms": 0.868625,
+                "p99_ms": 1.065334
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 15.002838668,
+                "p50_ms": 20.671,
+                "p95_ms": 21.459125,
+                "p99_ms": 22.890708
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.28871581999999996,
+                "p50_ms": 0.276125,
+                "p95_ms": 0.358166,
+                "p99_ms": 1.209
+              },
+              "successful_per_second": 35.267456673450276,
+              "successful_within_100ms_per_second": 35.267456673450276,
+              "successful_per_offered_second": 35.4,
+              "observed_header_limit_min": 3,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 6,
+          "cumulative_limit_increases": 7,
+          "cumulative_peak_backend_active": 6
+        }
+      ],
+      "resources": [
+        {
+          "role": "backend",
+          "cpu_seconds_entire_child_lifetime": 1.366301,
+          "observed_peak_rss_kib": 21840
+        }
+      ],
+      "checks": [
+        {
+          "name": "all scheduled and HTTP outcomes accounted for",
+          "pass": true
+        },
+        {
+          "name": "generator dropped at most 1.00% of schedules per priority/phase",
+          "pass": true
+        },
+        {
+          "name": "both priorities complete work without unexpected errors in every phase",
+          "pass": true
+        },
+        {
+          "name": "observed admission limits remain within configured bounds",
+          "pass": true
+        },
+        {
+          "name": "overload produces deliberate 503 shedding",
+          "pass": true
+        },
+        {
+          "name": "backend work never exceeds maximum admission limit",
+          "pass": true
+        },
+        {
+          "name": "adaptive limit decreases under pressure",
+          "pass": true
+        },
+        {
+          "name": "adaptive capacity grows during recovery",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "deployment": "direct",
+      "repeat": 3,
+      "phases": [
+        {
+          "name": "baseline",
+          "backend_capacity": 12,
+          "offered_rps": 200,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.016408292,
+          "traffic": {
+            "background": {
+              "scheduled": 875,
+              "sent": 875,
+              "dropped_schedules": 0,
+              "successful_2xx": 875,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 875,
+                "mean_ms": 20.67703558171425,
+                "p50_ms": 20.576667,
+                "p95_ms": 21.254292,
+                "p99_ms": 22.41225
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 875,
+                "mean_ms": 21.193146868571418,
+                "p50_ms": 21.056292,
+                "p95_ms": 21.892125,
+                "p99_ms": 23.51425
+              },
+              "dispatch_lag": {
+                "count": 875,
+                "mean_ms": 0.5160529474285712,
+                "p50_ms": 0.54125,
+                "p95_ms": 0.612542,
+                "p99_ms": 0.882875
+              },
+              "successful_per_second": 174.4275882398609,
+              "successful_within_100ms_per_second": 174.4275882398609,
+              "successful_per_offered_second": 175,
+              "observed_header_limit_min": 0,
+              "observed_header_limit_max": 0
+            },
+            "critical": {
+              "scheduled": 125,
+              "sent": 125,
+              "dropped_schedules": 0,
+              "successful_2xx": 125,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 125,
+                "mean_ms": 20.734418304000005,
+                "p50_ms": 20.563917,
+                "p95_ms": 21.200958,
+                "p99_ms": 27.02775
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 125,
+                "mean_ms": 21.232229024000002,
+                "p50_ms": 21.043959,
+                "p95_ms": 21.724167,
+                "p99_ms": 27.552959
+              },
+              "dispatch_lag": {
+                "count": 125,
+                "mean_ms": 0.4977580319999999,
+                "p50_ms": 0.534667,
+                "p95_ms": 0.600584,
+                "p99_ms": 0.616417
+              },
+              "successful_per_second": 24.9182268914087,
+              "successful_within_100ms_per_second": 24.9182268914087,
+              "successful_per_offered_second": 25,
+              "observed_header_limit_min": 0,
+              "observed_header_limit_max": 0
+            }
+          },
+          "end_limit": 0,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 6
+        },
+        {
+          "name": "pressure",
+          "backend_capacity": 2,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.398618459,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1750,
+              "dropped_schedules": 0,
+              "successful_2xx": 1750,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 1748,
+              "success_latency": {
+                "count": 1750,
+                "mean_ms": 399.51123417542834,
+                "p50_ms": 400.407958,
+                "p95_ms": 400.812958,
+                "p99_ms": 401.168833
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1750,
+                "mean_ms": 399.7727641977145,
+                "p50_ms": 400.663667,
+                "p95_ms": 401.101,
+                "p99_ms": 401.592334
+              },
+              "dispatch_lag": {
+                "count": 1750,
+                "mean_ms": 0.26147819714285714,
+                "p50_ms": 0.267625,
+                "p95_ms": 0.315542,
+                "p99_ms": 0.460834
+              },
+              "successful_per_second": 324.15700670281433,
+              "successful_within_100ms_per_second": 0.37046515051750206,
+              "successful_per_offered_second": 350,
+              "observed_header_limit_min": 0,
+              "observed_header_limit_max": 0
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 250,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 249,
+              "success_latency": {
+                "count": 250,
+                "mean_ms": 398.6225013400004,
+                "p50_ms": 400.401583,
+                "p95_ms": 400.765417,
+                "p99_ms": 401.293541
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 398.87780118800003,
+                "p50_ms": 400.666,
+                "p95_ms": 401.082375,
+                "p99_ms": 401.678167
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.25525134400000005,
+                "p50_ms": 0.264459,
+                "p95_ms": 0.309125,
+                "p99_ms": 0.384584
+              },
+              "successful_per_second": 46.30814381468776,
+              "successful_within_100ms_per_second": 0.18523257525875103,
+              "successful_per_offered_second": 50,
+              "observed_header_limit_min": 0,
+              "observed_header_limit_max": 0
+            }
+          },
+          "end_limit": 0,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 161
+        },
+        {
+          "name": "recovery",
+          "backend_capacity": 12,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.018371417,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1750,
+              "dropped_schedules": 0,
+              "successful_2xx": 1750,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 1750,
+                "mean_ms": 20.34323420228572,
+                "p50_ms": 20.295125,
+                "p95_ms": 20.57925,
+                "p99_ms": 20.92875
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1750,
+                "mean_ms": 20.618773529142867,
+                "p50_ms": 20.569209,
+                "p95_ms": 20.864459,
+                "p99_ms": 21.3425
+              },
+              "dispatch_lag": {
+                "count": 1750,
+                "mean_ms": 0.2755020908571427,
+                "p50_ms": 0.276125,
+                "p95_ms": 0.314167,
+                "p99_ms": 0.373375
+              },
+              "successful_per_second": 348.7187086375835,
+              "successful_within_100ms_per_second": 348.7187086375835,
+              "successful_per_offered_second": 350,
+              "observed_header_limit_min": 0,
+              "observed_header_limit_max": 0
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 250,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 250,
+                "mean_ms": 20.310966152000006,
+                "p50_ms": 20.284584,
+                "p95_ms": 20.483583,
+                "p99_ms": 20.6415
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 20.57972282400001,
+                "p50_ms": 20.561,
+                "p95_ms": 20.739167,
+                "p99_ms": 20.864834
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.26871849199999975,
+                "p50_ms": 0.273042,
+                "p95_ms": 0.303959,
+                "p99_ms": 0.328459
+              },
+              "successful_per_second": 49.81695837679764,
+              "successful_within_100ms_per_second": 49.81695837679764,
+              "successful_per_offered_second": 50,
+              "observed_header_limit_min": 0,
+              "observed_header_limit_max": 0
+            }
+          },
+          "end_limit": 0,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 161
+        }
+      ],
+      "resources": [
+        {
+          "role": "backend",
+          "cpu_seconds_entire_child_lifetime": 0.97315,
+          "observed_peak_rss_kib": 26256
+        }
+      ],
+      "checks": [
+        {
+          "name": "all scheduled and HTTP outcomes accounted for",
+          "pass": true
+        },
+        {
+          "name": "generator dropped at most 1.00% of schedules per priority/phase",
+          "pass": true
+        },
+        {
+          "name": "both priorities complete work without unexpected errors in every phase",
+          "pass": true
+        },
+        {
+          "name": "unguarded baseline has no admission rejections",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "deployment": "proxy-fixed",
+      "repeat": 3,
+      "phases": [
+        {
+          "name": "baseline",
+          "backend_capacity": 12,
+          "offered_rps": 200,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.019741959,
+          "traffic": {
+            "background": {
+              "scheduled": 875,
+              "sent": 875,
+              "dropped_schedules": 0,
+              "successful_2xx": 875,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 875,
+                "mean_ms": 20.923985470857122,
+                "p50_ms": 20.805583,
+                "p95_ms": 21.748,
+                "p99_ms": 22.974292
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 875,
+                "mean_ms": 21.406037660571453,
+                "p50_ms": 21.280584,
+                "p95_ms": 22.278042,
+                "p99_ms": 23.780375
+              },
+              "dispatch_lag": {
+                "count": 875,
+                "mean_ms": 0.48199957714285724,
+                "p50_ms": 0.506625,
+                "p95_ms": 0.570875,
+                "p99_ms": 0.753709
+              },
+              "successful_per_second": 174.31174891992092,
+              "successful_within_100ms_per_second": 174.31174891992092,
+              "successful_per_offered_second": 175,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 125,
+              "sent": 125,
+              "dropped_schedules": 0,
+              "successful_2xx": 125,
+              "rejected_503": 0,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 125,
+                "mean_ms": 20.887024359999998,
+                "p50_ms": 20.772166,
+                "p95_ms": 21.557917,
+                "p99_ms": 22.780167
+              },
+              "rejection_latency": {
+                "count": 0,
+                "mean_ms": 0,
+                "p50_ms": 0,
+                "p95_ms": 0,
+                "p99_ms": 0
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 125,
+                "mean_ms": 21.365394008,
+                "p50_ms": 21.236084,
+                "p95_ms": 21.979084,
+                "p99_ms": 23.78425
+              },
+              "dispatch_lag": {
+                "count": 125,
+                "mean_ms": 0.47831733600000015,
+                "p50_ms": 0.505834,
+                "p95_ms": 0.583875,
+                "p99_ms": 0.664375
+              },
+              "successful_per_second": 24.90167841713156,
+              "successful_within_100ms_per_second": 24.90167841713156,
+              "successful_per_offered_second": 25,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 6
+        },
+        {
+          "name": "pressure",
+          "backend_capacity": 2,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.195234208,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1750,
+              "dropped_schedules": 0,
+              "successful_2xx": 108,
+              "rejected_503": 1642,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 106,
+              "success_latency": {
+                "count": 108,
+                "mean_ms": 215.75277545370378,
+                "p50_ms": 221.773333,
+                "p95_ms": 223.049458,
+                "p99_ms": 223.572666
+              },
+              "rejection_latency": {
+                "count": 1642,
+                "mean_ms": 0.5287574403166877,
+                "p50_ms": 0.446959,
+                "p95_ms": 1.019042,
+                "p99_ms": 1.795417
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1750,
+                "mean_ms": 14.093683235428568,
+                "p50_ms": 0.725708,
+                "p95_ms": 221.073292,
+                "p99_ms": 222.608292
+              },
+              "dispatch_lag": {
+                "count": 1750,
+                "mean_ms": 0.2824715000000003,
+                "p50_ms": 0.273792,
+                "p95_ms": 0.381167,
+                "p99_ms": 0.899042
+              },
+              "successful_per_second": 20.788283198800496,
+              "successful_within_100ms_per_second": 0.3849682073851944,
+              "successful_per_offered_second": 21.6,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 32,
+              "rejected_503": 218,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 31,
+              "success_latency": {
+                "count": 32,
+                "mean_ms": 213.94969399999997,
+                "p50_ms": 221.827708,
+                "p95_ms": 222.807042,
+                "p99_ms": 223.690041
+              },
+              "rejection_latency": {
+                "count": 218,
+                "mean_ms": 0.5284388715596333,
+                "p50_ms": 0.454375,
+                "p95_ms": 1.150375,
+                "p99_ms": 1.994209
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 28.129264023999994,
+                "p50_ms": 0.757875,
+                "p95_ms": 222.178417,
+                "p99_ms": 223.262917
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.2828499920000002,
+                "p50_ms": 0.270042,
+                "p95_ms": 0.406542,
+                "p99_ms": 1.48875
+              },
+              "successful_per_second": 6.15949131816311,
+              "successful_within_100ms_per_second": 0.1924841036925972,
+              "successful_per_offered_second": 6.4,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 6
+        },
+        {
+          "name": "recovery",
+          "backend_capacity": 12,
+          "offered_rps": 400,
+          "offered_seconds": 5,
+          "elapsed_including_drain_seconds": 5.01663275,
+          "traffic": {
+            "background": {
+              "scheduled": 1750,
+              "sent": 1749,
+              "dropped_schedules": 1,
+              "successful_2xx": 1093,
+              "rejected_503": 656,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 1093,
+                "mean_ms": 21.036788464775846,
+                "p50_ms": 20.910958,
+                "p95_ms": 21.904958,
+                "p99_ms": 22.948625
+              },
+              "rejection_latency": {
+                "count": 656,
+                "mean_ms": 0.47309826219512185,
+                "p50_ms": 0.397667,
+                "p95_ms": 0.896167,
+                "p99_ms": 1.362916
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 1749,
+                "mean_ms": 13.584302311606649,
+                "p50_ms": 20.850458,
+                "p95_ms": 22.039791,
+                "p99_ms": 23.276875
+              },
+              "dispatch_lag": {
+                "count": 1749,
+                "mean_ms": 0.2602450691823898,
+                "p50_ms": 0.247041,
+                "p95_ms": 0.362916,
+                "p99_ms": 0.719083
+              },
+              "successful_per_second": 217.87522716308064,
+              "successful_within_100ms_per_second": 217.87522716308064,
+              "successful_per_offered_second": 218.6,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            },
+            "critical": {
+              "scheduled": 250,
+              "sent": 250,
+              "dropped_schedules": 0,
+              "successful_2xx": 188,
+              "rejected_503": 62,
+              "transport_or_unexpected_status_errors": 0,
+              "successful_over_100ms": 0,
+              "success_latency": {
+                "count": 188,
+                "mean_ms": 21.01650885638298,
+                "p50_ms": 20.903542,
+                "p95_ms": 21.723375,
+                "p99_ms": 23.066625
+              },
+              "rejection_latency": {
+                "count": 62,
+                "mean_ms": 0.5017533548387096,
+                "p50_ms": 0.40375,
+                "p95_ms": 0.958041,
+                "p99_ms": 2.505625
+              },
+              "scheduled_arrival_to_completion": {
+                "count": 250,
+                "mean_ms": 16.169971476000004,
+                "p50_ms": 20.983875,
+                "p95_ms": 21.914666,
+                "p99_ms": 22.651666
+              },
+              "dispatch_lag": {
+                "count": 250,
+                "mean_ms": 0.24106802400000002,
+                "p50_ms": 0.247083,
+                "p95_ms": 0.338625,
+                "p99_ms": 0.394208
+              },
+              "successful_per_second": 37.475336419633265,
+              "successful_within_100ms_per_second": 37.475336419633265,
+              "successful_per_offered_second": 37.6,
+              "observed_header_limit_min": 6,
+              "observed_header_limit_max": 6
+            }
+          },
+          "end_limit": 6,
+          "cumulative_limit_decreases": 0,
+          "cumulative_limit_increases": 0,
+          "cumulative_peak_backend_active": 6
+        }
+      ],
+      "resources": [
+        {
+          "role": "proxy",
+          "cpu_seconds_entire_child_lifetime": 1.912777,
+          "observed_peak_rss_kib": 23056
+        },
+        {
+          "role": "backend",
+          "cpu_seconds_entire_child_lifetime": 0.703353,
+          "observed_peak_rss_kib": 20128
+        }
+      ],
+      "checks": [
+        {
+          "name": "all scheduled and HTTP outcomes accounted for",
+          "pass": true
+        },
+        {
+          "name": "generator dropped at most 1.00% of schedules per priority/phase",
+          "pass": true
+        },
+        {
+          "name": "both priorities complete work without unexpected errors in every phase",
+          "pass": true
+        },
+        {
+          "name": "observed admission limits remain within configured bounds",
+          "pass": true
+        },
+        {
+          "name": "overload produces deliberate 503 shedding",
+          "pass": true
+        },
+        {
+          "name": "backend work never exceeds maximum admission limit",
+          "pass": true
+        }
+      ]
+    }
+  ],
+  "passed": true
+}
