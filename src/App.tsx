@@ -8,6 +8,7 @@ import Examples from './pages/Examples';
 import Benchmarks from './pages/Benchmarks';
 import Metrics from './pages/Metrics';
 import Reference from './pages/Reference';
+import Versions from './pages/Versions';
 
 function resolvePage(route: string): PageId {
   const value = route.split('/')[0];
@@ -27,6 +28,6 @@ export default function App() {
     });
     return () => cancelAnimationFrame(frame);
   }, [route, page]);
-  const pages = { overview: <Overview />, problem: <Problem />, installation: <Installation />, examples: <Examples />, benchmarks: <Benchmarks />, metrics: <Metrics />, reference: <Reference /> };
+  const pages = { overview: <Overview />, problem: <Problem />, installation: <Installation />, examples: <Examples />, benchmarks: <Benchmarks />, metrics: <Metrics />, reference: <Reference />, versions: <Versions /> };
   return <Layout page={page}>{pages[page]}</Layout>;
 }

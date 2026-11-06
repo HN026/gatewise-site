@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { latestRelease } from '../data/releases';
 import { configuration, metricFamilies, navigation, pageSections, type PageId } from '../data/content';
 
 export default function Layout({ page, children }: { page: PageId; children: ReactNode }) {
@@ -31,7 +32,7 @@ export default function Layout({ page, children }: { page: PageId; children: Rea
       {menu && <button className="sidebar-backdrop" aria-label="Close navigation" onClick={() => setMenu(false)} />}
       <aside className={`docs-sidebar ${menu ? 'open' : ''}`}><nav aria-label="Main navigation">
         {navigation.map(n => <div key={n.id} className="nav-group"><a href={`#/${n.id}`} aria-current={page === n.id && !activeSection ? 'page' : undefined} className={page === n.id ? 'current-page' : ''} onClick={() => { setMenu(false); if (location.hash === `#/${n.id}`) window.scrollTo({ top: 0, behavior: 'auto' }); }}>{n.label}</a>{page === n.id && <ul>{pageSections[n.id].map(([id, label]) => <li key={id}><a href={`#/${n.id}/${id}`} aria-current={activeSection === id ? 'location' : undefined} onClick={() => { setMenu(false); if (location.hash === `#/${n.id}/${id}`) document.getElementById(id)?.scrollIntoView({ behavior: 'auto' }); }}>{label}</a></li>)}</ul>}</div>)}
-      </nav><div className="sidebar-status">Gatewise<br />v0.1.0</div></aside>
+      </nav><div className="sidebar-status">Gatewise<br /><a href="#/versions">{latestRelease.version}</a></div></aside>
       <div className="document-column"><main id="content" tabIndex={-1}>{children}</main><footer><span>Gatewise documentation</span><a href="downloads/gatewise-demo.zip" download>Demo example</a><a href="#/reference">API reference</a></footer></div>
     </div>}
     <dialog ref={dialog} className="search-dialog" onClose={() => setSearch(false)} onClick={e => { if (e.target === e.currentTarget) setSearch(false); }} aria-label="Search documentation"><div className="search-dialog-inner"><div className="search-input-row"><input aria-label="Search documentation" placeholder="Search documentation" value={query} onChange={e => setQuery(e.target.value)} autoFocus /><button onClick={() => setSearch(false)} aria-label="Close search">Esc</button></div><div className="search-results">{searchItems.length ? searchItems.slice(0, 12).map((item, i) => <a key={i} href={item.href} onClick={() => setSearch(false)}><strong>{item.title}</strong><span>{item.text}</span></a>) : <p>No matching results.</p>}</div></div></dialog>
