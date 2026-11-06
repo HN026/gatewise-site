@@ -1,4 +1,4 @@
-// Package benchmark implements bounded local M6 experiments. It is deliberately
+// Package benchmark implements bounded local overload experiments. It is deliberately
 // separate from request handling and is not imported by the Gatewise server.
 package benchmark
 

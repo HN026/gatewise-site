@@ -53,7 +53,7 @@ python3 -m venv /tmp/gatewise-charts
 python3 tools/capture_metrics.py --help
 ```
 
-The capture tool starts an isolated local workload and monitoring stack, exports the dashboard panels, then cleans up its processes and containers. Its workload is distinct from the original M6 benchmark. Deployment instructions are examples; the systemd unit has not been exercised on a Linux host.
+The capture tool starts an isolated local workload and monitoring stack, exports the dashboard panels, then cleans up its processes and containers. Its workload is distinct from the 15-run overload benchmark. Deployment instructions are examples; the systemd unit has not been exercised on a Linux host.
 
 ## Content and release status
 

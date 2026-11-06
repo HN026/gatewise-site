@@ -1,7 +1,7 @@
 """Capture actual Grafana PNGs from an isolated local Gatewise workload.
 
 Requires built sibling Go binaries, running Podman and Grafana's official image
-renderer image. This workload is for monitoring screenshots, not M6 benchmarking.
+renderer image. This workload is for monitoring screenshots, not the repeated overload benchmark.
 """
 import argparse
 import base64
@@ -104,7 +104,7 @@ def main():
         prom = 'http://127.0.0.1:'+stack_env['PROMETHEUS_PORT']
         grafana = 'http://127.0.0.1:'+stack_env['GRAFANA_PORT']
         targets, backends = {}, {}
-        metadata = {'source': 'Fresh local screenshot workload; separate from the original M6 experiment', 'phases': [], 'screenshots': []}
+        metadata = {'source': 'Local monitoring workload; separate from the 15-run overload benchmark', 'phases': [], 'screenshots': []}
         def spawn(name, binary, argv):
             log = (temp/(name+'.log')).open('w')
             log_files.append(log)
