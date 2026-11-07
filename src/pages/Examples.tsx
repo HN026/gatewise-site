@@ -3,7 +3,7 @@ import { Arrow, Button, CodeBlock, Diagram, Note, PageTitle, Section, Table } fr
 
 export default function Examples() {
   return <div className="container"><PageTitle title="Examples and demo">Three PostgreSQL-backed services. Run them directly, behind Gatewise, or with Gatewise middleware.</PageTitle>
-    <div className="download-panel"><div className="download-mark"><img src="logo.svg" alt="Gatewise" /></div><div><span className="mono">Demo example · v0.2.0</span><h2>gatewise-demo.zip</h2><p>{demo.files} source files · {(demo.bytes / 1024).toFixed(0)} KB · Go 1.25+ · Python 3.10+ · Podman or Docker</p></div><Button href="downloads/gatewise-demo.zip" download>Download demo example</Button></div>
+    <div className="download-panel"><div className="download-mark"><img src="logo.svg" alt="Gatewise" /></div><div><span className="mono">Demo example · v0.3.0</span><h2>gatewise-demo.zip</h2><p>{demo.files} source files · {(demo.bytes / 1024).toFixed(0)} KB · Go 1.25+ · Python 3.10+ · Podman or Docker</p></div><Button href="downloads/gatewise-demo.zip" download>Download demo example</Button></div>
     <div className="download-links"><a href="downloads/gatewise-demo.sha256" download>SHA-256 <Arrow /></a><a href="downloads/postman.zip" download>Postman collection <Arrow /></a></div>
     <Section title="Application model"><Diagram name="commerce-services" caption="Each service owns a database, a four-connection pool and its admission budget. The proxy is the fourth HTTP application; middleware runs inside the three services." />
       <Table headers={['Service', 'Critical business operation', 'Background operation']} rows={[
@@ -33,6 +33,21 @@ python3 run.py --engine docker --profile middleware-adaptive`} /><p>Start your c
       ]} /><CodeBlock filename="optional Postman CLI" language="shell" code={`# Runs the same collection and cleans up on completion:
 python3 run.py --profile proxy-adaptive --verify`} /><p>The separate loopback admin listeners expose benchmark controls. They are test instrumentation and are never routed through Gatewise. The collection restores controls after fault checks. Stop and relaunch for a clean repeat.</p><a className="text-link" href="data/commerce-contract-results.json" download>Recorded Postman contract results ↗</a>
     </Section>
+    <Section id="tenant-isolation" title="Tenant isolation example">
+      <CodeBlock filename="terminal · extracted gatewise-demo" language="shell" code={`python3 run.py --profile proxy-adaptive --tenants
+# Middleware mode:
+python3 run.py --profile middleware-adaptive --tenants
+# With an installed Postman CLI:
+python3 run.py --profile proxy-adaptive --tenants --verify`} />
+      <p>The tenant profile uses an example cap of 2 concurrent requests per tenant, 32 identified entries and a 2s idle TTL. Import <code>postman/Tenants.postman_collection.json</code> and the generated environment. It exercises ordinary tenants alongside a noisy tenant, registry pressure, expiry, identity errors and aggregate metrics. The existing Commerce collection targets the default tenant-disabled profile.</p>
+      <Note label="Local identity">The demo trusts <code>X-Demo-Tenant</code> only from loopback peers so you can create synthetic tenants in Postman. This is not authentication. Production ingress must authenticate and overwrite identity metadata, or middleware must resolve an authenticated principal.</Note>
+      <CodeBlock filename="terminal · noisy-neighbor comparison" language="shell" code={`# Three repeats across ten policy variants; roughly 12 minutes:
+python3 tenant_benchmark.py --output results/tenant-results.json
+# Short wiring check:
+python3 tenant_benchmark.py --repeats 1 --phase-scale .2 \
+  --adapters proxy-fixed-tenants middleware-adaptive-tenants`} />
+      <p>Comparison adapters share the same real application and Go arrival generator. Variants include direct traffic, a plain fixed semaphore, and fixed/adaptive proxy and middleware with tenant limits on and off. All benchmark requests are critical so priority reservation does not confound tenant isolation. The semaphore reference is a demo benchmark policy.</p>
+    </Section>
     <Section title="Reproduce benchmarks"><CodeBlock filename="terminal · from gatewise-demo" language="shell" code={`# Three repeats × five deployment profiles; about 32 minutes:
 python3 benchmark.py --output results/commerce-results.json
 
@@ -41,7 +56,9 @@ python3 benchmark.py --repeats 1 --phase-scale .1 \
   --output results/smoke.json`} /><p>The Go load generator schedules independent arrivals with bounded in-flight work and no application retries. It records missed arrivals, dispatch lag, successful latency, rejection rates, database waits and controller traces. Stop competing workloads before measuring.</p><a className="text-link" href="#/benchmarks">Read the measured protocol and limitations <Arrow /></a>
       <CodeBlock filename="bundle structure" language="text" code={`gatewise-demo/
 ├── run.py                 # isolated processes and PostgreSQL
-├── benchmark.py           # phase protocol and sampled evidence
+├── benchmark.py           # service-overload protocol
+├── tenant_benchmark.py    # noisy-neighbor/churn comparison
+├── comparison.py          # policy adapters and metadata
 ├── validate_controller.py # constant-load slowdown validation
 ├── monitor.py             # optional monitoring lifecycle
 ├── observability/         # commerce dashboard

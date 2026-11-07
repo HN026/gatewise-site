@@ -137,10 +137,10 @@ export const metricFamilies = [
 export const pageSections: Record<PageId, readonly (readonly [string, string])[]> = {
   overview: [],
   problem: [['basics', 'Request basics'], ['overload', 'Overload problem'], ['alternatives', 'Alternative approaches'], ['design-decisions', 'Gatewise decisions'], ['evolution', 'Implementation layers'], ['architecture', 'Architecture'], ['admission', 'Admission rules'], ['lifecycle', 'Request lifetime'], ['adaptive', 'Adaptive controller'], ['operations', 'Deployment constraints'], ['references', 'References']],
-  installation: [['source', 'Download source'], ['configure', 'Configure'], ['run', 'Run'], ['verify', 'Verify'], ['adaptive-setup', 'Enable adaptive mode'], ['validate-config', 'Validate configuration'], ['tuning', 'Choose limits'], ['deployment', 'Deployment'], ['library-deployment', 'Go application'], ['proxy-deployment', 'Proxy service']],
-  examples: [['application-model', 'Application model'], ['run-the-demo', 'Run the demo'], ['postman-scenarios', 'Postman scenarios'], ['reproduce-benchmarks', 'Reproduce benchmarks']],
-  benchmarks: [['recorded-results', 'Recorded results'], ['service-results', 'Per-service results'], ['controller-validation', 'Controller validation'], ['methodology', 'Methodology'], ['resources-and-limitations', 'Resources and limitations'], ['reproduction', 'Reproduction']],
-  metrics: [['benchmark-metrics', 'Benchmark metrics'], ['prometheus-integration', 'Prometheus integration'], ['grafana-dashboard', 'Grafana dashboard'], ['controller-feedback', 'Controller feedback'], ['metric-families', 'Metric families']],
+  installation: [['source', 'Download source'], ['configure', 'Configure'], ['run', 'Run'], ['verify', 'Verify'], ['adaptive-setup', 'Enable adaptive mode'], ['tenant-isolation', 'Tenant isolation'], ['validate-config', 'Validate configuration'], ['tuning', 'Choose limits'], ['deployment', 'Deployment'], ['library-deployment', 'Go application'], ['proxy-deployment', 'Proxy service']],
+  examples: [['application-model', 'Application model'], ['run-the-demo', 'Run the demo'], ['postman-scenarios', 'Postman scenarios'], ['tenant-isolation', 'Tenant isolation'], ['reproduce-benchmarks', 'Reproduce benchmarks']],
+  benchmarks: [['tenant-isolation', 'Tenant isolation · v0.3.0'], ['recorded-results', 'Service overload · v0.2.0'], ['service-results', 'Per-service results'], ['controller-validation', 'Controller validation'], ['methodology', 'Methodology'], ['resources-and-limitations', 'Resources and limitations'], ['reproduction', 'Reproduction']],
+  metrics: [['benchmark-metrics', 'Benchmark metrics'], ['prometheus-integration', 'Prometheus integration'], ['grafana-dashboard', 'Grafana dashboard'], ['controller-feedback', 'Controller feedback'], ['tenant-feedback', 'Tenant diagnostics'], ['metric-families', 'Metric families']],
   versions: [['latest', 'Latest release'], ['install-version', 'Install a version'], ['release-history', 'Release history'], ['upgrading', 'Upgrading']],
   reference: [['proxy-configuration', 'Proxy configuration'], ['environment-overrides', 'Environment overrides'], ['public-go-api', 'Public Go API'], ['http-responses', 'HTTP responses'], ['scope', 'Scope']],
 };
@@ -164,5 +164,28 @@ export const adaptiveProxyInstallationExample = JSON.stringify({
       min_concurrent: 6, initial_concurrent: 12, interval: '1s',
       min_samples: 10, target_latency: '100ms',
     },
+  } },
+}, null, 2);
+
+export const tenantMiddlewareExample = `// The application's authentication layer sets this context value first.
+type authenticatedTenantKey struct{}
+
+guard, err := middleware.NewService(middleware.ServiceConfig{
+    Name: "orders", MaxConcurrent: 20, ReservedCritical: 5,
+    Tenants: &middleware.TenantConfig{
+        MaxConcurrent: 4, MaxTracked: 1024, IdleTTL: 5 * time.Minute,
+        Limits: map[string]int{"premium": 8}, // Optional example override.
+        Resolver: func(r *http.Request) (string, error) {
+            id, _ := r.Context().Value(authenticatedTenantKey{}).(string)
+            return id, nil
+        },
+    },
+})
+if err != nil { log.Fatal(err) }`;
+export const tenantProxyExample = JSON.stringify({
+  ...JSON.parse(proxyExample),
+  services: { orders: {
+    upstream_url: 'http://127.0.0.1:9090', max_concurrent: 20, reserved_critical: 5,
+    tenants: {max_concurrent:4, max_tracked:1024, idle_ttl:'5m', header:'X-Tenant-ID', trusted_proxies:['10.0.0.0/24'], missing_policy:'reject', overflow_policy:'reject', limits:{premium:8}},
   } },
 }, null, 2);

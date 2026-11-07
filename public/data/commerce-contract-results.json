@@ -1,42 +1,88 @@
 {
-  "target": "Freshly extracted source-only commerce demo; real PostgreSQL",
-  "archive_sha256": "de1325651ddbb361ceb1cec9b2185e75abd35870bf39aa95f28445a377c516c3",
-  "collection_sha256": "b8bdf0bfba8d25768eef61da3279e6a769a5abb89d5202ce8c307e7ae5c1e4e1",
+  "release": "v0.3.0",
+  "target": "Freshly extracted source-only commerce example with real PostgreSQL",
+  "archive_sha256": "bf695ba775fd00d0abb300ed1bfed7651f63031a29627dd119ed5b1d2fc784bc",
   "profiles": [
     {
       "profile": "direct",
-      "exit_code": 0,
+      "tenants_enabled": false,
       "assertions": 74,
       "failed_assertions": 0,
-      "pool_connections_drained": true
+      "exit_code": 0,
+      "pool_connections_drained": true,
+      "collection_sha256": "b8bdf0bfba8d25768eef61da3279e6a769a5abb89d5202ce8c307e7ae5c1e4e1"
     },
     {
       "profile": "proxy-fixed",
-      "exit_code": 0,
+      "tenants_enabled": false,
       "assertions": 74,
       "failed_assertions": 0,
-      "pool_connections_drained": true
+      "exit_code": 0,
+      "pool_connections_drained": true,
+      "collection_sha256": "b8bdf0bfba8d25768eef61da3279e6a769a5abb89d5202ce8c307e7ae5c1e4e1"
     },
     {
       "profile": "proxy-adaptive",
-      "exit_code": 0,
+      "tenants_enabled": false,
       "assertions": 74,
       "failed_assertions": 0,
-      "pool_connections_drained": true
+      "exit_code": 0,
+      "pool_connections_drained": true,
+      "collection_sha256": "b8bdf0bfba8d25768eef61da3279e6a769a5abb89d5202ce8c307e7ae5c1e4e1"
     },
     {
       "profile": "middleware-fixed",
-      "exit_code": 0,
+      "tenants_enabled": false,
       "assertions": 74,
       "failed_assertions": 0,
-      "pool_connections_drained": true
+      "exit_code": 0,
+      "pool_connections_drained": true,
+      "collection_sha256": "b8bdf0bfba8d25768eef61da3279e6a769a5abb89d5202ce8c307e7ae5c1e4e1"
     },
     {
       "profile": "middleware-adaptive",
-      "exit_code": 0,
+      "tenants_enabled": false,
       "assertions": 74,
       "failed_assertions": 0,
-      "pool_connections_drained": true
+      "exit_code": 0,
+      "pool_connections_drained": true,
+      "collection_sha256": "b8bdf0bfba8d25768eef61da3279e6a769a5abb89d5202ce8c307e7ae5c1e4e1"
+    },
+    {
+      "profile": "proxy-fixed",
+      "tenants_enabled": true,
+      "assertions": 32,
+      "failed_assertions": 0,
+      "exit_code": 0,
+      "pool_connections_drained": true,
+      "collection_sha256": "1dc95eb62da649b94953f5c19d6a0e7325894beb883b7e2eb099d84071dbdec9"
+    },
+    {
+      "profile": "proxy-adaptive",
+      "tenants_enabled": true,
+      "assertions": 32,
+      "failed_assertions": 0,
+      "exit_code": 0,
+      "pool_connections_drained": true,
+      "collection_sha256": "1dc95eb62da649b94953f5c19d6a0e7325894beb883b7e2eb099d84071dbdec9"
+    },
+    {
+      "profile": "middleware-fixed",
+      "tenants_enabled": true,
+      "assertions": 32,
+      "failed_assertions": 0,
+      "exit_code": 0,
+      "pool_connections_drained": true,
+      "collection_sha256": "1dc95eb62da649b94953f5c19d6a0e7325894beb883b7e2eb099d84071dbdec9"
+    },
+    {
+      "profile": "middleware-adaptive",
+      "tenants_enabled": true,
+      "assertions": 32,
+      "failed_assertions": 0,
+      "exit_code": 0,
+      "pool_connections_drained": true,
+      "collection_sha256": "1dc95eb62da649b94953f5c19d6a0e7325894beb883b7e2eb099d84071dbdec9"
     }
   ],
   "passed": true

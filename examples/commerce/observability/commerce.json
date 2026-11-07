@@ -2,7 +2,7 @@
   "uid": "gatewise-commerce",
   "title": "Gatewise \u00b7 Commerce experiment",
   "schemaVersion": 39,
-  "version": 1,
+  "version": 2,
   "timezone": "utc",
   "refresh": "5s",
   "time": {
@@ -541,6 +541,196 @@
             "lineWidth": 2,
             "fillOpacity": 5
           }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 13,
+      "title": "Default tenant limit",
+      "type": "timeseries",
+      "description": "Opt-in tenant admission; aggregate bounded labels, no tenant identities.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 48,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "gatewise_tenant_concurrency_limit{service=~\"$service\"}",
+          "legendFormat": "{{service}} {{__name__}} {{bucket}} {{reason}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "requests"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 14,
+      "title": "Tenant registry occupancy and bound",
+      "type": "timeseries",
+      "description": "Opt-in tenant admission; aggregate bounded labels, no tenant identities.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 48,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{__name__=~\"gatewise_tenants_tracked|gatewise_tenants_tracking_limit\",service=~\"$service\"}",
+          "legendFormat": "{{service}} {{__name__}} {{bucket}} {{reason}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 15,
+      "title": "Tenant reservations in flight",
+      "type": "timeseries",
+      "description": "Opt-in tenant admission; aggregate bounded labels, no tenant identities.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 56,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "gatewise_tenant_requests_in_flight{service=~\"$service\"}",
+          "legendFormat": "{{service}} {{__name__}} {{bucket}} {{reason}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "requests"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 16,
+      "title": "Tenant rejections",
+      "type": "timeseries",
+      "description": "Opt-in tenant admission; aggregate bounded labels, no tenant identities.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 56,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by(service,reason)(rate(gatewise_requests_rejected_total{reason=~\"tenant_.*\",service=~\"$service\"}[$__rate_interval]))",
+          "legendFormat": "{{service}} {{__name__}} {{bucket}} {{reason}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 17,
+      "title": "Expired tenant entries",
+      "type": "timeseries",
+      "description": "Opt-in tenant admission; aggregate bounded labels, no tenant identities.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 64,
+        "w": 24,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(gatewise_tenant_entries_expired_total{service=~\"$service\"}[$__rate_interval])",
+          "legendFormat": "{{service}} {{__name__}} {{bucket}} {{reason}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
         },
         "overrides": []
       },

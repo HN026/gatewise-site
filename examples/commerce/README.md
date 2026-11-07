@@ -55,3 +55,15 @@ Results include per-service successful p95 (excluding rejected/error responses),
 ## Controls and safety boundary
 
 Each service has its own separate numeric-loopback admin listener: `GET /state`, `PUT /control` with `{"work_multiplier":1,"sql_delay_ms":0,"failure_every":0}`. These controls are test instrumentation, never publish them on the business listener or expose them through a gateway. The example has no authentication, TLS, durable orchestration, migrations framework or distributed transactions. Gatewise remains independent of PostgreSQL and of this demo's application APIs.
+
+## Tenant isolation (v0.3.0)
+
+Run `python3 run.py --profile proxy-adaptive --tenants` or choose middleware-fixed / middleware-adaptive / proxy-fixed. The demo configures 2 concurrent requests per tenant, 32 identified entries and a 2s idle TTL. These are experimental settings. `X-Demo-Tenant` is accepted only from loopback and exists for local testing; production identity must come from authentication and trusted ingress metadata. The backend does not authenticate users.
+
+Import `postman/Tenants.postman_collection.json` with the generated environment. The original Commerce collection remains for tenant-disabled profiles. `--tenants --verify` runs the tenant collection. It validates real domain persistence, noisy/ordinary callers, missing/malformed identities, registry pressure, expiry and privacy of metrics. Controls restore healthy SQL settings.
+
+Run `python3 tenant_benchmark.py --output results/tenant-results.json` separately from other load. Three repeats rotate ten adapters: direct, plain semaphore, fixed/adaptive proxy and middleware, with tenant isolation on/off. Phases: 3s baseline (each actor 8 RPS), 12s noisy neighbor (noisy 480 RPS plus three ordinary actors at 8 RPS each, explicit 40ms SQL delay), 4s identity churn (400 fresh identities/s plus ordinary actors, ordinary SQL), and 4s recovery (all four actors at 8 RPS, ordinary SQL). All operations are critical; service proportions remain 60/20/20. Each run starts fresh databases. It takes about 12 minutes plus startup/drain. A `.2` phase scale is a wiring check, not equivalent evidence.
+
+The shared comparison interface in comparison.py supplies application URLs and metadata to the same Go generator. A new implementation needs an actual adapter, version/configuration provenance and the same measurement contract. No Cinnamon implementation is included. Direct comparison requires access to real code and permission to publish measurements.
+
+Hard tenant caps intentionally do not borrow unused capacity. Registry overflow rejects new identities by default; known active identities are never evicted. Missing/overflow shared buckets are opt-in in the library and are separately bounded. Identity churn cannot create unbounded tracking, but allowing a caller to invent identities defeats the intended per-tenant policy.

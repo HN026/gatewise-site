@@ -9,6 +9,7 @@ import (
 )
 
 type collector struct {
+	tenantLimit, tenantTracked, tenantTrackingLimit, tenantActive, tenantExpired                                    *prometheus.Desc
 	controllerSamples, controllerRatio, controllerFailures, controllerTime, controllerDecision, controllerSaturated *prometheus.Desc
 	service                                                                                                         *middleware.Service
 	limit, minimum, maximum, reserved, active, info, admitted, rejected, completed, duration, adjustments           *prometheus.Desc
@@ -25,6 +26,11 @@ func Register(registry prometheus.Registerer, service *middleware.Service) error
 		return prometheus.NewDesc("gatewise_"+name, help, labels, prometheus.Labels{"service": serviceName})
 	}
 	c := &collector{service: service,
+		tenantLimit:         desc("tenant_concurrency_limit", "Default per-tenant concurrency limit."),
+		tenantTracked:       desc("tenants_tracked", "Identified tenants currently retained in the bounded registry."),
+		tenantTrackingLimit: desc("tenants_tracking_limit", "Maximum identified tenant entries."),
+		tenantActive:        desc("tenant_requests_in_flight", "Tenant leases including brief service-admission reservations; never labeled by identity.", "bucket"),
+		tenantExpired:       desc("tenant_entries_expired_total", "Inactive identified tenant entries expired."),
 		controllerSamples:   desc("controller_last_window_samples", "Completed samples in the last evaluated adaptive window."),
 		controllerRatio:     desc("controller_last_p90_ratio", "Bucket-estimated p90 handler duration divided by latency target in the last evaluated window."),
 		controllerFailures:  desc("controller_last_failure_fraction", "Failed sample fraction in the last evaluated adaptive window."),
@@ -47,7 +53,7 @@ func Register(registry prometheus.Registerer, service *middleware.Service) error
 }
 
 func (c *collector) Describe(out chan<- *prometheus.Desc) {
-	for _, desc := range []*prometheus.Desc{c.limit, c.minimum, c.maximum, c.reserved, c.active, c.info, c.admitted, c.rejected, c.completed, c.duration, c.adjustments, c.controllerSamples, c.controllerRatio, c.controllerFailures, c.controllerTime, c.controllerDecision, c.controllerSaturated} {
+	for _, desc := range []*prometheus.Desc{c.limit, c.minimum, c.maximum, c.reserved, c.active, c.info, c.admitted, c.rejected, c.completed, c.duration, c.adjustments, c.controllerSamples, c.controllerRatio, c.controllerFailures, c.controllerTime, c.controllerDecision, c.controllerSaturated, c.tenantLimit, c.tenantTracked, c.tenantTrackingLimit, c.tenantActive, c.tenantExpired} {
 		out <- desc
 	}
 }
@@ -59,6 +65,16 @@ func (c *collector) Collect(out chan<- prometheus.Metric) {
 	}
 	counter := func(desc *prometheus.Desc, value uint64, labels ...string) {
 		out <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, float64(value), labels...)
+	}
+	if s.Tenants.Enabled {
+		t := s.Tenants
+		gauge(c.tenantLimit, float64(t.MaxConcurrent))
+		gauge(c.tenantTracked, float64(t.Tracked))
+		gauge(c.tenantTrackingLimit, float64(t.MaxTracked))
+		gauge(c.tenantActive, float64(t.IdentifiedActive), "identified")
+		gauge(c.tenantActive, float64(t.MissingActive), "missing")
+		gauge(c.tenantActive, float64(t.OverflowActive), "overflow")
+		counter(c.tenantExpired, t.EntriesExpired)
 	}
 	if s.Controller.Enabled {
 		e := s.Controller
@@ -90,6 +106,14 @@ func (c *collector) Collect(out chan<- prometheus.Metric) {
 		counter(c.admitted, p.Admitted, priority)
 		counter(c.rejected, p.RejectedConcurrency, priority, "concurrency_limit")
 		counter(c.rejected, p.RejectedReservation, priority, "critical_capacity_reserved")
+		if s.Tenants.Enabled {
+			for _, v := range []struct {
+				reason string
+				n      uint64
+			}{{"tenant_concurrency_limit", p.RejectedTenant}, {"tenant_registry_full", p.RejectedTenantRegistry}, {"tenant_identity_missing", p.RejectedTenantMissing}, {"tenant_identity_invalid", p.RejectedTenantInvalid}, {"tenant_identity_untrusted", p.RejectedTenantUntrusted}} {
+				counter(c.rejected, v.n, priority, v.reason)
+			}
+		}
 		for oi, o := range p.Outcomes {
 			if oi == 0 {
 				for i := 0; i < 6; i++ {

@@ -1,0 +1,18 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/HN026/gatewise/tests/tenancy
+cpu: Apple M4 Pro
+BenchmarkAccounting/service-only-12         	30537913	         8.072 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAccounting/service-only-12         	31645393	         7.703 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAccounting/service-only-12         	31253052	         7.715 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAccounting/tenant-and-service-12   	 1404446	       170.7 ns/op	      72 B/op	       2 allocs/op
+BenchmarkAccounting/tenant-and-service-12   	 1401132	       193.3 ns/op	      72 B/op	       2 allocs/op
+BenchmarkAccounting/tenant-and-service-12   	 1355372	       170.9 ns/op	      72 B/op	       2 allocs/op
+BenchmarkAccounting/tenant-rejection-12     	 2405295	        99.22 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAccounting/tenant-rejection-12     	 2432634	        99.15 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAccounting/tenant-rejection-12     	 2447793	        99.50 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAccounting/registry-full-12        	 2583157	        93.51 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAccounting/registry-full-12        	 2558184	        97.27 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAccounting/registry-full-12        	 2502990	        96.62 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/HN026/gatewise/tests/tenancy	4.913s

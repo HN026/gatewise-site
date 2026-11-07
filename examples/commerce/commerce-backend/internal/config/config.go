@@ -9,6 +9,8 @@ import (
 )
 
 type Config struct {
+	TenantLimit, TenantMaxTracked                                   int
+	TenantIdleTTL                                                   time.Duration
 	Listen, AdminListen, DatabaseURL, Mode, Role                    string
 	PoolSize, MaxConcurrent, Reserved, Minimum, Initial, MinSamples int
 	Interval, Target, QueryTimeout                                  time.Duration
@@ -27,6 +29,9 @@ func Load(args []string) (Config, error) {
 	f.StringVar(&c.AdminListen, "admin-listen", env("COMMERCE_ADMIN_ADDR", "127.0.0.1:9196"), "loopback-only benchmark controls")
 	f.StringVar(&c.Mode, "mode", env("COMMERCE_MODE", "direct"), "direct, fixed or adaptive")
 	f.StringVar(&c.Role, "role", env("COMMERCE_ROLE", "orders"), "orders, catalog or inventory")
+	f.IntVar(&c.TenantLimit, "tenant-limit", 0, "optional per-tenant concurrency limit; demo loopback identity only")
+	f.IntVar(&c.TenantMaxTracked, "tenant-max-tracked", 32, "example tenant registry bound")
+	f.DurationVar(&c.TenantIdleTTL, "tenant-idle-ttl", 2*time.Second, "example idle tenant TTL")
 	f.IntVar(&c.PoolSize, "db-pool", 4, "maximum SQL connections")
 	f.IntVar(&c.MaxConcurrent, "max-concurrent", 12, "example admission ceiling")
 	f.IntVar(&c.Reserved, "reserved-critical", 4, "example critical reservation")
@@ -49,8 +54,14 @@ func Load(args []string) (Config, error) {
 	if err != nil || net.ParseIP(h) == nil || !net.ParseIP(h).IsLoopback() {
 		return c, fmt.Errorf("admin-listen must bind numeric loopback")
 	}
-	if c.Mode != "direct" && c.Mode != "fixed" && c.Mode != "adaptive" {
+	if c.Mode != "direct" && c.Mode != "fixed" && c.Mode != "adaptive" && c.Mode != "semaphore" {
 		return c, fmt.Errorf("invalid mode")
+	}
+	if c.Mode == "semaphore" && c.MaxConcurrent < 1 {
+		return c, fmt.Errorf("reference semaphore requires a positive limit")
+	}
+	if c.TenantLimit < 0 {
+		return c, fmt.Errorf("tenant-limit cannot be negative")
 	}
 	if c.PoolSize < 1 || c.PoolSize > 128 || c.QueryTimeout <= 0 {
 		return c, fmt.Errorf("invalid database pool or timeout")

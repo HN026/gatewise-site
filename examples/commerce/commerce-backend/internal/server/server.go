@@ -24,8 +24,15 @@ func Run(ctx context.Context, c config.Config) error {
 	}
 	defer s.DB.Close()
 	var g *middleware.Service
-	if c.Mode != "direct" {
+	if c.Mode != "direct" && c.Mode != "semaphore" {
 		cfg := middleware.ServiceConfig{Name: c.Role, MaxConcurrent: c.MaxConcurrent, ReservedCritical: c.Reserved}
+		if c.TenantLimit > 0 {
+			resolver, err := middleware.TrustedTenantHeader("X-Demo-Tenant", []string{"127.0.0.1/32", "::1/128"})
+			if err != nil {
+				return err
+			}
+			cfg.Tenants = &middleware.TenantConfig{MaxConcurrent: c.TenantLimit, MaxTracked: c.TenantMaxTracked, IdleTTL: c.TenantIdleTTL, Resolver: resolver}
+		}
 		if c.Mode == "adaptive" {
 			cfg.Adaptive = &middleware.AdaptiveConfig{MinConcurrent: c.Minimum, InitialConcurrent: c.Initial, Interval: c.Interval, MinSamples: c.MinSamples, TargetLatency: c.Target}
 		}
@@ -36,7 +43,22 @@ func Run(ctx context.Context, c config.Config) error {
 	}
 	a := handler.New(s, g, c.Mode)
 	mux := http.NewServeMux()
+	referenceSlots := make(chan struct{}, c.MaxConcurrent)
 	protect := func(p middleware.Priority, h http.HandlerFunc) http.Handler {
+		if c.Mode == "semaphore" {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.Context().Err() != nil {
+					return
+				}
+				select {
+				case referenceSlots <- struct{}{}:
+					defer func() { <-referenceSlots }()
+					h.ServeHTTP(w, r)
+				default:
+					handler.JSON(w, 503, map[string]string{"error": "service_overloaded", "reason": "concurrency_limit"})
+				}
+			})
+		}
 		if g != nil {
 			return g.Middleware(p, h)
 		}

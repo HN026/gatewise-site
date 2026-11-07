@@ -5,9 +5,11 @@ package middleware
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/felixge/httpsnoop"
 	"github.com/HN026/gatewise/internal/adaptive"
+	"github.com/HN026/gatewise/internal/tenancy"
+	"github.com/felixge/httpsnoop"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -34,19 +36,23 @@ type ServiceConfig struct {
 	Logger *slog.Logger
 	// Adaptive nil retains fixed mode.
 	Adaptive *AdaptiveConfig
+	// Tenants nil preserves service-only admission.
+	Tenants *TenantConfig
 }
 
 // Service must be constructed with NewService; its zero value is not usable.
 // It is safe for concurrent use. Reuse one instance for handlers sharing
 // capacity; construct separate instances for independent service budgets.
 type Service struct {
-	name       string
-	limiter    *admission.Limiter
-	logger     *slog.Logger
-	maximum    int
-	adaptive   AdaptiveConfig
-	controller *adaptive.Controller
-	statistics *statistics
+	name           string
+	limiter        *admission.Limiter
+	logger         *slog.Logger
+	maximum        int
+	adaptive       AdaptiveConfig
+	controller     *adaptive.Controller
+	statistics     *statistics
+	tenants        *tenancy.Limiter
+	tenantResolver TenantResolver
 }
 
 func NewService(c ServiceConfig) (*Service, error) {
@@ -60,6 +66,11 @@ func NewService(c ServiceConfig) (*Service, error) {
 		c.Name = "service"
 	}
 	s := &Service{name: c.Name, maximum: c.MaxConcurrent, logger: c.Logger, statistics: newStatistics()}
+	var err error
+	s.tenants, s.tenantResolver, err = newTenants(c.Tenants, c.MaxConcurrent)
+	if err != nil {
+		return nil, err
+	}
 	initial := c.MaxConcurrent
 	if c.Adaptive != nil {
 		a, err := normalizeAdaptive(c)
@@ -100,6 +111,34 @@ func (s *Service) Middleware(priority Priority, next http.Handler, options ...Ha
 		if r.Context().Err() != nil {
 			return
 		}
+		var tenantLease *tenancy.Lease
+		if s.tenants != nil {
+			id, err := s.tenantResolver(r)
+			if r.Context().Err() != nil {
+				return
+			}
+			if err != nil {
+				decision := admission.TenantInvalid
+				status := 400
+				if errors.Is(err, ErrUntrustedTenantSource) {
+					decision = admission.TenantUntrusted
+					status = 403
+				}
+				s.reject(w, priority, decision, status)
+				return
+			}
+			lease, decision := s.tenants.Acquire(id, time.Now())
+			if decision != admission.Admitted {
+				status := 503
+				if decision == admission.TenantMissing || decision == admission.TenantInvalid {
+					status = 400
+				}
+				s.reject(w, priority, decision, status)
+				return
+			}
+			tenantLease = lease
+			defer func() { lease.Release(time.Now()) }()
+		}
 		start := time.Now()
 		var decision admission.Decision
 		var generation uint64
@@ -108,20 +147,15 @@ func (s *Service) Middleware(priority Priority, next http.Handler, options ...Ha
 		} else {
 			decision = s.limiter.TryAcquire(p)
 		}
-		s.statistics.admission(priority, decision)
-		state := s.Snapshot()
-		w.Header().Set("X-Gatewise-Limit", strconv.Itoa(state.Limit))
-		w.Header().Set("X-Gatewise-Mode", state.Mode)
 		if decision != admission.Admitted {
-			if s.logger != nil {
-				s.logger.Warn("request rejected", "service", s.name, "priority", priority, "reason", decision)
-			}
-			w.Header().Set("Cache-Control", "no-store")
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusServiceUnavailable)
-			_ = json.NewEncoder(w).Encode(map[string]string{"error": "service_overloaded", "service": s.name, "priority": string(priority), "reason": string(decision)})
+			s.reject(w, priority, decision, 503)
 			return
 		}
+		if tenantLease != nil {
+			tenantLease.Retain()
+		}
+		s.statistics.admission(priority, decision)
+		s.setHeaders(w)
 
 		completed := false
 		var metrics httpsnoop.Metrics
@@ -147,4 +181,25 @@ func (s *Service) Middleware(priority Priority, next http.Handler, options ...Ha
 		metrics = httpsnoop.CaptureMetrics(next, w, r)
 		completed = true
 	})
+}
+
+func (s *Service) setHeaders(w http.ResponseWriter) {
+	state := s.Snapshot()
+	w.Header().Set("X-Gatewise-Limit", strconv.Itoa(state.Limit))
+	w.Header().Set("X-Gatewise-Mode", state.Mode)
+}
+func (s *Service) reject(w http.ResponseWriter, priority Priority, decision admission.Decision, status int) {
+	s.statistics.admission(priority, decision)
+	s.setHeaders(w)
+	if s.logger != nil {
+		s.logger.Warn("request rejected", "service", s.name, "priority", priority, "reason", decision)
+	}
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	code := "service_overloaded"
+	if status != 503 {
+		code = string(decision)
+	}
+	_ = json.NewEncoder(w).Encode(map[string]string{"error": code, "service": s.name, "priority": string(priority), "reason": string(decision)})
 }
