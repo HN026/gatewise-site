@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 810 175" role="img" aria-label="fifo-queue">
+<defs><marker id="arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0L7 3.5L0 7" fill="#91ab9a"/></marker></defs>
+<rect width="810" height="175" fill="#101a13"/>
+<path d="M120 95.0 H140.0 V95.0 H157" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M265 95.0 H275.0 V95.0 H282" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M390 95.0 H400.0 V95.0 H407" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M515 95.0 H525.0 V95.0 H532" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M640 95.0 H662.5 V95.0 H682" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="15" y="60" width="105" height="70" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="67.5" y="85" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Arrival</text>
+<text x="67.5" y="106" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Join tail</text>
+<rect x="160" y="60" width="105" height="70" rx="2" fill="#142019" stroke="#6faf91"/>
+<text x="212.5" y="85" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Checkout</text>
+<text x="212.5" y="106" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Wait: 10ms</text>
+<rect x="285" y="60" width="105" height="70" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="337.5" y="85" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Reindex</text>
+<text x="337.5" y="106" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Wait: 120ms</text>
+<rect x="410" y="60" width="105" height="70" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="462.5" y="85" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Reindex</text>
+<text x="462.5" y="106" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Wait: 240ms</text>
+<rect x="535" y="60" width="105" height="70" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="587.5" y="85" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Reindex</text>
+<text x="587.5" y="106" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Wait: 400ms</text>
+<rect x="685" y="60" width="110" height="70" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="740.0" y="85" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Handler</text>
+<text x="740.0" y="106" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Serve head</text>
+</svg>

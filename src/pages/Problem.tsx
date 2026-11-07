@@ -26,35 +26,32 @@ export default function Problem() {
       <p>In the example above, 120 RPS corresponds to about 6 active requests at 50ms, but about 60 at 500ms. The rate limit can continue allowing the same traffic while the service accumulates work. Lowering the rate manually can help, but the safe value changes with latency and request cost.</p>
       <p><strong>Gatewise’s choice:</strong> count admitted handlers until they return. A configured concurrency ceiling bounds active synchronous work even when requests slow down. Keep a separate rate limiter when the application also needs caller quotas.</p>
       <Diagram name="rate-versus-concurrency" caption="Illustrative values: the same arrival-rate cap can allow more active work after a slowdown. A concurrency ceiling bounds active handlers and rejects excess arrivals." />
+      <Diagram name="token-bucket" caption="Example token bucket: tokens govern how frequently requests start. Once admitted, slow handlers can remain active after their tokens have been consumed." />
       <h3>2. Shared quotas backed by Redis or another coordinator</h3>
       <p>A shared counter can coordinate a quota across replicas. That is useful when a customer must have one global allowance. Coordination adds a request dependency and requires a policy for coordinator failures. Counting requests or charging a fixed cost also needs a cost model: two operations counted equally can put very different pressure on a backend.</p>
       <p><strong>Gatewise’s choice:</strong> make admission decisions locally, without a remote quota lookup. This avoids a coordination dependency on the admission path, but deliberately gives up global quotas and tenant fairness. Three processes with a limit of 20 can admit 60 requests in total. Gatewise cannot replace a distributed quota service.</p>
+      <Diagram name="shared-quota" caption="Quota coordination only: replicas consult one shared allowance. The store returns a decision; application traffic is still handled by the replicas, not forwarded through the quota store." />
       <h3>3. Waiting queues, FIFO scheduling and queue-delay control</h3>
       <p>A bounded queue can absorb a short burst when the work may wait. If overload persists, waiting adds latency and retains request state. For example, a request at the back of a 40-request queue served at 20 requests per second waits roughly two seconds before execution, assuming steady service and no cancellations. An unbounded queue provides no backlog bound.</p>
+      <Diagram name="fifo-queue" caption="Illustrative FIFO queue, moving toward the handler on the right. An arriving checkout request joins the tail behind older reindex requests. Ages are examples; FIFO alone does not consider business priority." />
       <p>Queue-delay control can discard stale work instead of allowing waiting time to grow indefinitely. <a href="https://www.rfc-editor.org/rfc/rfc8289.html" target="_blank" rel="noreferrer">CoDel</a> is a queue-management design based on experienced delay; its original setting is network packet queues. An application implementation still needs deadlines, queue bounds and a scheduling policy. Queue order and priority handling are separate from delay control. Gatewise implements neither CoDel nor FIFO/LIFO scheduling.</p>
       <p><strong>Gatewise’s choice:</strong> add no admission queue. A full guard returns 503 before invoking the handler. This avoids an additional waiting layer, but rejects bursts that a well-designed queue might absorb. Durable jobs and workloads that should wait belong in an application queue; callers must not retry rejected requests indefinitely.</p>
+      <Diagram name="queue-delay-control" caption="A conceptual delay-aware application queue: a controller can dispatch work or discard it under its policy. This is not CoDel pseudocode; queue bounds, delay measurement and deadline handling depend on the chosen design. Gatewise adds no admission queue." />
       <h3>4. A fixed semaphore or concurrency ceiling</h3>
       <p>A nonblocking semaphore is a good starting point: acquire a slot, run the handler and release it. It directly bounds active work. A single shared budget, however, can already be full of reindex requests when checkout arrives. A ceiling chosen for a healthy dependency can also be too high during degradation, or unnecessarily low after recovery.</p>
       <p><strong>Gatewise’s choice:</strong> retain a fixed mode, add a separate background quota within the total limit, and offer optional feedback-driven adjustment. Reservation leaves some capacity unavailable to background work; it does not interrupt running requests or guarantee critical admission when total capacity is full.</p>
+      <Diagram name="concurrency-reservation" caption="Two example snapshots with a total limit of 6. B denotes active background work; R denotes free capacity unavailable to background requests. A reservation of 2 leaves room for checkout without preempting existing work." />
       <h3>5. Timeouts, retries and circuit breakers</h3>
       <p>Timeouts bound how long a caller is willing to wait, but the work may continue if a handler or dependency ignores cancellation. Retrying adds another attempt; without a budget and backoff, attempts can increase load during an outage. A failure-triggered circuit breaker can stop calls to an unhealthy dependency, but failure counts alone do not specify a safe amount of simultaneous work.</p>
+      <Diagram name="retry-amplification" caption="Attempt accounting for one logical request with two retries. Paths represent sequential attempts, not a recommendation to retry concurrently. Three attempts consume more downstream work than one; apply retry budgets and backoff." />
       <p>These mechanisms overlap in some implementations: <a href="https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/circuit_breaking" target="_blank" rel="noreferrer">Envoy’s circuit breakers</a>, for example, include outstanding-request and retry limits. It would be incorrect to claim all circuit breakers lack concurrency protection.</p>
       <p><strong>Gatewise’s choice:</strong> control admission at the HTTP boundary and leave dependency timeouts, cancellation, retry budgets and downstream breakers to the application. Configure them together. Gatewise does not retry 503 responses or stop asynchronous work that outlives its handler.</p>
+      <Diagram name="failure-circuit-breaker" caption="Simplified closed and open states of a failure-based circuit breaker. Half-open probing is omitted. Concurrency-aware implementations can also enforce active-request limits; Gatewise does not implement this breaker state machine." />
       <h3>6. Scaling replicas and resource thresholds</h3>
       <p>More application replicas can help when application capacity is the bottleneck. They do not necessarily increase the capacity of a shared database. Scaling callers can increase pressure on that dependency. A CPU threshold can also miss requests blocked on I/O while they retain connections and memory.</p>
       <p><a href="https://kubernetes.io/docs/concepts/workloads/autoscaling/horizontal-pod-autoscale/" target="_blank" rel="noreferrer">Kubernetes horizontal autoscaling</a> changes replica count using observed metrics through a periodic control loop. That is a different timescale and control boundary from deciding whether to admit the next request.</p>
       <p><strong>Gatewise’s choice:</strong> enforce a local bound immediately and optionally adjust it using completed-request latency and errors. Scaling and resource monitoring remain complementary controls. Replica budgets must still be sized together; Gatewise has no direct CPU, memory or database-health detector.</p>
-    </Section>
-    <Section id="uber-design" title="How Uber’s design evolved">
-      <p><a href="https://www.uber.com/us/en/blog/from-static-rate-limiting-to-intelligent-load-management/" target="_blank" rel="noreferrer">Uber’s engineering article</a> describes database overload protection for Docstore and Schemaless. Its progression provides context for the design questions above:</p>
-      <Table headers={['Approach in the article', 'Limitation or next step']} rows={[
-        ['Redis-backed read/write quotas', 'Remote lookups, partition-health tracking and an imperfect cost model complicated protection.'],
-        ['CoDel-based queues', 'Controlled waiting and stale work, but their implementation did not distinguish request importance.'],
-        ['Scorecard and regulators', 'Added tenant boundaries and checks for resource pressure and hot partitions.'],
-        ['Cinnamon with adaptive control', 'Added priority-aware shedding and adjustments using latency and errors.'],
-        ['Unified overload signals', 'Combined local signals with remote state such as replication lag.'],
-      ]} />
-      <p>This is Uber’s implementation history, not Gatewise’s development or benchmark history. Gatewise does not reproduce that platform, and Uber’s reported performance improvements are not Gatewise results.</p>
+      <Diagram name="scaling-shared-dependency" caption="Example: three replicas with local limits of 20 can admit up to 60 HTTP requests collectively. Adding replicas does not itself enlarge a shared dependency’s capacity. A handler may issue more than one downstream operation." />
     </Section>
     <Section id="design-decisions" title="What Gatewise implements and why">
       <p>Gatewise chooses a smaller HTTP-level design with explicit boundaries. The guard runs before a protected handler in a Go application, or before forwarding a request in the standalone proxy.</p>
@@ -80,8 +77,8 @@ export default function Problem() {
         ['Observability', 'Bounded native statistics, Prometheus metrics and a Grafana dashboard.', 'Monitoring does not change configuration or prove production capacity.'],
         ['Validation', 'Independent backend consumers, API scenarios and repeatable baseline/pressure/recovery experiments.', 'Results apply to the documented local workload.'],
       ]} />
-      <h3>Relationship to Uber’s load manager</h3>
-      <p><a href="https://www.uber.com/us/en/blog/from-static-rate-limiting-to-intelligent-load-management/" target="_blank" rel="noreferrer">Uber’s article</a> describes a database load manager with priority-aware shedding, tenant controls and resource-specific overload signals. Gatewise applies a narrower HTTP admission model. The following distinctions are part of its current scope.</p>
+      <h3>Current scope</h3>
+      <p>The implementation focuses on HTTP request admission. These boundaries determine which additional controls an application may need.</p>
       <Table headers={['Concern', 'Gatewise implementation']} rows={[
         ['Priority', 'Two server-assigned classes with critical reservation; no propagated tier/cohort hierarchy.'],
         ['Queuing', 'No waiting queue, queue timeout policy or FIFO/LIFO scheduling. Unavailable capacity produces 503 immediately.'],
@@ -136,6 +133,6 @@ export default function Problem() {
       ]} />
       <p>Start with a measured fixed limit and explicit priorities. Enable adaptation after selecting realistic latency targets and bounds. Available evidence is the <a href="#/benchmarks">local benchmark workload</a>; production adoption and multi-host capacity have not been established.</p>
     </Section>
-    <Section id="references" title="References"><ul className="reference-list">{sources.map(s => <li key={s.url}><a href={s.url} target="_blank" rel="noreferrer">{s.title}</a> — {s.organization}, {s.year}.</li>)}</ul><p>QALM and Cinnamon provide background on criticality-aware shedding and adaptive capacity. Gatewise uses the rules above, not QALM’s queue or Cinnamon’s PID/TCP-Vegas controller and propagated cohorts.</p></Section>
+    <Section id="references" title="References"><ul className="reference-list">{sources.map(s => <li key={s.url}><a href={s.url} target="_blank" rel="noreferrer">{s.title}</a> — {s.organization}, {s.year}.</li>)}</ul><p>These engineering articles provide background on overload protection, request criticality and adaptive capacity. The diagrams on this page are original explanatory models. Gatewise’s implemented rules and measured behavior are documented in the sections above.</p></Section>
   </div>;
 }

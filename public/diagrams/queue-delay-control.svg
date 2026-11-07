@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 810 270" role="img" aria-label="queue-delay-control">
+<defs><marker id="arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0L7 3.5L0 7" fill="#91ab9a"/></marker></defs>
+<rect width="810" height="270" fill="#101a13"/>
+<path d="M230 60.0 H270.0 V60.0 H307" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M520 60.0 H560.0 V60.0 H597" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M415.0 95 V172" fill="none" stroke="#ef8d7d" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="20" y="25" width="210" height="70" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="125.0" y="50" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Bounded waiting queue</text>
+<text x="125.0" y="71" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Requests retain state</text>
+<rect x="310" y="25" width="210" height="70" rx="2" fill="#142019" stroke="#6faf91"/>
+<text x="415.0" y="50" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Queue controller</text>
+<text x="415.0" y="71" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Observe waiting delay</text>
+<rect x="600" y="25" width="190" height="70" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="695.0" y="50" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Handler</text>
+<text x="695.0" y="71" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Eligible work runs</text>
+<rect x="310" y="175" width="210" height="70" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="415.0" y="200" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Discard queued work</text>
+<text x="415.0" y="221" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Policy / deadline decision</text>
+</svg>
