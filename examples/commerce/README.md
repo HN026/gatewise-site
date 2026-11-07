@@ -1,0 +1,57 @@
+# Gatewise commerce example
+
+Three independent HTTP services and PostgreSQL. Proxy mode adds Gatewise as the fourth application process; middleware mode runs three processes. PostgreSQL and optional monitoring are infrastructure. This is a reproducible local experiment, not a production deployment template.
+
+## Requirements and startup
+
+Go 1.25+, Python 3.10+, and running Podman or Docker. The PostgreSQL 18.6 Alpine image is downloaded if absent. Local module replacements resolve the included Gatewise source snapshot; no unpublished module fetch is required.
+
+```sh
+python3 run.py --profile middleware-adaptive
+# Other modes: direct, middleware-fixed, proxy-fixed, proxy-adaptive
+python3 run.py --engine docker --profile proxy-adaptive
+```
+
+The launcher chooses free loopback ports, creates a uniquely named PostgreSQL container/volume and three fresh databases, builds both modules, and prints service, backend, metrics, admin and Postman-environment addresses. Ctrl+C stops only this launcher's processes and removes its disposable databases/volume. Do not use persistent or production data. Credentials `gatewise / gatewise-local` are public, disposable example credentials; PostgreSQL and admin listeners bind only to localhost.
+
+Orders: `POST /orders/checkout` with `Idempotency-Key` and `{"amount_cents":1234}`, then `GET /orders/{id}`. First checkout returns 201, exact replay 200, conflicting amount 409. Catalog: `GET /catalog/products?limit=10` returns persisted products. Inventory: `POST /inventory/reservations` with an idempotency key and `{"product_id":1,"quantity":1}`; `GET /inventory/stock/1` reads remaining stock. Reservations and stock decrements share one transaction; replay does not decrement twice and insufficient stock returns 409. These services demonstrate separate resources; checkout is not a distributed transaction across all three.
+
+Each service has `POST /<service>/reports/rebuild` classified as background. Reports run synchronously inside the HTTP handler, not in detached queue workers, so admission tracks their complete lifetime. Reports aggregate its own 20,000 seeded rows and upsert a report in a transaction. Each service has its own four-connection pool and, in protected modes, a separate admission budget: ceiling 12, reserved critical 4, adaptive minimum 5, initial 12, interval 500ms, minimum 10 samples, 100ms latency target. These are experimental settings, not recommended production defaults. A one-second SQL deadline includes pool acquisition. HTTP client benchmark timeout is three seconds; no automatic retries occur.
+
+## Postman
+
+Import `postman/Commerce.postman_collection.json` and the environment file printed by the launcher. Run the complete collection in order against a fresh database. Set a 5s request timeout and 15s script timeout. It validates persistence, idempotency, inventory consistency, validation, injected SQL failures, admission pressure and recovery. Control steps restore healthy settings. Postman CLI users can run the same contract and clean up automatically:
+
+```sh
+python3 run.py --profile proxy-adaptive --verify
+```
+
+The optional CLI must be on PATH; the GUI requires no CLI. No cloud workspace or account is required for local requests. Generated environments contain only local service addresses, not database credentials.
+
+## Optional metrics
+
+Run `python3 run.py --profile proxy-adaptive --monitor` to start local Prometheus and Grafana with dynamically configured scrape targets. The launcher prints their addresses. The commerce dashboard includes admission, SQL pools, controller feedback and backend Go heap/goroutines; the generic library dashboard remains available. Monitoring containers and their disposable volumes are removed on exit. This monitoring setup was validated on macOS/Podman and requires containers to reach host listeners; native Linux deployments may require different scrape networking. Rates need at least two scrapes and traffic. This adds monitoring infrastructure, not additional business services.
+
+## Repeat the measured experiment
+
+Stop other workloads first. Defaults are three repetitions of all five profiles with rotating order, fresh databases per run, and about 32 minutes of offered traffic plus startup/drain. Around 2.28 million requests are independently scheduled by the Go generator; it does not wait for a response to schedule the next arrival.
+
+```sh
+python3 benchmark.py --output results/commerce-results.json
+# Wiring check only; never compare its results with the published full run:
+python3 benchmark.py --repeats 1 --phase-scale .1 --output results/smoke.json
+```
+
+Phases: baseline 5s at 200 RPS; linear ramp 10s from 200 to 800 RPS; pressure 15s at 1,200 RPS; burst 5s at 2,400 RPS; intermittent SQL faults 10s at 800 RPS; recovery 15s at 1,200 RPS; sustained real-SQL traffic 60s at 1,500 RPS; low traffic 5s at 10 RPS. The service mix is 60% orders, 20% catalog, 20% inventory. Business/background split is 80/20 normally and 20/80 during pressure/burst. Ramp adds 10ms SQL delay; pressure/burst add explicit 40ms `pg_sleep` and 30× report work. Error phase fails every fourth transaction with SQL division by zero. Baseline, recovery, sustained and low traffic inject no delay/errors. The sustained phase uses real SQL alone.
+
+Database state persists between phases within a run; completed writes can affect later report costs. Each new deployment run starts fresh.
+
+Results include per-service successful p95 (excluding rejected/error responses), successful work within 100ms per offered second, 503 rates, non-503 5xx (the `backend_5xx` field also includes proxy gateway errors), pool wait counts/durations, scheduled/sent/dropped counts, dispatch lag, arrival latency, sampled concurrency/controller state, Go heap and goroutines. The generator has 4,096 in-flight slots and a 3s timeout; missed schedules and transport errors remain explicit. Sampled traces are observations, not exact peaks. Different hardware/VM limits can change both absolute capacity and comparative results. This does not establish production capacity, long-duration leak freedom, multi-host behavior or fault tolerance.
+
+## Targeted controller validation
+
+`python3 validate_controller.py --output results/controller-validation.json` runs three repetitions of both adaptive modes. At constant 600 RPS, real SQL delay increases through 0, 10, 20, 40 and 80ms in three-second stages. It then exercises a burst, intermittent SQL errors, eight seconds of recovery at 1,500 RPS, sustained traffic and low traffic. The same pool, delivery, bounds and recovery checks apply. Run this separately from the main benchmark.
+
+## Controls and safety boundary
+
+Each service has its own separate numeric-loopback admin listener: `GET /state`, `PUT /control` with `{"work_multiplier":1,"sql_delay_ms":0,"failure_every":0}`. These controls are test instrumentation, never publish them on the business listener or expose them through a gateway. The example has no authentication, TLS, durable orchestration, migrations framework or distributed transactions. Gatewise remains independent of PostgreSQL and of this demo's application APIs.

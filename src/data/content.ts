@@ -125,16 +125,44 @@ export const metricFamilies = [
   ['gatewise_requests_rejected_total', 'Counter', 'Rejected arrivals, with bounded reason labels.'],
   ['gatewise_requests_completed_total', 'Counter', 'Completed, canceled or panicked work and status class.'],
   ['gatewise_request_duration_seconds', 'Histogram', 'Admitted work duration. Rejections are excluded.'],
+  ['gatewise_controller_last_window_samples', 'Gauge', 'Completed sample count in the last evaluated adaptive window.'],
+  ['gatewise_controller_last_p90_ratio', 'Gauge', 'Bucket-estimated p90 duration / route latency target.'],
+  ['gatewise_controller_last_failure_fraction', 'Gauge', 'Failed sample fraction in the last evaluated window.'],
+  ['gatewise_controller_last_evaluation_timestamp_seconds', 'Gauge', 'Unix time of the last evaluation; zero before one completes.'],
+  ['gatewise_controller_last_decision', 'Gauge', 'Last adaptive decision with bounded decision and reason labels.'],
+  ['gatewise_controller_last_window_saturated', 'Gauge', 'Whether saturation was observed in the last evaluated window.'],
   ['gatewise_limit_adjustments_total', 'Counter', 'Adaptive increases/decreases and their reasons.'],
 ] as const;
 
 export const pageSections: Record<PageId, readonly (readonly [string, string])[]> = {
   overview: [],
   problem: [['basics', 'Request basics'], ['overload', 'Overload problem'], ['alternatives', 'Alternative approaches'], ['design-decisions', 'Gatewise decisions'], ['evolution', 'Implementation layers'], ['architecture', 'Architecture'], ['admission', 'Admission rules'], ['lifecycle', 'Request lifetime'], ['adaptive', 'Adaptive controller'], ['operations', 'Deployment constraints'], ['references', 'References']],
-  installation: [['source', 'Download source'], ['configure', 'Configure'], ['run', 'Run'], ['verify', 'Verify'], ['deployment', 'Deployment'], ['library-deployment', 'Go application'], ['proxy-deployment', 'Proxy service']],
-  examples: [['bundle-contents', 'Bundle contents'], ['run-the-demo', 'Run the demo'], ['postman-scenarios', 'Postman scenarios'], ['reproduce-benchmarks', 'Reproduce benchmarks']],
-  benchmarks: [['recorded-benchmark-figures', 'Benchmark images'], ['results', 'Results'], ['methodology', 'Methodology'], ['overhead-and-resource-accounting', 'Overhead and resources'], ['reproduction', 'Reproduction']],
-  metrics: [['benchmark-metrics', 'Benchmark metrics'], ['prometheus-integration', 'Prometheus integration'], ['grafana-dashboard', 'Grafana dashboard'], ['metric-families', 'Metric families']],
+  installation: [['source', 'Download source'], ['configure', 'Configure'], ['run', 'Run'], ['verify', 'Verify'], ['adaptive-setup', 'Enable adaptive mode'], ['validate-config', 'Validate configuration'], ['tuning', 'Choose limits'], ['deployment', 'Deployment'], ['library-deployment', 'Go application'], ['proxy-deployment', 'Proxy service']],
+  examples: [['application-model', 'Application model'], ['run-the-demo', 'Run the demo'], ['postman-scenarios', 'Postman scenarios'], ['reproduce-benchmarks', 'Reproduce benchmarks']],
+  benchmarks: [['recorded-results', 'Recorded results'], ['service-results', 'Per-service results'], ['controller-validation', 'Controller validation'], ['methodology', 'Methodology'], ['resources-and-limitations', 'Resources and limitations'], ['reproduction', 'Reproduction']],
+  metrics: [['benchmark-metrics', 'Benchmark metrics'], ['prometheus-integration', 'Prometheus integration'], ['grafana-dashboard', 'Grafana dashboard'], ['controller-feedback', 'Controller feedback'], ['metric-families', 'Metric families']],
   versions: [['latest', 'Latest release'], ['install-version', 'Install a version'], ['release-history', 'Release history'], ['upgrading', 'Upgrading']],
   reference: [['proxy-configuration', 'Proxy configuration'], ['environment-overrides', 'Environment overrides'], ['public-go-api', 'Public Go API'], ['http-responses', 'HTTP responses'], ['scope', 'Scope']],
 };
+
+export const adaptiveInstallationExample = `guard, err := middleware.NewService(middleware.ServiceConfig{
+    Name: "orders",
+    MaxConcurrent: 20,       // Example ceiling, not requests per second.
+    ReservedCritical: 5,
+    Adaptive: &middleware.AdaptiveConfig{
+        MinConcurrent: 6, InitialConcurrent: 12,
+        Interval: time.Second, MinSamples: 10,
+        TargetLatency: 100 * time.Millisecond,
+    },
+})
+if err != nil { log.Fatal(err) }`;
+export const adaptiveProxyInstallationExample = JSON.stringify({
+  ...JSON.parse(proxyExample),
+  services: { orders: {
+    upstream_url: 'http://127.0.0.1:9090', max_concurrent: 20,
+    reserved_critical: 5, mode: 'adaptive', adaptive: {
+      min_concurrent: 6, initial_concurrent: 12, interval: '1s',
+      min_samples: 10, target_latency: '100ms',
+    },
+  } },
+}, null, 2);

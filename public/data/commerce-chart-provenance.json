@@ -1,0 +1,11 @@
+{
+  "source_sha256": "e3130ef8cada4643707c0575bf3459206d4b63a01fb0aeb447bcc890cc5ff798",
+  "images": [
+    "commerce-critical.png",
+    "commerce-pool-outcomes.png",
+    "commerce-controller.png",
+    "commerce-sustained.png"
+  ],
+  "aggregation": "Run-level medians; outcome proportions pooled counts; controller trace proxy-adaptive repeat 1; never pooled latency percentiles",
+  "matplotlib": "3.11.2"
+}

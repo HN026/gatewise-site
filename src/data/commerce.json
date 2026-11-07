@@ -1,0 +1,1038 @@
+{
+  "source_sha256": "e3130ef8cada4643707c0575bf3459206d4b63a01fb0aeb447bcc890cc5ff798",
+  "maximum_service_dispatch_p95_ms": 4.014625,
+  "started_at": "2026-11-07T08:42:42.084696+00:00",
+  "finished_at": "2026-11-07T09:14:45.000680+00:00",
+  "postgres_version": "18.6",
+  "platform": "Darwin/arm64",
+  "go_version": "go version go1.27.3 darwin/arm64",
+  "hardware": {
+    "host_logical_cpus": 12,
+    "cpu": "Apple M4 Pro",
+    "host_memory_bytes": 51539607552,
+    "postgres_vm_resources": {
+      "CPUs": 6,
+      "Memory": 10240
+    }
+  },
+  "run_count": 15,
+  "checks": 135,
+  "scheduled": 2280750,
+  "sent": 2280750,
+  "dropped": 0,
+  "transport_errors": 0,
+  "comparisons": [
+    {
+      "deployment": "direct",
+      "label": "Direct",
+      "critical_p95_ms": 961.798917,
+      "critical_timely_per_second": 2.4666666666666677,
+      "critical_success_percent": 14.824074074074074,
+      "critical_rejected_percent": 0.0,
+      "critical_backend_errors_percent": 85.17592592592592,
+      "mean_pool_wait_ms": 913.5674805093769
+    },
+    {
+      "deployment": "proxy-fixed",
+      "label": "Proxy / fixed",
+      "critical_p95_ms": 361.017958,
+      "critical_timely_per_second": 43.133333333333795,
+      "critical_success_percent": 45.611111111111114,
+      "critical_rejected_percent": 54.370370370370374,
+      "critical_backend_errors_percent": 0.018518518518518517,
+      "mean_pool_wait_ms": 109.45869437082261
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "label": "Proxy / adaptive",
+      "critical_p95_ms": 93.213083,
+      "critical_timely_per_second": 150.46666666666326,
+      "critical_success_percent": 64.89814814814815,
+      "critical_rejected_percent": 35.101851851851855,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 23.501926529806884
+    },
+    {
+      "deployment": "middleware-fixed",
+      "label": "Middleware / fixed",
+      "critical_p95_ms": 366.354375,
+      "critical_timely_per_second": 43.266666666667135,
+      "critical_success_percent": 45.93518518518518,
+      "critical_rejected_percent": 54.0462962962963,
+      "critical_backend_errors_percent": 0.018518518518518517,
+      "mean_pool_wait_ms": 109.5448640224
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "label": "Middleware / adaptive",
+      "critical_p95_ms": 86.72925,
+      "critical_timely_per_second": 152.06666666666317,
+      "critical_success_percent": 65.74074074074075,
+      "critical_rejected_percent": 34.25925925925926,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 24.084766813011633
+    }
+  ],
+  "service_comparisons": [
+    {
+      "deployment": "direct",
+      "service": "orders",
+      "p95_ms": 960.167625,
+      "timely_per_second": 0.9333333333333332,
+      "rejected_percent": 0.0,
+      "backend_errors_percent": 90.20061728395062
+    },
+    {
+      "deployment": "direct",
+      "service": "catalog",
+      "p95_ms": 957.615708,
+      "timely_per_second": 0.6,
+      "rejected_percent": 0.0,
+      "backend_errors_percent": 85.27777777777777
+    },
+    {
+      "deployment": "direct",
+      "service": "inventory",
+      "p95_ms": 965.217417,
+      "timely_per_second": 1.0666666666666667,
+      "rejected_percent": 0.0,
+      "backend_errors_percent": 70.0
+    },
+    {
+      "deployment": "proxy-fixed",
+      "service": "orders",
+      "p95_ms": 332.522833,
+      "timely_per_second": 15.733333333333297,
+      "rejected_percent": 73.05555555555556,
+      "backend_errors_percent": 0.0
+    },
+    {
+      "deployment": "proxy-fixed",
+      "service": "catalog",
+      "p95_ms": 420.438167,
+      "timely_per_second": 10.866666666666648,
+      "rejected_percent": 33.93518518518518,
+      "backend_errors_percent": 0.09259259259259259
+    },
+    {
+      "deployment": "proxy-fixed",
+      "service": "inventory",
+      "p95_ms": 303.180792,
+      "timely_per_second": 17.73333333333329,
+      "rejected_percent": 18.75,
+      "backend_errors_percent": 0.0
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "service": "orders",
+      "p95_ms": 98.753042,
+      "timely_per_second": 58.73333333333457,
+      "rejected_percent": 57.361111111111114,
+      "backend_errors_percent": 0.0
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "service": "catalog",
+      "p95_ms": 45.402792,
+      "timely_per_second": 46.000000000000604,
+      "rejected_percent": 2.1296296296296298,
+      "backend_errors_percent": 0.0
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "service": "inventory",
+      "p95_ms": 92.0225,
+      "timely_per_second": 45.666666666667254,
+      "rejected_percent": 1.2962962962962963,
+      "backend_errors_percent": 0.0
+    },
+    {
+      "deployment": "middleware-fixed",
+      "service": "orders",
+      "p95_ms": 346.423208,
+      "timely_per_second": 14.333333333333302,
+      "rejected_percent": 72.85493827160494,
+      "backend_errors_percent": 0.0
+    },
+    {
+      "deployment": "middleware-fixed",
+      "service": "catalog",
+      "p95_ms": 452.856792,
+      "timely_per_second": 10.866666666666648,
+      "rejected_percent": 33.425925925925924,
+      "backend_errors_percent": 0.09259259259259259
+    },
+    {
+      "deployment": "middleware-fixed",
+      "service": "inventory",
+      "p95_ms": 306.583291,
+      "timely_per_second": 18.86666666666662,
+      "rejected_percent": 18.24074074074074,
+      "backend_errors_percent": 0.0
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "service": "orders",
+      "p95_ms": 95.477792,
+      "timely_per_second": 60.73333333333467,
+      "rejected_percent": 55.89506172839506,
+      "backend_errors_percent": 0.0
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "service": "catalog",
+      "p95_ms": 71.0335,
+      "timely_per_second": 45.333333333333904,
+      "rejected_percent": 2.175925925925926,
+      "backend_errors_percent": 0.0
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "service": "inventory",
+      "p95_ms": 85.132917,
+      "timely_per_second": 46.000000000000604,
+      "rejected_percent": 1.4351851851851851,
+      "backend_errors_percent": 0.0
+    }
+  ],
+  "phases": [
+    {
+      "deployment": "direct",
+      "phase": "baseline",
+      "critical_p95_ms": 3.016541,
+      "critical_timely_per_second": 159.99999999999946,
+      "critical_success_percent": 100.0,
+      "critical_rejected_percent": 0.0,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 0
+    },
+    {
+      "deployment": "direct",
+      "phase": "ramp",
+      "critical_p95_ms": 592.86625,
+      "critical_timely_per_second": 309.40000000000185,
+      "critical_success_percent": 96.475,
+      "critical_rejected_percent": 0.0,
+      "critical_backend_errors_percent": 3.525,
+      "mean_pool_wait_ms": 214.5213343440059
+    },
+    {
+      "deployment": "direct",
+      "phase": "pressure",
+      "critical_p95_ms": 961.798917,
+      "critical_timely_per_second": 2.4666666666666677,
+      "critical_success_percent": 14.824074074074074,
+      "critical_rejected_percent": 0.0,
+      "critical_backend_errors_percent": 85.17592592592592,
+      "mean_pool_wait_ms": 913.5674805093769
+    },
+    {
+      "deployment": "direct",
+      "phase": "burst",
+      "critical_p95_ms": 961.439708,
+      "critical_timely_per_second": 3.2000000000000006,
+      "critical_success_percent": 8.125,
+      "critical_rejected_percent": 0.0,
+      "critical_backend_errors_percent": 91.875,
+      "mean_pool_wait_ms": 951.2032757868458
+    },
+    {
+      "deployment": "direct",
+      "phase": "intermittent-errors",
+      "critical_p95_ms": 10.276959,
+      "critical_timely_per_second": 480.00000000004064,
+      "critical_success_percent": 75.0,
+      "critical_rejected_percent": 0.0,
+      "critical_backend_errors_percent": 25.0,
+      "mean_pool_wait_ms": 2.002432095751634
+    },
+    {
+      "deployment": "direct",
+      "phase": "recovery",
+      "critical_p95_ms": 1.632167,
+      "critical_timely_per_second": 960.0000000003325,
+      "critical_success_percent": 100.0,
+      "critical_rejected_percent": 0.0,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 2.111843875
+    },
+    {
+      "deployment": "direct",
+      "phase": "sustained",
+      "critical_p95_ms": 1.485834,
+      "critical_timely_per_second": 1199.9999999992374,
+      "critical_success_percent": 100.0,
+      "critical_rejected_percent": 0.0,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 10.361146360801781
+    },
+    {
+      "deployment": "direct",
+      "phase": "low-traffic",
+      "critical_p95_ms": 8.207583,
+      "critical_timely_per_second": 8.000000000000004,
+      "critical_success_percent": 100.0,
+      "critical_rejected_percent": 0.0,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 0
+    },
+    {
+      "deployment": "proxy-fixed",
+      "phase": "baseline",
+      "critical_p95_ms": 4.306,
+      "critical_timely_per_second": 159.99999999999946,
+      "critical_success_percent": 100.0,
+      "critical_rejected_percent": 0.0,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 0
+    },
+    {
+      "deployment": "proxy-fixed",
+      "phase": "ramp",
+      "critical_p95_ms": 47.02625,
+      "critical_timely_per_second": 378.1000000000175,
+      "critical_success_percent": 94.875,
+      "critical_rejected_percent": 5.125,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 13.379751252765956
+    },
+    {
+      "deployment": "proxy-fixed",
+      "phase": "pressure",
+      "critical_p95_ms": 361.017958,
+      "critical_timely_per_second": 43.133333333333795,
+      "critical_success_percent": 45.611111111111114,
+      "critical_rejected_percent": 54.370370370370374,
+      "critical_backend_errors_percent": 0.018518518518518517,
+      "mean_pool_wait_ms": 109.45869437082261
+    },
+    {
+      "deployment": "proxy-fixed",
+      "phase": "burst",
+      "critical_p95_ms": 375.525084,
+      "critical_timely_per_second": 52.60000000000021,
+      "critical_success_percent": 27.319444444444443,
+      "critical_rejected_percent": 72.66666666666667,
+      "critical_backend_errors_percent": 0.013888888888888888,
+      "mean_pool_wait_ms": 109.28463452181987
+    },
+    {
+      "deployment": "proxy-fixed",
+      "phase": "intermittent-errors",
+      "critical_p95_ms": 10.24825,
+      "critical_timely_per_second": 480.00000000004064,
+      "critical_success_percent": 75.0,
+      "critical_rejected_percent": 0.0,
+      "critical_backend_errors_percent": 25.0,
+      "mean_pool_wait_ms": 1.9628313331108143
+    },
+    {
+      "deployment": "proxy-fixed",
+      "phase": "recovery",
+      "critical_p95_ms": 1.641209,
+      "critical_timely_per_second": 960.0000000003325,
+      "critical_success_percent": 100.0,
+      "critical_rejected_percent": 0.0,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 1.6959697272727274
+    },
+    {
+      "deployment": "proxy-fixed",
+      "phase": "sustained",
+      "critical_p95_ms": 1.577208,
+      "critical_timely_per_second": 1199.733333332571,
+      "critical_success_percent": 99.98240740740741,
+      "critical_rejected_percent": 0.017592592592592594,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 3.8877696306818184
+    },
+    {
+      "deployment": "proxy-fixed",
+      "phase": "low-traffic",
+      "critical_p95_ms": 10.067375,
+      "critical_timely_per_second": 8.000000000000004,
+      "critical_success_percent": 100.0,
+      "critical_rejected_percent": 0.0,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 0
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "phase": "baseline",
+      "critical_p95_ms": 4.192833,
+      "critical_timely_per_second": 159.99999999999946,
+      "critical_success_percent": 100.0,
+      "critical_rejected_percent": 0.0,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 0
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "phase": "ramp",
+      "critical_p95_ms": 47.563083,
+      "critical_timely_per_second": 377.10000000001725,
+      "critical_success_percent": 94.625,
+      "critical_rejected_percent": 5.375,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 13.336799392081739
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "phase": "pressure",
+      "critical_p95_ms": 93.213083,
+      "critical_timely_per_second": 150.46666666666326,
+      "critical_success_percent": 64.89814814814815,
+      "critical_rejected_percent": 35.101851851851855,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 23.501926529806884
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "phase": "burst",
+      "critical_p95_ms": 83.9045,
+      "critical_timely_per_second": 195.9999999999974,
+      "critical_success_percent": 41.69444444444444,
+      "critical_rejected_percent": 58.30555555555556,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 17.513790236254295
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "phase": "intermittent-errors",
+      "critical_p95_ms": 7.666125,
+      "critical_timely_per_second": 456.6000000000353,
+      "critical_success_percent": 71.31770833333333,
+      "critical_rejected_percent": 4.885416666666667,
+      "critical_backend_errors_percent": 23.796875,
+      "mean_pool_wait_ms": 1.3206644217454901
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "phase": "recovery",
+      "critical_p95_ms": 1.698166,
+      "critical_timely_per_second": 959.9333333336658,
+      "critical_success_percent": 99.98842592592592,
+      "critical_rejected_percent": 0.011574074074074073,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 1.3579582499999998
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "phase": "sustained",
+      "critical_p95_ms": 1.686209,
+      "critical_timely_per_second": 1199.733333332571,
+      "critical_success_percent": 99.90462962962962,
+      "critical_rejected_percent": 0.09537037037037037,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 3.2443455319148935
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "phase": "low-traffic",
+      "critical_p95_ms": 9.644875,
+      "critical_timely_per_second": 8.000000000000004,
+      "critical_success_percent": 100.0,
+      "critical_rejected_percent": 0.0,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 0
+    },
+    {
+      "deployment": "middleware-fixed",
+      "phase": "baseline",
+      "critical_p95_ms": 2.943917,
+      "critical_timely_per_second": 159.99999999999946,
+      "critical_success_percent": 100.0,
+      "critical_rejected_percent": 0.0,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 0
+    },
+    {
+      "deployment": "middleware-fixed",
+      "phase": "ramp",
+      "critical_p95_ms": 47.962,
+      "critical_timely_per_second": 378.00000000001745,
+      "critical_success_percent": 94.8,
+      "critical_rejected_percent": 5.2,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 13.490080297239915
+    },
+    {
+      "deployment": "middleware-fixed",
+      "phase": "pressure",
+      "critical_p95_ms": 366.354375,
+      "critical_timely_per_second": 43.266666666667135,
+      "critical_success_percent": 45.93518518518518,
+      "critical_rejected_percent": 54.0462962962963,
+      "critical_backend_errors_percent": 0.018518518518518517,
+      "mean_pool_wait_ms": 109.5448640224
+    },
+    {
+      "deployment": "middleware-fixed",
+      "phase": "burst",
+      "critical_p95_ms": 342.739417,
+      "critical_timely_per_second": 56.20000000000026,
+      "critical_success_percent": 29.055555555555557,
+      "critical_rejected_percent": 70.93055555555556,
+      "critical_backend_errors_percent": 0.013888888888888888,
+      "mean_pool_wait_ms": 105.23536376675604
+    },
+    {
+      "deployment": "middleware-fixed",
+      "phase": "intermittent-errors",
+      "critical_p95_ms": 10.126875,
+      "critical_timely_per_second": 480.00000000004064,
+      "critical_success_percent": 74.953125,
+      "critical_rejected_percent": 0.052083333333333336,
+      "critical_backend_errors_percent": 24.994791666666668,
+      "mean_pool_wait_ms": 2.003146596462496
+    },
+    {
+      "deployment": "middleware-fixed",
+      "phase": "recovery",
+      "critical_p95_ms": 1.623792,
+      "critical_timely_per_second": 960.0000000003325,
+      "critical_success_percent": 100.0,
+      "critical_rejected_percent": 0.0,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 1.9638348275862068
+    },
+    {
+      "deployment": "middleware-fixed",
+      "phase": "sustained",
+      "critical_p95_ms": 1.477458,
+      "critical_timely_per_second": 1199.583333332571,
+      "critical_success_percent": 99.97222222222223,
+      "critical_rejected_percent": 0.027777777777777776,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 4.935512985645933
+    },
+    {
+      "deployment": "middleware-fixed",
+      "phase": "low-traffic",
+      "critical_p95_ms": 9.34925,
+      "critical_timely_per_second": 8.000000000000004,
+      "critical_success_percent": 100.0,
+      "critical_rejected_percent": 0.0,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 0
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "phase": "baseline",
+      "critical_p95_ms": 2.948208,
+      "critical_timely_per_second": 159.99999999999946,
+      "critical_success_percent": 100.0,
+      "critical_rejected_percent": 0.0,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 0
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "phase": "ramp",
+      "critical_p95_ms": 47.722791,
+      "critical_timely_per_second": 377.7000000000174,
+      "critical_success_percent": 94.80833333333334,
+      "critical_rejected_percent": 5.191666666666666,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 13.469272757057315
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "phase": "pressure",
+      "critical_p95_ms": 86.72925,
+      "critical_timely_per_second": 152.06666666666317,
+      "critical_success_percent": 65.74074074074075,
+      "critical_rejected_percent": 34.25925925925926,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 24.084766813011633
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "phase": "burst",
+      "critical_p95_ms": 84.354458,
+      "critical_timely_per_second": 193.59999999999755,
+      "critical_success_percent": 41.44444444444444,
+      "critical_rejected_percent": 58.55555555555556,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 18.141178503546097
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "phase": "intermittent-errors",
+      "critical_p95_ms": 7.458375,
+      "critical_timely_per_second": 456.70000000003535,
+      "critical_success_percent": 71.30208333333333,
+      "critical_rejected_percent": 4.9375,
+      "critical_backend_errors_percent": 23.760416666666668,
+      "mean_pool_wait_ms": 1.2511871711409397
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "phase": "recovery",
+      "critical_p95_ms": 1.619083,
+      "critical_timely_per_second": 959.8666666669991,
+      "critical_success_percent": 99.97685185185185,
+      "critical_rejected_percent": 0.023148148148148147,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 1.1277695333333333
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "phase": "sustained",
+      "critical_p95_ms": 1.486583,
+      "critical_timely_per_second": 1199.966666665904,
+      "critical_success_percent": 99.97731481481482,
+      "critical_rejected_percent": 0.022685185185185187,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 1.9322562966101693
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "phase": "low-traffic",
+      "critical_p95_ms": 8.174709,
+      "critical_timely_per_second": 8.000000000000004,
+      "critical_success_percent": 100.0,
+      "critical_rejected_percent": 0.0,
+      "critical_backend_errors_percent": 0.0,
+      "mean_pool_wait_ms": 0
+    }
+  ],
+  "recovery": [
+    {
+      "deployment": "proxy-adaptive",
+      "service": "orders",
+      "healthy_feedback_seconds": [
+        0.8002841472625732,
+        0.7897090911865234,
+        0.8040130138397217
+      ],
+      "median_healthy_feedback_seconds": 0.8002841472625732,
+      "recovery_end_limits": [
+        6.0,
+        9.0,
+        8.0
+      ]
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "service": "catalog",
+      "healthy_feedback_seconds": [
+        0.8003320693969727,
+        0.7897579669952393,
+        1.066472053527832
+      ],
+      "median_healthy_feedback_seconds": 0.8003320693969727,
+      "recovery_end_limits": [
+        6.0,
+        6.0,
+        6.0
+      ]
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "service": "inventory",
+      "healthy_feedback_seconds": [
+        1.0528831481933594,
+        0.7897999286651611,
+        0.8041069507598877
+      ],
+      "median_healthy_feedback_seconds": 0.8041069507598877,
+      "recovery_end_limits": [
+        6.0,
+        6.0,
+        6.0
+      ]
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "service": "orders",
+      "healthy_feedback_seconds": [
+        0.8377330303192139,
+        0.7413530349731445,
+        0.6027288436889648
+      ],
+      "median_healthy_feedback_seconds": 0.7413530349731445,
+      "recovery_end_limits": [
+        7.0,
+        8.0,
+        7.0
+      ]
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "service": "catalog",
+      "healthy_feedback_seconds": [
+        1.0932810306549072,
+        0.9981601238250732,
+        0.6027779579162598
+      ],
+      "median_healthy_feedback_seconds": 0.9981601238250732,
+      "recovery_end_limits": [
+        6.0,
+        6.0,
+        6.0
+      ]
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "service": "inventory",
+      "healthy_feedback_seconds": [
+        1.093322992324829,
+        0.7414429187774658,
+        1.110666036605835
+      ],
+      "median_healthy_feedback_seconds": 1.093322992324829,
+      "recovery_end_limits": [
+        6.0,
+        7.0,
+        6.0
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "deployment": "direct",
+      "service": "orders",
+      "median_peak_heap_mib": 44.043975830078125,
+      "median_peak_goroutines": 1719
+    },
+    {
+      "deployment": "direct",
+      "service": "catalog",
+      "median_peak_heap_mib": 15.847572326660156,
+      "median_peak_goroutines": 580
+    },
+    {
+      "deployment": "direct",
+      "service": "inventory",
+      "median_peak_heap_mib": 15.267135620117188,
+      "median_peak_goroutines": 563
+    },
+    {
+      "deployment": "proxy-fixed",
+      "service": "orders",
+      "median_peak_heap_mib": 3.410858154296875,
+      "median_peak_goroutines": 35
+    },
+    {
+      "deployment": "proxy-fixed",
+      "service": "catalog",
+      "median_peak_heap_mib": 3.3305511474609375,
+      "median_peak_goroutines": 33
+    },
+    {
+      "deployment": "proxy-fixed",
+      "service": "inventory",
+      "median_peak_heap_mib": 3.3713760375976562,
+      "median_peak_goroutines": 34
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "service": "orders",
+      "median_peak_heap_mib": 3.3906936645507812,
+      "median_peak_goroutines": 35
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "service": "catalog",
+      "median_peak_heap_mib": 3.3269424438476562,
+      "median_peak_goroutines": 30
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "service": "inventory",
+      "median_peak_heap_mib": 3.3477859497070312,
+      "median_peak_goroutines": 30
+    },
+    {
+      "deployment": "middleware-fixed",
+      "service": "orders",
+      "median_peak_heap_mib": 3.2845916748046875,
+      "median_peak_goroutines": 38
+    },
+    {
+      "deployment": "middleware-fixed",
+      "service": "catalog",
+      "median_peak_heap_mib": 3.3165130615234375,
+      "median_peak_goroutines": 36
+    },
+    {
+      "deployment": "middleware-fixed",
+      "service": "inventory",
+      "median_peak_heap_mib": 3.364990234375,
+      "median_peak_goroutines": 35
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "service": "orders",
+      "median_peak_heap_mib": 3.3025131225585938,
+      "median_peak_goroutines": 36
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "service": "catalog",
+      "median_peak_heap_mib": 3.27325439453125,
+      "median_peak_goroutines": 31
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "service": "inventory",
+      "median_peak_heap_mib": 3.2986526489257812,
+      "median_peak_goroutines": 30
+    }
+  ],
+  "controller_decisions": [
+    {
+      "deployment": "proxy-adaptive",
+      "service": "orders",
+      "decision": "decrease",
+      "reason": "latency_pressure",
+      "observed_windows": 18
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "service": "orders",
+      "decision": "decrease",
+      "reason": "server_errors",
+      "observed_windows": 3
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "service": "orders",
+      "decision": "hold",
+      "reason": "healthy_saturation",
+      "observed_windows": 27
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "service": "orders",
+      "decision": "hold",
+      "reason": "no_change",
+      "observed_windows": 590
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "service": "orders",
+      "decision": "hold",
+      "reason": "server_errors",
+      "observed_windows": 55
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "service": "orders",
+      "decision": "increase",
+      "reason": "healthy_saturation",
+      "observed_windows": 33
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "service": "catalog",
+      "decision": "decrease",
+      "reason": "latency_pressure",
+      "observed_windows": 22
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "service": "catalog",
+      "decision": "decrease",
+      "reason": "server_errors",
+      "observed_windows": 2
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "service": "catalog",
+      "decision": "hold",
+      "reason": "healthy_saturation",
+      "observed_windows": 1
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "service": "catalog",
+      "decision": "hold",
+      "reason": "latency_pressure",
+      "observed_windows": 81
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "service": "catalog",
+      "decision": "hold",
+      "reason": "no_change",
+      "observed_windows": 534
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "service": "catalog",
+      "decision": "hold",
+      "reason": "server_errors",
+      "observed_windows": 56
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "service": "catalog",
+      "decision": "increase",
+      "reason": "healthy_saturation",
+      "observed_windows": 21
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "service": "inventory",
+      "decision": "decrease",
+      "reason": "latency_pressure",
+      "observed_windows": 15
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "service": "inventory",
+      "decision": "decrease",
+      "reason": "server_errors",
+      "observed_windows": 3
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "service": "inventory",
+      "decision": "hold",
+      "reason": "no_change",
+      "observed_windows": 617
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "service": "inventory",
+      "decision": "hold",
+      "reason": "server_errors",
+      "observed_windows": 56
+    },
+    {
+      "deployment": "proxy-adaptive",
+      "service": "inventory",
+      "decision": "increase",
+      "reason": "healthy_saturation",
+      "observed_windows": 23
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "service": "orders",
+      "decision": "decrease",
+      "reason": "latency_pressure",
+      "observed_windows": 22
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "service": "orders",
+      "decision": "decrease",
+      "reason": "server_errors",
+      "observed_windows": 2
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "service": "orders",
+      "decision": "hold",
+      "reason": "healthy_saturation",
+      "observed_windows": 28
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "service": "orders",
+      "decision": "hold",
+      "reason": "no_change",
+      "observed_windows": 585
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "service": "orders",
+      "decision": "hold",
+      "reason": "server_errors",
+      "observed_windows": 56
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "service": "orders",
+      "decision": "increase",
+      "reason": "healthy_saturation",
+      "observed_windows": 33
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "service": "catalog",
+      "decision": "decrease",
+      "reason": "latency_pressure",
+      "observed_windows": 22
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "service": "catalog",
+      "decision": "decrease",
+      "reason": "server_errors",
+      "observed_windows": 1
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "service": "catalog",
+      "decision": "hold",
+      "reason": "healthy_saturation",
+      "observed_windows": 2
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "service": "catalog",
+      "decision": "hold",
+      "reason": "latency_pressure",
+      "observed_windows": 81
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "service": "catalog",
+      "decision": "hold",
+      "reason": "no_change",
+      "observed_windows": 533
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "service": "catalog",
+      "decision": "hold",
+      "reason": "server_errors",
+      "observed_windows": 59
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "service": "catalog",
+      "decision": "increase",
+      "reason": "healthy_saturation",
+      "observed_windows": 19
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "service": "inventory",
+      "decision": "decrease",
+      "reason": "latency_pressure",
+      "observed_windows": 22
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "service": "inventory",
+      "decision": "decrease",
+      "reason": "server_errors",
+      "observed_windows": 2
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "service": "inventory",
+      "decision": "hold",
+      "reason": "no_change",
+      "observed_windows": 598
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "service": "inventory",
+      "decision": "hold",
+      "reason": "server_errors",
+      "observed_windows": 57
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "service": "inventory",
+      "decision": "increase",
+      "reason": "healthy_saturation",
+      "observed_windows": 35
+    }
+  ]
+}

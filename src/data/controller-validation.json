@@ -1,0 +1,19 @@
+{
+  "source_sha256": "1fe8c349c88139a830f3c82bd3badc5cbe671d591267708ea45e006152028417",
+  "runs": 6,
+  "checks": 66,
+  "profiles": [
+    {
+      "deployment": "proxy-adaptive",
+      "pressure_p95_ms": 172.443208,
+      "burst_p95_ms": 180.185834,
+      "recovery_p95_ms": 1.691083
+    },
+    {
+      "deployment": "middleware-adaptive",
+      "pressure_p95_ms": 169.905834,
+      "burst_p95_ms": 181.039042,
+      "recovery_p95_ms": 1.571209
+    }
+  ]
+}

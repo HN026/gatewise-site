@@ -1,0 +1,1351 @@
+{
+  "info": {
+    "name": "Gatewise commerce example",
+    "description": "Disposable PostgreSQL-backed orders, catalog and inventory APIs. Run the full collection in order against a fresh launcher environment. Includes persistence, idempotency, stock consistency, input errors, SQL faults, admission and recovery. Controls are separate loopback-only listeners. No credentials or external API calls.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if(pm.info.requestName===\"Create checkout\")pm.collectionVariables.set(\"checkout_key\",pm.variables.replaceIn(\"{{$guid}}\"));",
+          "if(pm.info.requestName===\"Create reservation\")pm.collectionVariables.set(\"reservation_key\",pm.variables.replaceIn(\"{{$guid}}\"));"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{orders_url}}/healthz"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"database ready\", () => pm.expect(pm.response.json().status).to.eql(\"ok\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create checkout",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{checkout_key}}"
+          }
+        ],
+        "url": "{{orders_url}}/orders/checkout",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"amount_cents\": 1234}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+              "const order=pm.response.json(); pm.collectionVariables.set(\"order_id\",order.id); pm.test(\"persisted order shape\",()=>{pm.expect(order.id).to.be.a(\"string\");pm.expect(order.amount_cents).to.eql(1234);pm.expect(order.status).to.eql(\"confirmed\");});pm.test(\"mode header\",()=>{const mode=pm.environment.get(\"expected_mode\");if(mode!==\"direct\")pm.expect(pm.response.headers.get(\"X-Gatewise-Mode\")).to.eql(mode);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Replay same checkout",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{checkout_key}}"
+          }
+        ],
+        "url": "{{orders_url}}/orders/checkout",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"amount_cents\": 1234}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"same order, no duplicate\",()=>pm.expect(pm.response.json().id).to.eql(pm.collectionVariables.get(\"order_id\")));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Read persisted order",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{orders_url}}/orders/{{order_id}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"stored amount\",()=>pm.expect(pm.response.json().amount_cents).to.eql(1234));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reject conflicting key",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{checkout_key}}"
+          }
+        ],
+        "url": "{{orders_url}}/orders/checkout",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"amount_cents\": 9999}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+              "pm.test(\"conflict explained\",()=>pm.expect(pm.response.json().error).to.eql(\"idempotency_conflict\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Require idempotency key",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{orders_url}}/orders/checkout",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"amount_cents\": 1000}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reject invalid amount",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "invalid-amount"
+          }
+        ],
+        "url": "{{orders_url}}/orders/checkout",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"amount_cents\": 0}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Unknown order",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{orders_url}}/orders/missing"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Background report",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{orders_url}}/orders/reports/rebuild",
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"SQL report result\",()=>{pm.expect(pm.response.json().report).to.eql(\"orders\");pm.expect(pm.response.json().total).to.be.above(0);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pool and controller state",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{orders_admin}}/state"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"pool is bounded\",()=>pm.expect(pm.response.json().pool.MaxOpenConnections).to.eql(4));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Prometheus exposition",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{orders_url}}/metrics"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"metrics available\",()=>pm.expect(pm.response.text()).to.include(\"# HELP\"));",
+              "pm.test(\"controller metrics match mode\",()=>pm.expect(pm.response.text().includes(\"gatewise_controller_last_decision\")).to.eql(pm.environment.get(\"expected_mode\")===\"adaptive\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Inject SQL errors",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{orders_admin}}/control",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"work_multiplier\": 1, \"sql_delay_ms\": 0, \"failure_every\": 1}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "SQL failure response",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "injected-failure"
+          }
+        ],
+        "url": "{{orders_url}}/orders/checkout",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"amount_cents\": 1234}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 500\", () => pm.response.to.have.status(500));",
+              "pm.test(\"database failure explained\",()=>pm.expect(pm.response.json().error).to.eql(\"database_error\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Restore SQL workload",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{orders_admin}}/control",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"work_multiplier\": 1, \"sql_delay_ms\": 50, \"failure_every\": 0}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Concurrent admission and reservation",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{orders_url}}/healthz"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "",
+              "const n=20;let left=n;const outcomes=[];",
+              "for(let i=0;i<n;i++){",
+              " const critical=i>=16;",
+              " pm.sendRequest({url:pm.environment.get(\"orders_url\")+(critical?\"/orders/checkout\":\"/orders/reports/rebuild\"),method:\"POST\",header:{\"Content-Type\":\"application/json\",\"Idempotency-Key\":pm.variables.replaceIn(\"{{$guid}}\")},body:{mode:\"raw\",raw:critical?JSON.stringify({amount_cents:1000}):\"{}\"}},(err,res)=>{",
+              "  outcomes.push({critical,code:res?res.code:0,error:!!err});",
+              "  if(--left===0){",
+              "   pm.test(\"bounded batch completed without transport errors\",()=>pm.expect(outcomes.some(x=>x.error)).to.eql(false));",
+              "   pm.test(\"critical traffic has successful work\",()=>pm.expect(outcomes.some(x=>x.critical&&x.code>=200&&x.code<300)).to.eql(true));",
+              "   pm.test(\"admission sheds background pressure\",()=>{if(pm.environment.get(\"expected_mode\")!==\"direct\")pm.expect(outcomes.some(x=>!x.critical&&x.code===503)).to.eql(true);});",
+              "  }",
+              " });",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Restore healthy defaults",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{orders_admin}}/control",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"work_multiplier\": 1, \"sql_delay_ms\": 5, \"failure_every\": 0}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reject invalid controls",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{orders_admin}}/control",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"work_multiplier\": 0, \"sql_delay_ms\": 0, \"failure_every\": 0}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Recovery health",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{orders_url}}/healthz"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"ready after overload\",()=>pm.expect(pm.response.json().status).to.eql(\"ok\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Catalog products",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_url}}/catalog/products?limit=3",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"three persisted products\",()=>{const p=pm.response.json().products;pm.expect(p.length).to.eql(3);pm.expect(p[0].id).to.eql(1);pm.expect(p[0].price_cents).to.be.above(0);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Catalog invalid limit",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_url}}/catalog/products?limit=1001",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\",()=>pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Initial stock",
+      "request": {
+        "method": "GET",
+        "url": "{{inventory_url}}/inventory/stock/19999",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
+              "pm.collectionVariables.set(\"initial_stock\",pm.response.json().available);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create reservation",
+      "request": {
+        "method": "POST",
+        "url": "{{inventory_url}}/inventory/reservations",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{reservation_key}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"product_id\": 19999, \"quantity\": 2}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\",()=>pm.response.to.have.status(201));",
+              "pm.collectionVariables.set(\"reservation_id\",pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Replay reservation",
+      "request": {
+        "method": "POST",
+        "url": "{{inventory_url}}/inventory/reservations",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{reservation_key}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"product_id\": 19999, \"quantity\": 2}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"same reservation\",()=>pm.expect(pm.response.json().id).to.eql(pm.collectionVariables.get(\"reservation_id\")));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Replay does not decrement twice",
+      "request": {
+        "method": "GET",
+        "url": "{{inventory_url}}/inventory/stock/19999",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"stock decremented once\",()=>pm.expect(pm.response.json().available).to.eql(Number(pm.collectionVariables.get(\"initial_stock\"))-2));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reservation key conflict",
+      "request": {
+        "method": "POST",
+        "url": "{{inventory_url}}/inventory/reservations",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{reservation_key}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"product_id\": 19999, \"quantity\": 3}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 409\",()=>pm.response.to.have.status(409));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "No overselling",
+      "request": {
+        "method": "POST",
+        "url": "{{inventory_url}}/inventory/reservations",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{$guid}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"product_id\": 19999, \"quantity\": 1000}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 409\",()=>pm.response.to.have.status(409));",
+              "pm.test(\"stock shortage explained\",()=>pm.expect(pm.response.json().error).to.eql(\"insufficient_stock\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Invalid reservation",
+      "request": {
+        "method": "POST",
+        "url": "{{inventory_url}}/inventory/reservations",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{$guid}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"product_id\": 1, \"quantity\": 0}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\",()=>pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "catalog report",
+      "request": {
+        "method": "POST",
+        "url": "{{catalog_url}}/catalog/reports/rebuild",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"SQL aggregate\",()=>pm.expect(pm.response.json().total).to.be.above(0));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "catalog pool",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_admin}}/state",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"own bounded database pool\",()=>{pm.expect(pm.response.json().role).to.eql(\"catalog\");pm.expect(pm.response.json().pool.MaxOpenConnections).to.eql(4);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "catalog backend metrics",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_backend}}/metrics",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"database pool metrics\",()=>pm.expect(pm.response.text()).to.include(\"commerce_db_pool_wait_seconds_total\"));",
+              "pm.test(\"wait duration has service label\",()=>pm.expect(pm.response.text()).to.include('commerce_db_pool_wait_seconds_total{service=\"catalog\"}'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "catalog inject SQL errors",
+      "request": {
+        "method": "PUT",
+        "url": "{{catalog_admin}}/control",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"work_multiplier\": 1, \"sql_delay_ms\": 0, \"failure_every\": 1}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "catalog SQL error",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_url}}/catalog/products",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 500\",()=>pm.response.to.have.status(500));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "catalog restore",
+      "request": {
+        "method": "PUT",
+        "url": "{{catalog_admin}}/control",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"work_multiplier\": 1, \"sql_delay_ms\": 0, \"failure_every\": 0}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "catalog ready after recovery",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_backend}}/healthz",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "inventory report",
+      "request": {
+        "method": "POST",
+        "url": "{{inventory_url}}/inventory/reports/rebuild",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"SQL aggregate\",()=>pm.expect(pm.response.json().total).to.be.above(0));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "inventory pool",
+      "request": {
+        "method": "GET",
+        "url": "{{inventory_admin}}/state",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"own bounded database pool\",()=>{pm.expect(pm.response.json().role).to.eql(\"inventory\");pm.expect(pm.response.json().pool.MaxOpenConnections).to.eql(4);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "inventory backend metrics",
+      "request": {
+        "method": "GET",
+        "url": "{{inventory_backend}}/metrics",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"database pool metrics\",()=>pm.expect(pm.response.text()).to.include(\"commerce_db_pool_wait_seconds_total\"));",
+              "pm.test(\"wait duration has service label\",()=>pm.expect(pm.response.text()).to.include('commerce_db_pool_wait_seconds_total{service=\"inventory\"}'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "inventory inject SQL errors",
+      "request": {
+        "method": "PUT",
+        "url": "{{inventory_admin}}/control",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"work_multiplier\": 1, \"sql_delay_ms\": 0, \"failure_every\": 1}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "inventory SQL error",
+      "request": {
+        "method": "POST",
+        "url": "{{inventory_url}}/inventory/reservations",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{$guid}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"product_id\": 1, \"quantity\": 1}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 500\",()=>pm.response.to.have.status(500));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "inventory restore",
+      "request": {
+        "method": "PUT",
+        "url": "{{inventory_admin}}/control",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"work_multiplier\": 1, \"sql_delay_ms\": 0, \"failure_every\": 0}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "inventory ready after recovery",
+      "request": {
+        "method": "GET",
+        "url": "{{inventory_backend}}/healthz",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Concurrent reservation replay",
+      "request": {
+        "method": "GET",
+        "url": "{{inventory_url}}/inventory/stock/19998"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
+              "pm.collectionVariables.set(\"stock_before_concurrent\",pm.response.json().available);",
+              "const key=pm.variables.replaceIn(\"{{$guid}}\");let left=5;const outcomes=[];",
+              "for(let i=0;i<5;i++)pm.sendRequest({url:pm.environment.get(\"inventory_url\")+\"/inventory/reservations\",method:\"POST\",header:{\"Content-Type\":\"application/json\",\"Idempotency-Key\":key},body:{mode:\"raw\",raw:JSON.stringify({product_id:19998,quantity:1})}},(error,response)=>{",
+              " outcomes.push({error:!!error,code:response?response.code:0,id:response&&response.code<300?response.json().id:null});",
+              " if(--left===0){",
+              "  pm.test(\"concurrent reservation requests complete\",()=>pm.expect(outcomes.every(x=>!x.error&&[200,201].includes(x.code))).to.eql(true));",
+              "  pm.test(\"exactly one concurrent insert\",()=>pm.expect(outcomes.filter(x=>x.code===201).length).to.eql(1));",
+              "  pm.test(\"same reservation across concurrent replays\",()=>pm.expect(new Set(outcomes.map(x=>x.id)).size).to.eql(1));",
+              " }",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Concurrent replay stock consistency",
+      "request": {
+        "method": "GET",
+        "url": "{{inventory_url}}/inventory/stock/19998"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"concurrent replay decrements stock once\",()=>pm.expect(pm.response.json().available).to.eql(Number(pm.collectionVariables.get(\"stock_before_concurrent\"))-1));"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "checkout_key",
+      "value": ""
+    },
+    {
+      "key": "order_id",
+      "value": ""
+    }
+  ]
+}
