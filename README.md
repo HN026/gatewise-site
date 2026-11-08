@@ -53,7 +53,7 @@ Measurements were made on macOS with Podman. They are local production-style wor
 
 ## Releases and deployment
 
-The site targets Gatewise v0.9.0. Add published versions to `src/data/releases.ts`, newest first, with verified GitHub timestamps, IST dates, requirements, upgrade notes and tag-specific downloads. The Versions page and sidebar use this shared source. Never change an existing release tag to update the site.
+The site targets Gatewise v0.10.0. Add published versions to `src/data/releases.ts`, newest first, with verified GitHub timestamps, IST dates, requirements, upgrade notes and tag-specific downloads. The Versions page and sidebar use this shared source. Never change an existing release tag to update the site.
 
 The Pages workflow type-checks/builds and deploys `main`. Library: https://github.com/HN026/gatewise · Site: https://hn026.github.io/gatewise-site/ · License: MIT.
 

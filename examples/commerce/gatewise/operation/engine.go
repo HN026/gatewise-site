@@ -24,6 +24,8 @@ const (
 type Config struct {
 	// Decisions is optional. The caller owns observation collection and lifecycle.
 	Decisions *decisionpkg.Engine
+	// Queue nil preserves immediate rejection.
+	Queue *QueueConfig
 	// Name identifies this service in rejection responses and logs; default "service".
 	Name string
 	// MaxConcurrent is required and must be positive.
@@ -43,6 +45,7 @@ type Config struct {
 // It is safe for concurrent use. Reuse one instance for operations sharing
 // capacity; construct separate instances for independent service budgets.
 type Engine struct {
+	queue      *waitingQueue
 	decisions  *decisionpkg.Engine
 	name       string
 	limiter    *admission.Limiter
@@ -104,6 +107,10 @@ func New(c Config) (*Engine, error) {
 	}
 	if c.Adaptive != nil {
 		s.controller = adaptive.New(s.limiter, adaptive.Config{Profile: s.adaptive.Profile, Min: s.adaptive.MinConcurrent, Max: c.MaxConcurrent, Interval: s.adaptive.Interval, MinSamples: s.adaptive.MinSamples})
+	}
+	s.queue, err = newWaitingQueue(c.Queue, s)
+	if err != nil {
+		return nil, err
 	}
 	return s, nil
 }

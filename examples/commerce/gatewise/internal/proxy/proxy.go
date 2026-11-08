@@ -61,7 +61,7 @@ func New(c config.Config, logger *slog.Logger) (http.Handler, func()) {
 	for name, service := range c.Services {
 		h, closeIdle := newUpstream(c, service.Upstream, logger.With("service", name))
 		guard, err := middleware.NewService(middleware.ServiceConfig{
-			CostResolver: service.CostResolver, Decisions: service.Decisions, Name: name, MaxConcurrent: service.MaxConcurrent, ReservedCritical: service.ReservedCritical, Logger: logger, Adaptive: service.Adaptive, Tenants: service.Tenants, Priorities: service.Priorities,
+			QueueBodyMaxBytes: service.QueueBodyMaxBytes, Queue: service.Queue, CostResolver: service.CostResolver, Decisions: service.Decisions, Name: name, MaxConcurrent: service.MaxConcurrent, ReservedCritical: service.ReservedCritical, Logger: logger, Adaptive: service.Adaptive, Tenants: service.Tenants, Priorities: service.Priorities,
 		})
 		if err != nil {
 			panic("proxy: invalid validated service configuration: " + err.Error())

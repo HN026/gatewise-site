@@ -12,6 +12,7 @@ import (
 type Source interface{ Statistics() operation.Statistics }
 
 type collector struct {
+	queueDescriptors
 	controllerControlRatio, controllerControlFailure, controllerWindowInterval, controllerWindowStart, controllerProfile, controllerSmoothed, controllerPending, controllerSparse, controllerExternal *prometheus.Desc
 	workAdmitted, workRejected, workCompleted, workDuration                                                                                                                                           *prometheus.Desc
 	budgetBytes, budgetLimit, budgetActive, budgetTracked, budgetTrackingLimit, budgetFallback, budgetExpired, budgetAttempts, budgetProposals, budgetRejected, budgetAdmitted                        *prometheus.Desc
@@ -34,7 +35,7 @@ func Register(registry prometheus.Registerer, service Source) error {
 	desc := func(name, help string, labels ...string) *prometheus.Desc {
 		return prometheus.NewDesc("gatewise_"+name, help, labels, prometheus.Labels{"service": serviceName})
 	}
-	c := &collector{service: service,
+	c := &collector{service: service, queueDescriptors: newQueueDescriptors(desc),
 		controllerControlRatio: desc("controller_control_ratio", "Last control ratio: aggregate p90 for legacy, worst aggregate p90 or well-sampled tier p95 for stable."), controllerControlFailure: desc("controller_control_failure_fraction", "Last failure fraction used for control, including well-sampled tier failures for stable."),
 		controllerWindowInterval: desc("controller_window_interval_seconds", "Current feedback interval, including stable profile local timing offset."), controllerWindowStart: desc("controller_window_started_timestamp_seconds", "Current feedback-window start; no evaluation is implied."),
 		controllerProfile: desc("controller_info", "Selected bounded controller profile.", "profile"), controllerSmoothed: desc("controller_smoothed_ratio", "Stable profile EWMA of the selected normalized control ratio; zero before sufficient feedback."), controllerPending: desc("controller_pending_samples", "Current unevaluated window completions."), controllerSparse: desc("controller_sparse_window", "Last evaluation had fewer than configured minimum samples and held capacity."), controllerExternal: desc("controller_external_limit", "A matching signal ceiling constrained admission in the last evaluated window."),
@@ -95,6 +96,7 @@ func Register(registry prometheus.Registerer, service Source) error {
 }
 
 func (c *collector) Describe(out chan<- *prometheus.Desc) {
+	c.describeQueue(out)
 	for _, desc := range []*prometheus.Desc{c.controllerControlRatio, c.controllerControlFailure, c.controllerWindowInterval, c.controllerWindowStart, c.controllerProfile, c.controllerSmoothed, c.controllerPending, c.controllerSparse, c.controllerExternal, c.workAdmitted, c.workRejected, c.workCompleted, c.workDuration, c.budgetBytes, c.budgetLimit, c.budgetActive, c.budgetTracked, c.budgetTrackingLimit, c.budgetFallback, c.budgetExpired, c.budgetAttempts, c.budgetProposals, c.budgetRejected, c.budgetAdmitted, c.decisionInfo, c.proposals, c.signalState, c.signalValue, c.signalThreshold, c.signalTime, c.signalAccepted, c.signalDropped, c.signalFailures, c.sharingDemand, c.sharingShares, c.sharingPause, c.sharingActive, c.sharingAdmissions, c.resolutions, c.limit, c.minimum, c.maximum, c.reserved, c.active, c.info, c.admitted, c.rejected, c.completed, c.duration, c.adjustments, c.controllerSamples, c.controllerRatio, c.controllerFailures, c.controllerTime, c.controllerDecision, c.controllerSaturated, c.tenantLimit, c.tenantTracked, c.tenantTrackingLimit, c.tenantActive, c.tenantExpired} {
 		out <- desc
 	}
@@ -102,6 +104,7 @@ func (c *collector) Describe(out chan<- *prometheus.Desc) {
 
 func (c *collector) Collect(out chan<- prometheus.Metric) {
 	s := c.service.Statistics()
+	c.collectQueue(out, s)
 	gauge := func(desc *prometheus.Desc, value float64, labels ...string) {
 		out <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, value, labels...)
 	}
@@ -250,6 +253,11 @@ func (c *collector) Collect(out chan<- prometheus.Metric) {
 	classes := [7]string{"1xx", "2xx", "3xx", "4xx", "5xx", "other", "none"}
 	for _, p := range s.Tiers {
 		priority := string(p.Priority)
+		if s.Queue.Enabled {
+			for i, r := range []string{"queue_full", "queue_reserved", "queue_timeout", "queue_deadline", "queue_canceled"} {
+				counter(c.rejected, p.RejectedQueue[i], priority, r)
+			}
+		}
 		counter(c.admitted, p.Admitted, priority)
 		if s.PriorityEnabled {
 			for _, v := range []struct {

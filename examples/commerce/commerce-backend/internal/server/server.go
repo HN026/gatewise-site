@@ -43,6 +43,13 @@ func Run(ctx context.Context, c config.Config) error {
 	var collectors []decision.Collector
 	if c.Mode != "direct" && c.Mode != "semaphore" {
 		cfg := middleware.ServiceConfig{Name: c.Role, MaxConcurrent: c.MaxConcurrent, ReservedCritical: c.Reserved}
+		if c.QueueWaiting > 0 {
+			reserved := middleware.Critical
+			if pc != nil {
+				reserved = "urgent"
+			}
+			cfg.Queue = &middleware.QueueConfig{MaxWaiting: c.QueueWaiting, MaxWait: c.QueueWait, AgingAfter: c.QueueAging, Reserved: map[middleware.Priority]int{reserved: c.QueueReserved}}
+		}
 		if c.DecisionMode != "" {
 			engine, collectors, e = signalEngine(c.DecisionMode, c.AdminListen)
 			if e != nil {

@@ -1,0 +1,290 @@
+{
+  "info": {
+    "name": "Gatewise bounded waiting",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Restore healthy service",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{orders_admin}}/control",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"work_multiplier\": 1, \"sql_delay_ms\": 0, \"failure_every\": 0}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"controls restored\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Inspect queue-enabled admission",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{orders_url}}/orders/seed-1"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('healthy request succeeds',()=>pm.response.to.have.status(200));",
+              "pm.test('queue is opt-in and visible',()=>{pm.expect(String(pm.environment.get('queue_enabled'))).eql('true');pm.expect(pm.response.headers.get('X-Gatewise-Queue-Eligible')).eql('true');pm.expect(Number(pm.response.headers.get('X-Gatewise-Queue-Wait-Ms'))).at.least(0);pm.expect(pm.response.headers.get('X-Gatewise-Mode')).eql(pm.environment.get('expected_mode'));});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Inspect bounded policy and metrics",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{orders_url}}/metrics"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const send=(method,url,body,headers={})=>new Promise((resolve,reject)=>pm.sendRequest({method,url,header:{'Content-Type':'application/json',...headers},...(body===undefined?{}:{body:{mode:'raw',raw:JSON.stringify(body)}})},(err,res)=>err?reject(err):resolve(res)));",
+              "const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));",
+              "const base=pm.environment.get('orders_url'),admin=pm.environment.get('orders_admin');",
+              "const gauge=(text,name,labels=[])=>text.split('\\n').filter(l=>l.startsWith(name+'{')&&l.includes('service=\"orders\"')&&labels.every(s=>l.includes(s))).reduce((n,l)=>n+Number(l.trim().split(/\\s+/)[1]),0);",
+              "const checkout=()=>send('POST',base+'/orders/checkout',{amount_cents:1},{'Idempotency-Key':'queue-'+pm.variables.replaceIn('{{$guid}}')});",
+              "const control=delay=>send('PUT',admin+'/control',{work_multiplier:1,sql_delay_ms:delay,failure_every:0});",
+              "const read=async()=>{const m=await send('GET',base+'/metrics');return m.text();};",
+              "const drain=async()=>{for(let i=0;i<100;i++){const t=await read();if(gauge(t,'gatewise_queue_waiting')===0&&gauge(t,'gatewise_requests_in_flight')===0)return t;await sleep(10);}throw new Error('work did not drain');};",
+              "pm.test('queue policy exposed',()=>{const t=pm.response.text();pm.expect(gauge(t,'gatewise_queue_capacity')).eql(16);pm.expect(gauge(t,'gatewise_queue_max_wait_seconds')).eql(.04);pm.expect(gauge(t,'gatewise_queue_aging_after_seconds')).eql(.02);pm.expect(gauge(t,'gatewise_queue_reserved_slots',['priority=\"critical\"'])).eql(4);});",
+              "pm.test('depth, outcomes and waiting histogram exported',()=>{for(const n of ['gatewise_queue_waiting','gatewise_queue_high_watermark','gatewise_queue_events_total','gatewise_queue_wait_duration_seconds_count'])pm.expect(pm.response.text()).includes(n);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Overflow and expiration remain bounded",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{orders_url}}/metrics"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const send=(method,url,body,headers={})=>new Promise((resolve,reject)=>pm.sendRequest({method,url,header:{'Content-Type':'application/json',...headers},...(body===undefined?{}:{body:{mode:'raw',raw:JSON.stringify(body)}})},(err,res)=>err?reject(err):resolve(res)));",
+              "const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));",
+              "const base=pm.environment.get('orders_url'),admin=pm.environment.get('orders_admin');",
+              "const gauge=(text,name,labels=[])=>text.split('\\n').filter(l=>l.startsWith(name+'{')&&l.includes('service=\"orders\"')&&labels.every(s=>l.includes(s))).reduce((n,l)=>n+Number(l.trim().split(/\\s+/)[1]),0);",
+              "const checkout=()=>send('POST',base+'/orders/checkout',{amount_cents:1},{'Idempotency-Key':'queue-'+pm.variables.replaceIn('{{$guid}}')});",
+              "const control=delay=>send('PUT',admin+'/control',{work_multiplier:1,sql_delay_ms:delay,failure_every:0});",
+              "const read=async()=>{const m=await send('GET',base+'/metrics');return m.text();};",
+              "const drain=async()=>{for(let i=0;i<100;i++){const t=await read();if(gauge(t,'gatewise_queue_waiting')===0&&gauge(t,'gatewise_requests_in_flight')===0)return t;await sleep(10);}throw new Error('work did not drain');};",
+              "(async()=>{try{",
+              " await drain();await control(60);const before=await read();const replies=await Promise.all(Array.from({length:128},checkout));const after=await drain();",
+              " pm.test('overflow produces known refusals and real successful work',()=>{pm.expect(replies.some(r=>r.code===201)).eql(true);pm.expect(replies.some(r=>r.code===503)).eql(true);for(const r of replies){pm.expect([200,201,503]).includes(r.code);if(r.code===503)pm.expect(['queue_full','queue_timeout']).includes(r.json().reason);}});",
+              " pm.test('full queue and timeout counted separately',()=>{for(const event of ['full','timeout'])pm.expect(gauge(after,'gatewise_queue_events_total',['event=\"'+event+'\"'])-gauge(before,'gatewise_queue_events_total',['event=\"'+event+'\"'])).above(0);});",
+              " pm.test('waiting capacity and execution ceiling preserved',()=>{pm.expect(gauge(after,'gatewise_queue_high_watermark')).at.most(16);pm.expect(gauge(after,'gatewise_concurrency_limit')).at.most(Number(pm.environment.get('execution_limit')));pm.expect(gauge(after,'gatewise_queue_waiting')).eql(0);pm.expect(gauge(after,'gatewise_requests_in_flight')).eql(0);});",
+              " }catch(e){pm.test('overflow scenario completes',()=>{throw e;});}finally{await control(0);}})();"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Short waiting can admit later work",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{orders_url}}/metrics"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const send=(method,url,body,headers={})=>new Promise((resolve,reject)=>pm.sendRequest({method,url,header:{'Content-Type':'application/json',...headers},...(body===undefined?{}:{body:{mode:'raw',raw:JSON.stringify(body)}})},(err,res)=>err?reject(err):resolve(res)));",
+              "const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));",
+              "const base=pm.environment.get('orders_url'),admin=pm.environment.get('orders_admin');",
+              "const gauge=(text,name,labels=[])=>text.split('\\n').filter(l=>l.startsWith(name+'{')&&l.includes('service=\"orders\"')&&labels.every(s=>l.includes(s))).reduce((n,l)=>n+Number(l.trim().split(/\\s+/)[1]),0);",
+              "const checkout=()=>send('POST',base+'/orders/checkout',{amount_cents:1},{'Idempotency-Key':'queue-'+pm.variables.replaceIn('{{$guid}}')});",
+              "const control=delay=>send('PUT',admin+'/control',{work_multiplier:1,sql_delay_ms:delay,failure_every:0});",
+              "const read=async()=>{const m=await send('GET',base+'/metrics');return m.text();};",
+              "const drain=async()=>{for(let i=0;i<100;i++){const t=await read();if(gauge(t,'gatewise_queue_waiting')===0&&gauge(t,'gatewise_requests_in_flight')===0)return t;await sleep(10);}throw new Error('work did not drain');};",
+              "(async()=>{try{",
+              " await drain();await control(5);const before=await read();const replies=await Promise.all(Array.from({length:24},checkout));const after=await drain();",
+              " pm.test('queued work reaches handler before expiration',()=>{pm.expect(gauge(after,'gatewise_queue_events_total',['event=\"admitted\"'])-gauge(before,'gatewise_queue_events_total',['event=\"admitted\"'])).above(0);pm.expect(replies.some(r=>r.code===201&&Number(r.headers.get('X-Gatewise-Queue-Wait-Ms'))>0)).eql(true);});",
+              " }catch(e){pm.test('short-wait scenario completes',()=>{throw e;});}finally{await control(0);}})();"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Background waiting preserves important access",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{orders_url}}/metrics"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const send=(method,url,body,headers={})=>new Promise((resolve,reject)=>pm.sendRequest({method,url,header:{'Content-Type':'application/json',...headers},...(body===undefined?{}:{body:{mode:'raw',raw:JSON.stringify(body)}})},(err,res)=>err?reject(err):resolve(res)));",
+              "const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));",
+              "const base=pm.environment.get('orders_url'),admin=pm.environment.get('orders_admin');",
+              "const gauge=(text,name,labels=[])=>text.split('\\n').filter(l=>l.startsWith(name+'{')&&l.includes('service=\"orders\"')&&labels.every(s=>l.includes(s))).reduce((n,l)=>n+Number(l.trim().split(/\\s+/)[1]),0);",
+              "const checkout=()=>send('POST',base+'/orders/checkout',{amount_cents:1},{'Idempotency-Key':'queue-'+pm.variables.replaceIn('{{$guid}}')});",
+              "const control=delay=>send('PUT',admin+'/control',{work_multiplier:1,sql_delay_ms:delay,failure_every:0});",
+              "const read=async()=>{const m=await send('GET',base+'/metrics');return m.text();};",
+              "const drain=async()=>{for(let i=0;i<100;i++){const t=await read();if(gauge(t,'gatewise_queue_waiting')===0&&gauge(t,'gatewise_requests_in_flight')===0)return t;await sleep(10);}throw new Error('work did not drain');};",
+              "(async()=>{try{",
+              " await drain();await control(60);const before=await read();const background=Array.from({length:80},()=>send('POST',base+'/orders/reports/rebuild',{}));",
+              " for(let i=0;i<60;i++){const t=await read();if(gauge(t,'gatewise_queue_events_total',['event=\"reserved\"','priority=\"background\"'])>gauge(before,'gatewise_queue_events_total',['event=\"reserved\"','priority=\"background\"']))break;await sleep(2);}",
+              " const important=await Promise.all(Array.from({length:4},checkout));const replies=await Promise.all(background);const after=await drain();",
+              " pm.test('background cannot consume reserved waiting slots',()=>pm.expect(gauge(after,'gatewise_queue_events_total',['event=\"reserved\"','priority=\"background\"'])-gauge(before,'gatewise_queue_events_total',['event=\"reserved\"','priority=\"background\"'])).above(0));",
+              " pm.test('important work still completes',()=>{for(const r of important)pm.expect(r.code).eql(201);});",
+              " pm.test('background refusal and cleanup are explicit',()=>{pm.expect(replies.some(r=>r.code===503&&r.json().reason==='queue_reserved')).eql(true);pm.expect(gauge(after,'gatewise_queue_waiting')).eql(0);});",
+              " }catch(e){pm.test('priority waiting scenario completes',()=>{throw e;});}finally{await control(0);}})();"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Large body keeps streaming admission",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{orders_url}}/orders/reports/rebuild",
+        "body": {
+          "mode": "raw",
+          "raw": "{{queue_large_body}}"
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.variables.set('queue_large_body',' '.repeat(65537));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('large body remains usable without waiting',()=>{pm.response.to.have.status(200);pm.expect(pm.response.headers.get('X-Gatewise-Queue-Eligible')).eql('false');pm.expect(Number(pm.response.headers.get('X-Gatewise-Queue-Wait-Ms'))).eql(0);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "All SQL connections return after checks",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{orders_admin}}/state"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('pool drained',()=>pm.expect(pm.response.json().pool.InUse).eql(0));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Finish healthy",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{orders_url}}/orders/seed-1"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('healthy after overload',()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

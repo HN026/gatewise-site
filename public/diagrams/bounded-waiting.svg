@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 390" role="img" aria-label="bounded-waiting">
+<defs><marker id="arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0L7 3.5L0 7" fill="#91ab9a"/></marker></defs>
+<rect width="1080" height="390" fill="#101a13"/>
+<path d="M220 65.0 H257.5 V65.0 H292" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M510 65.0 H677.5 V65.0 H842" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<text x="677.5" y="56.0" fill="#91ab9a" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">capacity</text>
+<path d="M402.5 100 V222" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<text x="410.5" y="162.5" fill="#91ab9a" text-anchor="start" font-family="Arial,sans-serif" font-size="11">local capacity full</text>
+<path d="M510 260.0 H542.5 V260.0 H572" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<text x="542.5" y="251.0" fill="#91ab9a" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">turn</text>
+<path d="M780 260.0 H812.5 V65.0 H842" fill="none" stroke="#91ab9a" stroke-width="1.4" marker-end="url(#arrow)"/>
+<text x="812.5" y="153.5" fill="#91ab9a" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">admitted</text>
+<path d="M402.5 295 V360 H117.5 V298" fill="none" stroke="#ef8d7d" stroke-width="1.4" marker-end="url(#arrow)"/>
+<text x="260.0" y="352" fill="#ef8d7d" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">bound</text>
+<path d="M677.5 295 V360 H117.5 V298" fill="none" stroke="#ef8d7d" stroke-width="1.4" marker-end="url(#arrow)"/>
+<text x="397.5" y="352" fill="#ef8d7d" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">policy veto</text>
+<rect x="15" y="30" width="205" height="70" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="117.5" y="55" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Prepared request</text>
+<text x="117.5" y="76" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Trusted identity + bounded body</text>
+<rect x="295" y="30" width="215" height="70" rx="2" fill="#142019" stroke="#6faf91"/>
+<text x="402.5" y="55" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Admission checks</text>
+<text x="402.5" y="76" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Signals / resources / tenant</text>
+<rect x="845" y="30" width="205" height="70" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="947.5" y="55" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Execute work</text>
+<text x="947.5" y="76" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Hold permits until completion</text>
+<rect x="295" y="225" width="215" height="70" rx="2" fill="#142019" stroke="#6faf91"/>
+<text x="402.5" y="250" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Bounded waiting</text>
+<text x="402.5" y="271" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Priority + FIFO + aging</text>
+<rect x="575" y="225" width="205" height="70" rx="2" fill="#142019" stroke="#6faf91"/>
+<text x="677.5" y="250" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Selected request</text>
+<text x="677.5" y="271" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Recheck all hard rules</text>
+<rect x="15" y="225" width="205" height="70" rx="2" fill="#142019" stroke="#4a6051"/>
+<text x="117.5" y="250" fill="#dce7df" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">Reject / cancel</text>
+<text x="117.5" y="271" fill="#a1b7a8" text-anchor="middle" font-family="Arial,sans-serif" font-size="11">Full / expired / caller done</text>
+</svg>

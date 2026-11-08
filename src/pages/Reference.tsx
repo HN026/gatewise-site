@@ -5,7 +5,17 @@ import { CodeBlock, Note, PageTitle, Section, Table } from '../components/ui';
 export default function Reference() {
   const [filter, setFilter] = useState('');
   const rows = configuration.filter(r => r.join(' ').toLowerCase().includes(filter.toLowerCase()));
-  return <div className="container"><PageTitle title="Configuration and API reference">Proxy configuration, environment overrides, public Go interfaces and rejection responses.</PageTitle><Section id="adaptive-profiles" title="Adaptive profiles and diagnostics"><Table headers={['Setting or field','Contract']} rows={[
+  return <div className="container"><PageTitle title="Configuration and API reference">Proxy configuration, environment overrides, public Go interfaces and rejection responses.</PageTitle><Section id="queue-reference" title="Waiting configuration and API"><Table headers={['Setting / API','Contract']} rows={[
+ ['QueueConfig','nil disables waiting; MaxWaiting must be 1..65536, MaxWait positive. AgingAfter defaults to half MaxWait (at least 1ns), and must not exceed MaxWait. Reserved maps actual configured priority names to nonnegative waiting reservations, summing to at most MaxWaiting.'],
+ ['Proxy JSON','services.<name>.queue: max_waiting, max_wait, aging_after, reserved and HTTP-only max_body_bytes. Positive top-level read_timeout is required while HTTP queue buffering is enabled.'],
+ ['Environment','GATEWISE_SERVICE_<NAME>_QUEUE_ENABLED, _QUEUE_MAX_WAITING, _QUEUE_MAX_WAIT, _QUEUE_AGING_AFTER, _QUEUE_RESERVED (JSON object), _QUEUE_MAX_BODY_BYTES; GATEWISE_READ_TIMEOUT. Process environment overrides dotenv, then JSON. False disables waiting.'],
+ ['Engine.QueueSnapshot() / QueueEnabled()','Configuration, current depth, high watermark and per-tier lifecycle counters/histograms. These snapshots do not form a transaction with unrelated resource snapshots.'],
+ ['Permit.QueueWait()','Time spent in the waiting queue before successful execution admission. It excludes preparation and executing work.'],
+ ['Request.NoWait','Server-owned per-operation opt-out. Hard policies and queued-predecessor order remain in force. A request can fail immediately while earlier eligible work is waiting.'],
+ ['HTTP buffering','QueueBodyMaxBytes defaults to 64KiB, -1 disables buffering, maximum1MiB. Proxy: queue.max_body_bytes. Large/unknown bodies retain streaming and never queue; set HTTP ReadTimeout to bound preparation.'],
+ ['HTTP feedback','X-Gatewise-Queue-Eligible is true/false. Admitted requests report X-Gatewise-Queue-Wait-Ms. Queue_full, queue_reserved and queue_timeout return503. Caller context cancellation/deadline returns its context error in Go; HTTP disconnects do not receive a new response.'],
+ ['Feedback scope','Queue wait has its own metrics. Handler/operation latency and adaptive feedback still measure executing lifetimes, not queue time. Per-resource/tenant attempt counters can include internal admission retries; they are not unique-client-request counts.']
+]}/><p><a href="#/installation/bounded-waiting">Setup, selection rules, body handling and rollback</a>.</p></Section><Section id="adaptive-profiles" title="Adaptive profiles and diagnostics"><Table headers={['Setting or field','Contract']} rows={[
  ['AdaptiveConfig.Profile / adaptive.profile','legacy (default) or stable (opt-in). Mode must be adaptive. Unknown profiles reject at startup; profile selection does not erase explicit interval, samples, bounds or targets.'],
  ['GATEWISE_SERVICE_<NAME>_ADAPTIVE_PROFILE','Process environment / dotenv override for an adaptive proxy service. Explicit empty/invalid values reject. Restart to apply a profile change.'],
  ['ControllerState.P90Ratio','Original aggregate bucket-estimated normalized p90, retained for compatibility.'],
@@ -18,7 +28,7 @@ export default function Reference() {
  ['HealthyStreak / PressureStreak','Consecutive evaluated full-window classifications. Sparse/idle handling clears streaks.']
 ]}/><p><a href="#/installation/stable-adaptive">Exact preset rules</a> describe sample eligibility, operator bounds and rollback. Adjustment counters retain existing reason families; the profile does not change admission priorities, tenant policies or permit lifetimes.</p></Section><Section id="operation-reference" title="Operation and SQL APIs"><Table headers={['API','Contract']} rows={[
  ['operation.New(Config)','Transport-neutral, process-local engine. Reuses the HTTP limiter, priorities, tenant rules, signal decisions, byte/key budgets and adaptive controller.'],
- ['Engine.Begin(ctx, Request)','Never queues. Returns Permit or error. Metadata is supplied by trusted application code; Kind is bounded to operation/http. Same-engine active nesting returns ErrNested.'],
+ ['Engine.Begin(ctx, Request)','Immediate by default; optional Queue can wait within explicit bounds. Returns Permit or error. Metadata is supplied by trusted application code; Kind is bounded to operation/http. Same-engine active nesting returns ErrNested.'],
  ['Engine.Do(ctx, Request, fn)','Calls fn with the admitted context; finishes exactly once on return or panic. Errors remain application-owned; no retry.'],
  ['Permit.Context / Decision / Finish','Carry the admitted context; inspect a cloned decision; finish only after actual work and cleanup end. Outcome has Err, StatusCode, Canceled and Panicked. Cancellation alone does not release.'],
  ['sqlguard.New(db, engine, Metadata)','Wraps an existing database/sql pool; does not install a driver or own pool shutdown. Metadata is a local trusted resolver.'],
