@@ -14,6 +14,9 @@ type Decision string
 
 const (
 	Admitted                 Decision = ""
+	SignalPressure           Decision = "signal_pressure"
+	SignalUnavailable        Decision = "signal_unavailable"
+	SignalConcurrencyLimit   Decision = "signal_concurrency_limit"
 	TenantShareReserved      Decision = "tenant_share_reserved"
 	TenantConcurrencyLimit   Decision = "tenant_concurrency_limit"
 	TenantRegistryFull       Decision = "tenant_registry_full"
@@ -72,6 +75,12 @@ func (l *Limiter) index(p Priority) int {
 }
 func (l *Limiter) TryAcquire(p Priority) Decision { return l.TryAcquireCohort(p, -1, 0) }
 func (l *Limiter) TryAcquireCohort(p Priority, bucket, buckets int) Decision {
+	return l.TryAcquireBudget(p, bucket, buckets, 0)
+}
+
+// TryAcquireBudget checks an optional signal ceiling under the same lock as all
+// other capacity rules. It never changes the adaptive controller baseline.
+func (l *Limiter) TryAcquireBudget(p Priority, bucket, buckets, ceiling int) Decision {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	index := l.index(p)
@@ -81,7 +90,14 @@ func (l *Limiter) TryAcquireCohort(p Priority, bucket, buckets int) Decision {
 	if l.active >= l.limit {
 		return ConcurrencyLimit
 	}
-	headroom, budget := l.limit-l.active, l.limit
+	effective := l.limit
+	if ceiling > 0 && ceiling < effective {
+		effective = ceiling
+	}
+	if l.active >= effective {
+		return SignalConcurrencyLimit
+	}
+	headroom, budget := effective-l.active, effective
 	reserved := 0
 	for boundary := 1; boundary <= index; boundary++ {
 		reserved += l.tiers[boundary-1].Reserved
@@ -95,6 +111,10 @@ func (l *Limiter) TryAcquireCohort(p Priority, bucket, buckets int) Decision {
 				return CriticalCapacityReserved
 			}
 			return TierCapacityReserved
+		}
+		cap = effective - reserved
+		if occupied >= cap {
+			return SignalConcurrencyLimit
 		}
 		if float64(cap-occupied)/float64(cap) < float64(headroom)/float64(budget) {
 			headroom = cap - occupied

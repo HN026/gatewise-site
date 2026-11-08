@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/HN026/gatewise/decision"
 	"github.com/HN026/gatewise/internal/admission"
 	"github.com/HN026/gatewise/middleware"
 	prioritypkg "github.com/HN026/gatewise/priority"
@@ -21,6 +22,8 @@ import (
 const DefaultMaxConcurrent = 100
 
 type Service struct {
+	Decisions        *decision.Engine
+	Collectors       []decision.Collector
 	Upstream         *url.URL
 	MaxConcurrent    int
 	ReservedCritical int
@@ -30,6 +33,7 @@ type Service struct {
 }
 
 type Route struct {
+	Resource      string
 	Prefix        string
 	Service       string
 	StripPrefix   bool
@@ -50,15 +54,17 @@ type rawConfig struct {
 	ResponseHeaderTimeout string `json:"response_header_timeout"`
 	ShutdownTimeout       string `json:"shutdown_timeout"`
 	Services              map[string]struct {
-		UpstreamURL      string       `json:"upstream_url"`
-		Mode             string       `json:"mode"`
-		Adaptive         *rawAdaptive `json:"adaptive"`
-		Tenants          *rawTenant   `json:"tenants"`
-		Priorities       *rawPriority `json:"priorities"`
-		MaxConcurrent    *int         `json:"max_concurrent"`
-		ReservedCritical int          `json:"reserved_critical"`
+		Decisions        *rawDecisions `json:"decisions"`
+		UpstreamURL      string        `json:"upstream_url"`
+		Mode             string        `json:"mode"`
+		Adaptive         *rawAdaptive  `json:"adaptive"`
+		Tenants          *rawTenant    `json:"tenants"`
+		Priorities       *rawPriority  `json:"priorities"`
+		MaxConcurrent    *int          `json:"max_concurrent"`
+		ReservedCritical int           `json:"reserved_critical"`
 	} `json:"services"`
 	Routes []struct {
+		Resource      string             `json:"resource"`
 		Prefix        string             `json:"path_prefix"`
 		Service       string             `json:"service"`
 		StripPrefix   bool               `json:"strip_prefix"`
@@ -185,7 +191,11 @@ func LoadWithEnv(filename, envFile string) (Config, error) {
 		if err != nil {
 			return Config{}, err
 		}
-		c.Services[name] = Service{Upstream: target, MaxConcurrent: limit, ReservedCritical: reserved, Adaptive: a, Tenants: t, Priorities: pc}
+		de, collectors, err := parseDecisions(name, service.Decisions, lookup, t != nil)
+		if err != nil {
+			return Config{}, err
+		}
+		c.Services[name] = Service{Decisions: de, Collectors: collectors, Upstream: target, MaxConcurrent: limit, ReservedCritical: reserved, Adaptive: a, Tenants: t, Priorities: pc}
 	}
 	prefixes := map[string]bool{}
 	for _, r := range raw.Routes {
@@ -222,7 +232,10 @@ func LoadWithEnv(filename, envFile string) (Config, error) {
 				return Config{}, fmt.Errorf("route %q latency_target must be positive", r.Prefix)
 			}
 		}
-		c.Routes = append(c.Routes, Route{Prefix: r.Prefix, Service: r.Service, StripPrefix: r.StripPrefix, Priority: priority, LatencyTarget: latencyTarget})
+		if r.Resource != "" && !decision.ValidName(r.Resource) {
+			return Config{}, fmt.Errorf("route resource must match [a-z][a-z0-9_]{0,63}")
+		}
+		c.Routes = append(c.Routes, Route{Resource: r.Resource, Prefix: r.Prefix, Service: r.Service, StripPrefix: r.StripPrefix, Priority: priority, LatencyTarget: latencyTarget})
 	}
 	if len(c.Routes) == 0 {
 		return Config{}, fmt.Errorf("configure at least one route and its named service")

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	decisionpkg "github.com/HN026/gatewise/decision"
 	"github.com/HN026/gatewise/internal/adaptive"
 	"github.com/HN026/gatewise/internal/tenancy"
 	prioritypkg "github.com/HN026/gatewise/priority"
@@ -27,6 +28,8 @@ const (
 )
 
 type ServiceConfig struct {
+	// Decisions is optional. The caller owns observation collection and lifecycle.
+	Decisions *decisionpkg.Engine
 	// Name identifies this service in rejection responses and logs; default "service".
 	Name string
 	// MaxConcurrent is required and must be positive.
@@ -46,6 +49,7 @@ type ServiceConfig struct {
 // It is safe for concurrent use. Reuse one instance for handlers sharing
 // capacity; construct separate instances for independent service budgets.
 type Service struct {
+	decisions      *decisionpkg.Engine
 	name           string
 	limiter        *admission.Limiter
 	logger         *slog.Logger
@@ -73,6 +77,10 @@ func NewService(c ServiceConfig) (*Service, error) {
 	s.tenants, s.tenantResolver, err = newTenants(c.Tenants, c.MaxConcurrent)
 	if err != nil {
 		return nil, err
+	}
+	s.decisions = c.Decisions
+	if s.decisions != nil && s.decisions.HasActorRules() && s.tenantResolver == nil {
+		return nil, fmt.Errorf("gatewise: actor rules require a trusted tenant resolver")
 	}
 	if c.Priorities != nil {
 		if c.ReservedCritical != 0 {
@@ -136,6 +144,21 @@ func (s *Service) Middleware(priority Priority, next http.Handler, options ...Ha
 			return
 		}
 		priority := routePriority
+		var trace decisionpkg.Result
+		if s.decisions != nil {
+			trace = decisionpkg.NewResult(string(priority), o.resource)
+		}
+		stage := "identity"
+		fail := func(reason admission.Decision, status int) {
+			if s.decisions != nil {
+				trace.Priority = string(priority)
+				trace.Reason = string(reason)
+				trace.Stage = stage
+				trace.Mark(stage, string(reason))
+				s.recordDecision(trace)
+			}
+			s.reject(w, priority, reason, status, trace)
+		}
 		bucket, buckets := -1, 0
 		if s.priorities != nil {
 			resolved, m, err := s.priorities.Resolve(r, string(routePriority), time.Now())
@@ -146,7 +169,7 @@ func (s *Service) Middleware(priority Priority, next http.Handler, options ...Ha
 					status, decision = 403, admission.PriorityUntrusted
 				}
 				s.statistics.resolution(priority, "invalid")
-				s.reject(w, priority, decision, status)
+				fail(decision, status)
 				return
 			}
 			r = resolved
@@ -159,8 +182,10 @@ func (s *Service) Middleware(priority Priority, next http.Handler, options ...Ha
 		}
 		p := admission.Priority(priority)
 		var tenantLease *tenancy.Lease
+		var id string
 		if s.tenants != nil {
-			id, err := s.tenantResolver(r)
+			var err error
+			id, err = s.tenantResolver(r)
 			if r.Context().Err() != nil {
 				return
 			}
@@ -171,12 +196,41 @@ func (s *Service) Middleware(priority Priority, next http.Handler, options ...Ha
 					decision = admission.TenantUntrusted
 					status = 403
 				}
-				s.reject(w, priority, decision, status)
+				fail(decision, status)
 				return
 			}
+		}
+		if id != "" && !tenancy.ValidID(id) {
+			fail(admission.TenantInvalid, 400)
+			return
+		}
+		trace.Priority = string(priority)
+		trace.Mark("identity", "")
+		stage = "signals"
+		ceiling := 0
+		if s.decisions != nil {
+			trace.Evaluation = s.decisions.Evaluate(decisionpkg.Target{Actor: id, Resource: o.resource}, s.limiter.Snapshot().Limit, time.Now())
+			if trace.Evaluation.Mode == decisionpkg.Enforce {
+				ceiling = trace.Evaluation.SignalCeiling
+			}
+			w.Header().Set("X-Gatewise-Decision-Mode", string(trace.Evaluation.Mode))
+			w.Header().Set("X-Gatewise-Signal-Proposal", trace.Evaluation.Action)
+			w.Header().Set("X-Gatewise-Proposed-Limit", strconv.Itoa(trace.Evaluation.ProposedLimit))
+			w.Header().Set("X-Gatewise-Effective-Limit", strconv.Itoa(trace.Evaluation.EffectiveLimit))
+			if trace.Evaluation.Reject {
+				fail(admission.Decision(trace.Evaluation.Reason), 503)
+				return
+			}
+		}
+		trace.Mark("signals", "")
+		stage = "tenant"
+		if s.tenants != nil {
 			capacity := 0
 			if s.tenants.SharingEnabled() {
 				capacity = s.limiter.Snapshot().Limit
+				if ceiling > 0 && ceiling < capacity {
+					capacity = ceiling
+				}
 			}
 			lease, decision := s.tenants.AcquireWithLimit(id, time.Now(), capacity)
 			if decision != admission.Admitted {
@@ -184,25 +238,27 @@ func (s *Service) Middleware(priority Priority, next http.Handler, options ...Ha
 				if decision == admission.TenantMissing || decision == admission.TenantInvalid {
 					status = 400
 				}
-				s.reject(w, priority, decision, status)
+				fail(decision, status)
 				return
 			}
 			tenantLease = lease
 			defer func() { lease.Release(time.Now()) }()
 		}
+		trace.Mark("tenant", "")
+		stage = "capacity"
 		start := time.Now()
 		var decision admission.Decision
 		var generation uint64
 		if s.controller != nil {
-			decision, generation = s.controller.BeginCohort(p, start, bucket, buckets)
+			decision, generation = s.controller.BeginBudget(p, start, bucket, buckets, ceiling)
 		} else {
-			decision = s.limiter.TryAcquireCohort(p, bucket, buckets)
+			decision = s.limiter.TryAcquireBudget(p, bucket, buckets, ceiling)
 		}
 		if decision != admission.Admitted {
 			if tenantLease != nil {
 				tenantLease.Rejected(decision, time.Now())
 			}
-			s.reject(w, priority, decision, 503)
+			fail(decision, 503)
 			return
 		}
 		if tenantLease != nil {
@@ -213,6 +269,13 @@ func (s *Service) Middleware(priority Priority, next http.Handler, options ...Ha
 				w.Header().Set("X-Gatewise-Tenant-Share", strconv.Itoa(tenantLease.Share()))
 				w.Header().Set("X-Gatewise-Tenant-Ceiling", strconv.Itoa(tenantLease.Ceiling()))
 			}
+		}
+		trace.Mark("capacity", "")
+		trace.Allowed = true
+		trace.Stage = "admitted"
+		if s.decisions != nil {
+			s.recordDecision(trace)
+			r = r.WithContext(decisionpkg.WithResult(r.Context(), trace))
 		}
 		s.statistics.admission(priority, decision)
 		s.setHeaders(w)
@@ -248,7 +311,7 @@ func (s *Service) setHeaders(w http.ResponseWriter) {
 	w.Header().Set("X-Gatewise-Limit", strconv.Itoa(state.Limit))
 	w.Header().Set("X-Gatewise-Mode", state.Mode)
 }
-func (s *Service) reject(w http.ResponseWriter, priority Priority, decision admission.Decision, status int) {
+func (s *Service) reject(w http.ResponseWriter, priority Priority, decision admission.Decision, status int, traces ...decisionpkg.Result) {
 	s.statistics.admission(priority, decision)
 	s.setHeaders(w)
 	if s.logger != nil {
@@ -261,5 +324,9 @@ func (s *Service) reject(w http.ResponseWriter, priority Priority, decision admi
 	if status != 503 {
 		code = string(decision)
 	}
-	_ = json.NewEncoder(w).Encode(map[string]string{"error": code, "service": s.name, "priority": string(priority), "reason": string(decision)})
+	body := map[string]any{"error": code, "service": s.name, "priority": string(priority), "reason": string(decision)}
+	if s.decisions != nil && len(traces) > 0 {
+		body["decision"] = traces[0]
+	}
+	_ = json.NewEncoder(w).Encode(body)
 }

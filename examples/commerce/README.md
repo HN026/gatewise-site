@@ -83,3 +83,9 @@ Use `python3 run.py --profile middleware-fixed --sharing 4` (or `proxy-adaptive`
 `python3 sharing_benchmark.py --output results/sharing-results.json` compares hard caps and ceilings 4/12 through solo load, returning tenants, all tenants busy, solo load again and healthy recovery. All traffic is critical. First-success time includes the wait until the tenant’s first scheduled arrival. Report throughput, ordinary latency and rejections together; a large ceiling can add SQL-pool waiting.
 
 `python3 validate_sharing.py --output results/sharing-validation.json` checks returning customers while borrowed requests are still running. This targeted test retries 503 every 10ms (up to 3s); the separate scheduled throughput experiment never retries.
+
+## Controlled overload signals
+
+Run `python3 run.py --profile proxy-adaptive --decisions enforce --verify` or choose `--decisions observe`. The Signals Postman contract tests delivery and policy with two controlled providers on each existing loopback admin listener. No extra application process is added. Threshold `.8`, pressure cap `4`, unknown cap `2`, polling `100ms`, deadline `50ms` and freshness `600ms` are experimental settings, not recommended production values. Signal controls are absent from the business listener. Observe mode keeps hard service limits while recording proposals.
+
+`python3 decision_benchmark.py --output results/decision-results.json` compares disabled, observe and enforce modes for both fixed/adaptive middleware and proxy deployments, three repeats each. Healthy traffic, pressure, conflicting sources, source failure and recovery run against real PostgreSQL. The provider values are controlled; this release does not infer pressure from SQL-pool metrics. See the site’s benchmark page for outcomes, rejections, pool waiting, measured overhead and limitations.

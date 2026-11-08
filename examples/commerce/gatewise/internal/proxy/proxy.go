@@ -60,7 +60,7 @@ func New(c config.Config, logger *slog.Logger) (http.Handler, func()) {
 	for name, service := range c.Services {
 		h, closeIdle := newUpstream(c, service.Upstream, logger.With("service", name))
 		guard, err := middleware.NewService(middleware.ServiceConfig{
-			Name: name, MaxConcurrent: service.MaxConcurrent, ReservedCritical: service.ReservedCritical, Logger: logger, Adaptive: service.Adaptive, Tenants: service.Tenants, Priorities: service.Priorities,
+			Decisions: service.Decisions, Name: name, MaxConcurrent: service.MaxConcurrent, ReservedCritical: service.ReservedCritical, Logger: logger, Adaptive: service.Adaptive, Tenants: service.Tenants, Priorities: service.Priorities,
 		})
 		if err != nil {
 			panic("proxy: invalid validated service configuration: " + err.Error())
@@ -70,6 +70,20 @@ func New(c config.Config, logger *slog.Logger) (http.Handler, func()) {
 		}
 		backends[name] = backend{handler: h, guard: guard}
 		cleanups = append(cleanups, closeIdle)
+		if service.Decisions != nil {
+			ctx, cancel := context.WithCancel(context.Background())
+			done := make(chan struct{})
+			go func() { defer close(done); _ = service.Decisions.Run(ctx, service.Collectors) }()
+			cleanups = append(cleanups, func() {
+				cancel()
+				<-done
+				for _, c := range service.Collectors {
+					if p, ok := c.Provider.(interface{ Close() }); ok {
+						p.Close()
+					}
+				}
+			})
+		}
 	}
 
 	h := accessLog(logger, route(newRouter(c.Routes, backends), promhttp.HandlerFor(registry, promhttp.HandlerOpts{})))

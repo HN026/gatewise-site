@@ -246,7 +246,7 @@ func main() {
 					}
 					_ = json.Unmarshal(body, &rejection)
 					switch rejection.Reason {
-					case "tenant_concurrency_limit", "tenant_registry_full", "concurrency_limit", "critical_capacity_reserved", "tier_capacity_reserved", "cohort_limited", "tenant_share_reserved":
+					case "signal_pressure", "signal_unavailable", "signal_concurrency_limit", "tenant_concurrency_limit", "tenant_registry_full", "concurrency_limit", "critical_capacity_reserved", "tier_capacity_reserved", "cohort_limited", "tenant_share_reserved":
 						reason = rejection.Reason
 					default:
 						reason = "other_503"

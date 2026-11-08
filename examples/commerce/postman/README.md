@@ -11,3 +11,5 @@ Use `Priorities.postman_collection.json` with `run.py --priorities`. It checks s
 For sharing, use `Sharing.postman_collection.json` against `run.py --sharing 4`. It extends the tenant contract with borrowed-admission headers and sharing metrics. The 4-request ceiling includes the configured 2-request share.
 
 `python3 validate_sharing.py --output results/sharing-validation.json` checks returning customers while borrowed requests are still running. This targeted test retries 503 every 10ms (up to 3s); the separate scheduled throughput experiment never retries.
+
+Use `Signals.postman_collection.json` with `run.py --decisions enforce` or `--decisions observe`. The generated environment selects the expected mode. Run in order; allow script timeout 15 seconds. It verifies conflicting signals, stale/unknown observations, provider errors/timeouts, recovery, mode ownership and metrics against the real services. These loopback providers are controlled test inputs, not automatic database or runtime sensors. `python3 decision_benchmark.py --output results/decision-results.json` compares disabled, observe and enforce modes, with no retries.

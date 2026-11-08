@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+ "github.com/HN026/gatewise/decision"
 	"errors"
 	"github.com/HN026/gatewise-examples/commerce/internal/config"
 	"github.com/HN026/gatewise-examples/commerce/internal/handler"
@@ -33,9 +34,12 @@ func Run(ctx context.Context, c config.Config) error {
 		pc.TrustedProxies = strings.Split(c.PriorityTrusted, ",")
 	}
 	var g *middleware.Service
+ var engine *decision.Engine
+ var collectors []decision.Collector
 	if c.Mode != "direct" && c.Mode != "semaphore" {
 		cfg := middleware.ServiceConfig{Name: c.Role, MaxConcurrent: c.MaxConcurrent, ReservedCritical: c.Reserved}
-		if pc != nil {
+		if c.DecisionMode!="" { engine,collectors,e=signalEngine(c.DecisionMode,c.AdminListen);if e!=nil {return e};cfg.Decisions=engine }
+ if pc != nil {
 			cfg.ReservedCritical = 0
 			cfg.Priorities = pc
 		}
@@ -135,6 +139,7 @@ func Run(ctx context.Context, c config.Config) error {
 	admin := http.NewServeMux()
 	admin.HandleFunc("GET /state", a.State)
 	admin.HandleFunc("PUT /control", a.Update)
+ if c.DecisionMode!="" { controls:=newSignals();admin.Handle("GET /signals/{name}",controls);admin.Handle("PUT /signals/{name}",controls) }
 	l, e := net.Listen("tcp", c.Listen)
 	if e != nil {
 		return e
@@ -149,6 +154,8 @@ func Run(ctx context.Context, c config.Config) error {
 	errs := make(chan error, 2)
 	go func() { errs <- servers[0].Serve(l) }()
 	go func() { errs <- servers[1].Serve(al) }()
+ collectorCtx,stopCollectors:=context.WithCancel(ctx);defer stopCollectors()
+ if engine!=nil { done:=make(chan struct{});go func(){defer close(done);_ = engine.Run(collectorCtx,collectors)}();defer func(){stopCollectors();<-done;for _,c:=range collectors {c.Provider.(*decision.HTTPProvider).Close()}}() }
 	select {
 	case <-ctx.Done():
 	case e = <-errs:

@@ -49,9 +49,12 @@ func (c *Controller) Begin(priority admission.Priority, now time.Time) (admissio
 	return c.BeginCohort(priority, now, -1, 0)
 }
 func (c *Controller) BeginCohort(priority admission.Priority, now time.Time, bucket, buckets int) (admission.Decision, uint64) {
+	return c.BeginBudget(priority, now, bucket, buckets, 0)
+}
+func (c *Controller) BeginBudget(priority admission.Priority, now time.Time, bucket, buckets, ceiling int) (admission.Decision, uint64) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	decision := c.limiter.TryAcquireCohort(priority, bucket, buckets)
+	decision := c.limiter.TryAcquireBudget(priority, bucket, buckets, ceiling)
 	state := c.limiter.Snapshot()
 	if c.start.IsZero() {
 		c.reset(now)
@@ -59,7 +62,7 @@ func (c *Controller) BeginCohort(priority admission.Priority, now time.Time, buc
 	if decision == admission.Admitted && state.Active == 1 && !c.lastSample.IsZero() && now.Sub(c.lastSample) > 2*c.config.Interval {
 		c.reset(now)
 	}
-	if decision != admission.Admitted && decision != admission.CohortLimited || state.Active >= state.Limit || (priority == admission.Background && state.Background >= state.Limit-state.ReservedCritical) {
+	if decision != admission.Admitted && decision != admission.CohortLimited && decision != admission.SignalConcurrencyLimit || state.Active >= state.Limit || (priority == admission.Background && state.Background >= state.Limit-state.ReservedCritical) {
 		c.saturated = true
 	}
 	return decision, c.generation

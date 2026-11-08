@@ -3,7 +3,7 @@ module github.com/HN026/gatewise-examples/commerce
 go 1.25.0
 
 require (
-	github.com/HN026/gatewise v0.5.0
+	github.com/HN026/gatewise v0.6.0
 	github.com/jackc/pgx/v5 v5.12.0
 	github.com/prometheus/client_golang v1.22.0
 )
