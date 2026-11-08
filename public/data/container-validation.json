@@ -1,0 +1,40 @@
+{
+  "release": "v0.11.1",
+  "started_at": "2026-11-08T21:57:22.421979+00:00",
+  "checks": [
+    {
+      "name": "image runs as nonroot",
+      "pass": true
+    },
+    {
+      "name": "configuration validation works without a backend",
+      "pass": true
+    },
+    {
+      "name": "missing backend configuration rejected",
+      "pass": true
+    },
+    {
+      "name": "all three realSQL services reachable",
+      "pass": true
+    },
+    {
+      "name": "Prometheus metrics exposed",
+      "pass": true
+    },
+    {
+      "name": "Commerce Postman contract passes through image",
+      "pass": true
+    },
+    {
+      "name": "SIGTERM exits cleanly",
+      "pass": true
+    }
+  ],
+  "image_id": "3bbe6d117213e7547c3ce423fdac21f7544ff305d7ffc3ebabe95cb46a8237ac",
+  "architecture": "arm64",
+  "size_bytes": 11795027,
+  "passed": true,
+  "postman_assertions": 74,
+  "finished_at": "2026-11-08T21:57:29.870895+00:00"
+}

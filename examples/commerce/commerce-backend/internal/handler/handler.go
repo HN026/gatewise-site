@@ -19,9 +19,10 @@ import (
 )
 
 type Control struct {
-	Multiplier   int `json:"work_multiplier"`
-	DelayMS      int `json:"sql_delay_ms"`
-	FailureEvery int `json:"failure_every"`
+	IgnoreCancellation bool `json:"ignore_cancellation"`
+	Multiplier         int  `json:"work_multiplier"`
+	DelayMS            int  `json:"sql_delay_ms"`
+	FailureEvery       int  `json:"failure_every"`
 }
 type API struct {
 	Store       *store.Store
@@ -97,7 +98,11 @@ func (a *API) Checkout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	c, fail := a.config()
-	ctx, cancel := context.WithTimeout(r.Context(), a.Store.Timeout)
+	parent := r.Context()
+	if c.IgnoreCancellation {
+		parent = context.WithoutCancel(parent)
+	}
+	ctx, cancel := context.WithTimeout(parent, a.Store.Timeout)
 	defer cancel()
 	o, created, e := a.Store.Checkout(ctx, key, body.Amount, time.Duration(c.DelayMS)*time.Millisecond, fail)
 	if e != nil {

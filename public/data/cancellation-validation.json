@@ -1,0 +1,745 @@
+{
+  "release": "v0.11.1",
+  "started_at": "2026-11-08T21:57:11.406492+00:00",
+  "scope": "Controlled realSQL failure-mode validation, not throughput or a promise about arbitrary upstream cancellation. IgnoreCancellation strips the caller cancellation only for fixture checkout; existing1s SQL timeout remains authoritative. Three waves of4checkouts; no retries. Middleware holds slots until actual handler return; proxy slots protect proxy request lifetime.",
+  "runs": [
+    {
+      "profile": "middleware-fixed",
+      "ignore_cancellation": false,
+      "client_timeout_ms": 40,
+      "sql_delay_ms": 300,
+      "sql_timeout_ms": 1000,
+      "waves": [
+        {
+          "wave": 1,
+          "outcomes": [
+            "client_timeout",
+            "client_timeout",
+            "client_timeout",
+            "client_timeout"
+          ],
+          "backend": {
+            "mode": "fixed",
+            "execution_limit": 0,
+            "rate_per_second": 0,
+            "burst": 0,
+            "active": 0,
+            "peak": 4,
+            "admitted": 4,
+            "rejected": 0
+          },
+          "proxy_or_middleware": {
+            "limit": 4.0,
+            "active": 0.0,
+            "waiting": 0,
+            "high_water": 0,
+            "capacity": 0,
+            "queue_events": {
+              "enqueued": 0,
+              "admitted": 0,
+              "full": 0,
+              "reserved": 0,
+              "timeout": 0,
+              "deadline": 0,
+              "canceled": 0,
+              "policy_rejected": 0
+            }
+          },
+          "pool": {
+            "MaxOpenConnections": 4,
+            "OpenConnections": 2,
+            "InUse": 0,
+            "Idle": 2,
+            "WaitCount": 0,
+            "WaitDuration": 0,
+            "MaxIdleClosed": 0,
+            "MaxIdleTimeClosed": 0,
+            "MaxLifetimeClosed": 0
+          }
+        },
+        {
+          "wave": 2,
+          "outcomes": [
+            "client_timeout",
+            "client_timeout",
+            "client_timeout",
+            "client_timeout"
+          ],
+          "backend": {
+            "mode": "fixed",
+            "execution_limit": 0,
+            "rate_per_second": 0,
+            "burst": 0,
+            "active": 0,
+            "peak": 4,
+            "admitted": 8,
+            "rejected": 0
+          },
+          "proxy_or_middleware": {
+            "limit": 4.0,
+            "active": 0.0,
+            "waiting": 0,
+            "high_water": 0,
+            "capacity": 0,
+            "queue_events": {
+              "enqueued": 0,
+              "admitted": 0,
+              "full": 0,
+              "reserved": 0,
+              "timeout": 0,
+              "deadline": 0,
+              "canceled": 0,
+              "policy_rejected": 0
+            }
+          },
+          "pool": {
+            "MaxOpenConnections": 4,
+            "OpenConnections": 3,
+            "InUse": 0,
+            "Idle": 3,
+            "WaitCount": 0,
+            "WaitDuration": 0,
+            "MaxIdleClosed": 0,
+            "MaxIdleTimeClosed": 0,
+            "MaxLifetimeClosed": 0
+          }
+        },
+        {
+          "wave": 3,
+          "outcomes": [
+            "client_timeout",
+            "client_timeout",
+            "client_timeout",
+            "client_timeout"
+          ],
+          "backend": {
+            "mode": "fixed",
+            "execution_limit": 0,
+            "rate_per_second": 0,
+            "burst": 0,
+            "active": 0,
+            "peak": 4,
+            "admitted": 12,
+            "rejected": 0
+          },
+          "proxy_or_middleware": {
+            "limit": 4.0,
+            "active": 0.0,
+            "waiting": 0,
+            "high_water": 0,
+            "capacity": 0,
+            "queue_events": {
+              "enqueued": 0,
+              "admitted": 0,
+              "full": 0,
+              "reserved": 0,
+              "timeout": 0,
+              "deadline": 0,
+              "canceled": 0,
+              "policy_rejected": 0
+            }
+          },
+          "pool": {
+            "MaxOpenConnections": 4,
+            "OpenConnections": 4,
+            "InUse": 0,
+            "Idle": 4,
+            "WaitCount": 0,
+            "WaitDuration": 0,
+            "MaxIdleClosed": 0,
+            "MaxIdleTimeClosed": 0,
+            "MaxLifetimeClosed": 0
+          }
+        }
+      ],
+      "checks": [
+        {
+          "name": "cooperative work drains after wave1",
+          "pass": true
+        },
+        {
+          "name": "cooperative work drains after wave2",
+          "pass": true
+        },
+        {
+          "name": "cooperative work drains after wave3",
+          "pass": true
+        },
+        {
+          "name": "Gatewise sampled request ceiling4",
+          "pass": true
+        },
+        {
+          "name": "SQL pool ceiling4",
+          "pass": true
+        },
+        {
+          "name": "client deadlines exercised",
+          "pass": true
+        },
+        {
+          "name": "all actual work and SQL connections released",
+          "pass": true
+        },
+        {
+          "name": "healthy checkout recovers",
+          "pass": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "profile": "middleware-fixed",
+      "ignore_cancellation": true,
+      "client_timeout_ms": 40,
+      "sql_delay_ms": 300,
+      "sql_timeout_ms": 1000,
+      "waves": [
+        {
+          "wave": 1,
+          "outcomes": [
+            "client_timeout",
+            "client_timeout",
+            "client_timeout",
+            "client_timeout"
+          ],
+          "backend": {
+            "mode": "fixed",
+            "execution_limit": 0,
+            "rate_per_second": 0,
+            "burst": 0,
+            "active": 4,
+            "peak": 4,
+            "admitted": 4,
+            "rejected": 0
+          },
+          "proxy_or_middleware": {
+            "limit": 4.0,
+            "active": 4.0,
+            "waiting": 0,
+            "high_water": 0,
+            "capacity": 0,
+            "queue_events": {
+              "enqueued": 0,
+              "admitted": 0,
+              "full": 0,
+              "reserved": 0,
+              "timeout": 0,
+              "deadline": 0,
+              "canceled": 0,
+              "policy_rejected": 0
+            }
+          },
+          "pool": {
+            "MaxOpenConnections": 4,
+            "OpenConnections": 4,
+            "InUse": 4,
+            "Idle": 0,
+            "WaitCount": 0,
+            "WaitDuration": 0,
+            "MaxIdleClosed": 0,
+            "MaxIdleTimeClosed": 0,
+            "MaxLifetimeClosed": 0
+          }
+        },
+        {
+          "wave": 2,
+          "outcomes": [
+            503,
+            503,
+            503,
+            503
+          ],
+          "backend": {
+            "mode": "fixed",
+            "execution_limit": 0,
+            "rate_per_second": 0,
+            "burst": 0,
+            "active": 4,
+            "peak": 4,
+            "admitted": 4,
+            "rejected": 0
+          },
+          "proxy_or_middleware": {
+            "limit": 4.0,
+            "active": 4.0,
+            "waiting": 0,
+            "high_water": 0,
+            "capacity": 0,
+            "queue_events": {
+              "enqueued": 0,
+              "admitted": 0,
+              "full": 0,
+              "reserved": 0,
+              "timeout": 0,
+              "deadline": 0,
+              "canceled": 0,
+              "policy_rejected": 0
+            }
+          },
+          "pool": {
+            "MaxOpenConnections": 4,
+            "OpenConnections": 4,
+            "InUse": 4,
+            "Idle": 0,
+            "WaitCount": 0,
+            "WaitDuration": 0,
+            "MaxIdleClosed": 0,
+            "MaxIdleTimeClosed": 0,
+            "MaxLifetimeClosed": 0
+          }
+        },
+        {
+          "wave": 3,
+          "outcomes": [
+            503,
+            503,
+            503,
+            503
+          ],
+          "backend": {
+            "mode": "fixed",
+            "execution_limit": 0,
+            "rate_per_second": 0,
+            "burst": 0,
+            "active": 4,
+            "peak": 4,
+            "admitted": 4,
+            "rejected": 0
+          },
+          "proxy_or_middleware": {
+            "limit": 4.0,
+            "active": 4.0,
+            "waiting": 0,
+            "high_water": 0,
+            "capacity": 0,
+            "queue_events": {
+              "enqueued": 0,
+              "admitted": 0,
+              "full": 0,
+              "reserved": 0,
+              "timeout": 0,
+              "deadline": 0,
+              "canceled": 0,
+              "policy_rejected": 0
+            }
+          },
+          "pool": {
+            "MaxOpenConnections": 4,
+            "OpenConnections": 4,
+            "InUse": 4,
+            "Idle": 0,
+            "WaitCount": 0,
+            "WaitDuration": 0,
+            "MaxIdleClosed": 0,
+            "MaxIdleTimeClosed": 0,
+            "MaxLifetimeClosed": 0
+          }
+        }
+      ],
+      "checks": [
+        {
+          "name": "middleware holds actual handler lifetime wave1",
+          "pass": true
+        },
+        {
+          "name": "middleware holds actual handler lifetime wave2",
+          "pass": true
+        },
+        {
+          "name": "middleware holds actual handler lifetime wave3",
+          "pass": true
+        },
+        {
+          "name": "Gatewise sampled request ceiling4",
+          "pass": true
+        },
+        {
+          "name": "SQL pool ceiling4",
+          "pass": true
+        },
+        {
+          "name": "new requests refused while canceled handlers still work",
+          "pass": true
+        },
+        {
+          "name": "client deadlines exercised",
+          "pass": true
+        },
+        {
+          "name": "all actual work and SQL connections released",
+          "pass": true
+        },
+        {
+          "name": "healthy checkout recovers",
+          "pass": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "profile": "proxy-fixed",
+      "ignore_cancellation": false,
+      "client_timeout_ms": 40,
+      "sql_delay_ms": 300,
+      "sql_timeout_ms": 1000,
+      "waves": [
+        {
+          "wave": 1,
+          "outcomes": [
+            "client_timeout",
+            "client_timeout",
+            "client_timeout",
+            "client_timeout"
+          ],
+          "backend": {
+            "mode": "direct",
+            "execution_limit": 0,
+            "rate_per_second": 0,
+            "burst": 0,
+            "active": 0,
+            "peak": 4,
+            "admitted": 4,
+            "rejected": 0
+          },
+          "proxy_or_middleware": {
+            "limit": 4.0,
+            "active": 0.0,
+            "waiting": 0,
+            "high_water": 0,
+            "capacity": 0,
+            "queue_events": {
+              "enqueued": 0,
+              "admitted": 0,
+              "full": 0,
+              "reserved": 0,
+              "timeout": 0,
+              "deadline": 0,
+              "canceled": 0,
+              "policy_rejected": 0
+            }
+          },
+          "pool": {
+            "MaxOpenConnections": 4,
+            "OpenConnections": 3,
+            "InUse": 0,
+            "Idle": 3,
+            "WaitCount": 0,
+            "WaitDuration": 0,
+            "MaxIdleClosed": 0,
+            "MaxIdleTimeClosed": 0,
+            "MaxLifetimeClosed": 0
+          }
+        },
+        {
+          "wave": 2,
+          "outcomes": [
+            "client_timeout",
+            "client_timeout",
+            "client_timeout",
+            "client_timeout"
+          ],
+          "backend": {
+            "mode": "direct",
+            "execution_limit": 0,
+            "rate_per_second": 0,
+            "burst": 0,
+            "active": 0,
+            "peak": 4,
+            "admitted": 8,
+            "rejected": 0
+          },
+          "proxy_or_middleware": {
+            "limit": 4.0,
+            "active": 0.0,
+            "waiting": 0,
+            "high_water": 0,
+            "capacity": 0,
+            "queue_events": {
+              "enqueued": 0,
+              "admitted": 0,
+              "full": 0,
+              "reserved": 0,
+              "timeout": 0,
+              "deadline": 0,
+              "canceled": 0,
+              "policy_rejected": 0
+            }
+          },
+          "pool": {
+            "MaxOpenConnections": 4,
+            "OpenConnections": 3,
+            "InUse": 0,
+            "Idle": 3,
+            "WaitCount": 0,
+            "WaitDuration": 0,
+            "MaxIdleClosed": 0,
+            "MaxIdleTimeClosed": 0,
+            "MaxLifetimeClosed": 0
+          }
+        },
+        {
+          "wave": 3,
+          "outcomes": [
+            "client_timeout",
+            "client_timeout",
+            "client_timeout",
+            "client_timeout"
+          ],
+          "backend": {
+            "mode": "direct",
+            "execution_limit": 0,
+            "rate_per_second": 0,
+            "burst": 0,
+            "active": 0,
+            "peak": 4,
+            "admitted": 12,
+            "rejected": 0
+          },
+          "proxy_or_middleware": {
+            "limit": 4.0,
+            "active": 0.0,
+            "waiting": 0,
+            "high_water": 0,
+            "capacity": 0,
+            "queue_events": {
+              "enqueued": 0,
+              "admitted": 0,
+              "full": 0,
+              "reserved": 0,
+              "timeout": 0,
+              "deadline": 0,
+              "canceled": 0,
+              "policy_rejected": 0
+            }
+          },
+          "pool": {
+            "MaxOpenConnections": 4,
+            "OpenConnections": 3,
+            "InUse": 0,
+            "Idle": 3,
+            "WaitCount": 0,
+            "WaitDuration": 0,
+            "MaxIdleClosed": 0,
+            "MaxIdleTimeClosed": 0,
+            "MaxLifetimeClosed": 0
+          }
+        }
+      ],
+      "checks": [
+        {
+          "name": "cooperative work drains after wave1",
+          "pass": true
+        },
+        {
+          "name": "cooperative work drains after wave2",
+          "pass": true
+        },
+        {
+          "name": "cooperative work drains after wave3",
+          "pass": true
+        },
+        {
+          "name": "Gatewise sampled request ceiling4",
+          "pass": true
+        },
+        {
+          "name": "SQL pool ceiling4",
+          "pass": true
+        },
+        {
+          "name": "client deadlines exercised",
+          "pass": true
+        },
+        {
+          "name": "all actual work and SQL connections released",
+          "pass": true
+        },
+        {
+          "name": "healthy checkout recovers",
+          "pass": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "profile": "proxy-fixed",
+      "ignore_cancellation": true,
+      "client_timeout_ms": 40,
+      "sql_delay_ms": 300,
+      "sql_timeout_ms": 1000,
+      "waves": [
+        {
+          "wave": 1,
+          "outcomes": [
+            "client_timeout",
+            "client_timeout",
+            "client_timeout",
+            "client_timeout"
+          ],
+          "backend": {
+            "mode": "direct",
+            "execution_limit": 0,
+            "rate_per_second": 0,
+            "burst": 0,
+            "active": 4,
+            "peak": 4,
+            "admitted": 4,
+            "rejected": 0
+          },
+          "proxy_or_middleware": {
+            "limit": 4.0,
+            "active": 0.0,
+            "waiting": 0,
+            "high_water": 0,
+            "capacity": 0,
+            "queue_events": {
+              "enqueued": 0,
+              "admitted": 0,
+              "full": 0,
+              "reserved": 0,
+              "timeout": 0,
+              "deadline": 0,
+              "canceled": 0,
+              "policy_rejected": 0
+            }
+          },
+          "pool": {
+            "MaxOpenConnections": 4,
+            "OpenConnections": 4,
+            "InUse": 4,
+            "Idle": 0,
+            "WaitCount": 0,
+            "WaitDuration": 0,
+            "MaxIdleClosed": 0,
+            "MaxIdleTimeClosed": 0,
+            "MaxLifetimeClosed": 0
+          }
+        },
+        {
+          "wave": 2,
+          "outcomes": [
+            "client_timeout",
+            "client_timeout",
+            "client_timeout",
+            "client_timeout"
+          ],
+          "backend": {
+            "mode": "direct",
+            "execution_limit": 0,
+            "rate_per_second": 0,
+            "burst": 0,
+            "active": 8,
+            "peak": 8,
+            "admitted": 8,
+            "rejected": 0
+          },
+          "proxy_or_middleware": {
+            "limit": 4.0,
+            "active": 0.0,
+            "waiting": 0,
+            "high_water": 0,
+            "capacity": 0,
+            "queue_events": {
+              "enqueued": 0,
+              "admitted": 0,
+              "full": 0,
+              "reserved": 0,
+              "timeout": 0,
+              "deadline": 0,
+              "canceled": 0,
+              "policy_rejected": 0
+            }
+          },
+          "pool": {
+            "MaxOpenConnections": 4,
+            "OpenConnections": 4,
+            "InUse": 4,
+            "Idle": 0,
+            "WaitCount": 4,
+            "WaitDuration": 0,
+            "MaxIdleClosed": 0,
+            "MaxIdleTimeClosed": 0,
+            "MaxLifetimeClosed": 0
+          }
+        },
+        {
+          "wave": 3,
+          "outcomes": [
+            "client_timeout",
+            "client_timeout",
+            "client_timeout",
+            "client_timeout"
+          ],
+          "backend": {
+            "mode": "direct",
+            "execution_limit": 0,
+            "rate_per_second": 0,
+            "burst": 0,
+            "active": 12,
+            "peak": 12,
+            "admitted": 12,
+            "rejected": 0
+          },
+          "proxy_or_middleware": {
+            "limit": 4.0,
+            "active": 0.0,
+            "waiting": 0,
+            "high_water": 0,
+            "capacity": 0,
+            "queue_events": {
+              "enqueued": 0,
+              "admitted": 0,
+              "full": 0,
+              "reserved": 0,
+              "timeout": 0,
+              "deadline": 0,
+              "canceled": 0,
+              "policy_rejected": 0
+            }
+          },
+          "pool": {
+            "MaxOpenConnections": 4,
+            "OpenConnections": 4,
+            "InUse": 4,
+            "Idle": 0,
+            "WaitCount": 8,
+            "WaitDuration": 0,
+            "MaxIdleClosed": 0,
+            "MaxIdleTimeClosed": 0,
+            "MaxLifetimeClosed": 0
+          }
+        }
+      ],
+      "checks": [
+        {
+          "name": "Gatewise sampled request ceiling4",
+          "pass": true
+        },
+        {
+          "name": "SQL pool ceiling4",
+          "pass": true
+        },
+        {
+          "name": "remote activity can exceed proxy request ceiling",
+          "pass": true
+        },
+        {
+          "name": "client deadlines exercised",
+          "pass": true
+        },
+        {
+          "name": "all actual work and SQL connections released",
+          "pass": true
+        },
+        {
+          "name": "healthy checkout recovers",
+          "pass": true
+        }
+      ],
+      "passed": true
+    }
+  ],
+  "passed": true,
+  "finished_at": "2026-11-08T21:57:22.307691+00:00"
+}

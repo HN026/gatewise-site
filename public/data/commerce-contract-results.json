@@ -1,8 +1,44 @@
 {
-  "release": "v0.11.0",
+  "release": "v0.11.1",
   "target": "Freshly extracted source-only demo with real PostgreSQL",
-  "archive_sha256": "49e42c75c8fb653181b24adf8e294cb64a6f360fcc3b4a487b40547391092c05",
+  "archive_sha256": "72231159365dbf7271b88cdcf0af21df83cf4deef99485f480620c4f39fe8c07",
   "profiles": [
+    {
+      "profile": "middleware-fixed",
+      "cancellation_controls": true,
+      "assertions": 8,
+      "failed_assertions": 0,
+      "exit_code": 0,
+      "pool_connections_drained": true,
+      "collection_sha256": "6c1bb21b4e73c6a5d259801821240efaf2b3b81ce616cd627106db56c2d6bf48"
+    },
+    {
+      "profile": "proxy-fixed",
+      "cancellation_controls": true,
+      "assertions": 8,
+      "failed_assertions": 0,
+      "exit_code": 0,
+      "pool_connections_drained": true,
+      "collection_sha256": "6c1bb21b4e73c6a5d259801821240efaf2b3b81ce616cd627106db56c2d6bf48"
+    },
+    {
+      "profile": "middleware-adaptive",
+      "cancellation_controls": true,
+      "assertions": 8,
+      "failed_assertions": 0,
+      "exit_code": 0,
+      "pool_connections_drained": true,
+      "collection_sha256": "6c1bb21b4e73c6a5d259801821240efaf2b3b81ce616cd627106db56c2d6bf48"
+    },
+    {
+      "profile": "proxy-adaptive",
+      "cancellation_controls": true,
+      "assertions": 8,
+      "failed_assertions": 0,
+      "exit_code": 0,
+      "pool_connections_drained": true,
+      "collection_sha256": "6c1bb21b4e73c6a5d259801821240efaf2b3b81ce616cd627106db56c2d6bf48"
+    },
     {
       "profile": "semaphore",
       "tenants_enabled": false,

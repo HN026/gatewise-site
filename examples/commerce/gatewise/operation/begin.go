@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/HN026/gatewise/decision"
 	"github.com/HN026/gatewise/internal/admission"
+	"github.com/HN026/gatewise/internal/decisioncontext"
 	"github.com/HN026/gatewise/internal/tenancy"
 	"time"
 )
@@ -46,11 +47,19 @@ func (s *Engine) prepare(ctx context.Context, request Request) (*prepared, error
 	if request.Resource != "" && !decision.ValidName(request.Resource) {
 		return nil, fmt.Errorf("gatewise: invalid operation resource")
 	}
-	trace := decision.NewResult(string(request.Priority), request.Resource)
+	trace := decision.Result{Priority: string(request.Priority), Resource: request.Resource}
 	trace.Kind = request.Kind
 	stage := "identity"
 	bucket, buckets := -1, 0
 	fail := func(reason admission.Decision, input bool) (*prepared, error) {
+		// Preparation success exposes no trace; allocate stages only on failure.
+		trace.Stages = decision.NewResult(string(request.Priority), request.Resource).Stages
+		for _, name := range []string{"identity", "signals", "resources", "tenant", "capacity"} {
+			if name == stage {
+				break
+			}
+			trace.Mark(name, "")
+		}
 		trace.Priority = string(request.Priority)
 		trace.Reason = string(reason)
 		trace.Stage = stage
@@ -242,7 +251,8 @@ func (s *Engine) attempt(p *prepared, record, capacityAllowed bool) (*Permit, er
 	parent, _ := ctx.Value(activeKey{}).(*active)
 	marker := &active{engine: s, parent: parent, live: true}
 	ctx = context.WithValue(ctx, activeKey{}, marker)
-	ctx = decision.WithResult(ctx, trace)
+	// trace is immutable after admission. Public reads and snapshots detach slices.
+	ctx = decisioncontext.WithOwned(ctx, trace)
 	rollback = false
 	return &Permit{engine: s, ctx: ctx, request: request, result: trace, generation: generation, started: started, tenant: tenant, resources: resources, active: marker}, nil
 }

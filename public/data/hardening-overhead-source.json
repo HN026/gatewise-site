@@ -1,0 +1,8 @@
+{
+  "before_runtime_sha256": "feecdf9a90f7f5f5a9a778ecaa6a0b98fb15a337fc109870bdd2acc65f044158",
+  "after_runtime_sha256": "ad2a2e02f989a15f72001e5a7fc9ca15274a888c024face631579a945bbf65a6",
+  "benchmark_source_sha256": "5bdbb466e60aeeebb3238ba8f26a128921fc8af26d4ed550465f62a54fd86acf",
+  "before_source_version": "v0.11.0",
+  "after_source_version": "v0.11.1",
+  "go_binary_sha256": "60fa7fbaac037e24462915e8c19a1c73b02f548df0098b323823d6fbcdd0c764"
+}

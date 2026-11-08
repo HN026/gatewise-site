@@ -39,6 +39,7 @@ type ServiceConfig struct {
 	CostResolver                    CostResolver
 }
 type Service struct {
+	decisionsEnabled bool
 	*operation.Engine
 	queueBodyMaxBytes int64
 	costResolver      CostResolver
@@ -75,7 +76,7 @@ func NewService(c ServiceConfig) (*Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	s := &Service{Engine: engine, queueBodyMaxBytes: c.QueueBodyMaxBytes, costResolver: c.CostResolver, logger: c.Logger, name: c.Name}
+	s := &Service{decisionsEnabled: c.Decisions != nil, Engine: engine, queueBodyMaxBytes: c.QueueBodyMaxBytes, costResolver: c.CostResolver, logger: c.Logger, name: c.Name}
 	if s.name == "" {
 		s.name = "service"
 	}
@@ -173,8 +174,9 @@ func (s *Service) Middleware(priority Priority, next http.Handler, options ...Ha
 		if s.QueueEnabled() {
 			w.Header().Set("X-Gatewise-Queue-Wait-Ms", strconv.FormatFloat(float64(permit.QueueWait())/float64(time.Millisecond), 'f', 3, 64))
 		}
-		trace := permit.Decision()
-		s.signalHeaders(w, trace)
+		if s.decisionsEnabled {
+			s.signalHeaders(w, permit.Decision())
+		}
 		s.setHeaders(w)
 		kind, share, ceiling := permit.TenantAllocation()
 		if s.TenantSnapshot().SharingEnabled && kind != "" {

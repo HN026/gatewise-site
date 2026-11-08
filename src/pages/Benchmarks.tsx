@@ -1,10 +1,11 @@
+import { HardeningBenchmarks } from '../components/HardeningBenchmarks';
 import { ComparisonBenchmarks } from '../components/ComparisonBenchmarks';
 import { QueueBenchmarks } from '../components/QueueBenchmarks';
 import { AdaptationBenchmarks } from '../components/AdaptationBenchmarks';
 import { PoolBalanceBenchmarks } from '../components/PoolBalanceBenchmarks';
 import { OperationBenchmarks } from '../components/OperationBenchmarks';
 import { ResourceBenchmarks } from '../components/ResourceBenchmarks';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import data from '../data/commerce.json';
 import validation from '../data/controller-validation.json';
 import tenants from '../data/tenants.json';
@@ -18,6 +19,7 @@ const signalFixedDisabled=decisions.rows.find(r=>r.profile==='middleware-fixed'&
 const signalFixedEnforce=decisions.rows.find(r=>r.profile==='middleware-fixed'&&r.strategy==='enforce'&&r.phase==='pressure');
 const labels: Record<string, string> = {'direct':'Direct','proxy-fixed':'Proxy / fixed','proxy-adaptive':'Proxy / adaptive','middleware-fixed':'Middleware / fixed','middleware-adaptive':'Middleware / adaptive'};
 export default function Benchmarks() {
+  useEffect(()=>{document.getElementById(location.hash.split('/')[2]??'')?.scrollIntoView({behavior:'auto'});},[]);
   const [phase, setPhase] = useState('pressure');
   const [service, setService] = useState('orders');
   const [signalPhase,setSignalPhase]=useState('pressure');
@@ -26,9 +28,10 @@ export default function Benchmarks() {
   const phaseNames: Record<string,string> = {baseline:'Normal traffic',ramp:'Traffic increases',pressure:'Database overload',burst:'Sudden traffic spike','intermittent-errors':'Database errors',recovery:'Recovery',sustained:'One minute of steady traffic','low-traffic':'Low traffic'};
   return <div className="container"><PageTitle title="Benchmarks">We run real services against PostgreSQL, stress their runtime and database work, and send more requests than the services can handle. These tests show which requests still finish, how long they take, and how many Gatewise rejects.</PageTitle>
 
-    <p>The v0.11.0 comparison tests unprotected traffic, a semaphore, three static rates and Gatewise policies against the same application. The v0.10.0 comparison tests whether bounded waiting preserves short-burst work and what it costs during sustained overload and tight deadlines. The v0.9.0 comparison tests the adaptive controller against legacy defaults and earlier tuning. The retained v0.8.1 comparison tests background progress using real pool contention and capacity sharing. The retained v0.8.0 experiment measures SQL lifetimes and physical-standby failures. Earlier resource tests measure memory, goroutines, write bytes and hot keys alongside other traffic. Earlier tests cover signal decisions, lending spare capacity, priority across services and database overload.</p>
+    <p>The v0.11.1 comparison uses matched seeded traffic, reservation sweeps and explicit cancellation lifetime checks. The retained v0.11.0 comparison tests unprotected traffic, a semaphore, three static rates and Gatewise policies against the same application. The v0.10.0 comparison tests whether bounded waiting preserves short-burst work and what it costs during sustained overload and tight deadlines. The v0.9.0 comparison tests the adaptive controller against legacy defaults and earlier tuning. The retained v0.8.1 comparison tests background progress using real pool contention and capacity sharing. The retained v0.8.0 experiment measures SQL lifetimes and physical-standby failures. Earlier resource tests measure memory, goroutines, write bytes and hot keys alongside other traffic. Earlier tests cover signal decisions, lending spare capacity, priority across services and database overload.</p>
     <Note label="How to read the results">A fast response is useful only if the request succeeds. We use 100 ms as the response-time goal for these tests and show how many requests succeed within it, alongside rejection and error rates. “p95” means 95% of successful requests finished within that time; rejected and failed requests are counted separately. “RPS” means requests per second.</Note>
     <p>We compare two ways to use Gatewise: middleware inside a Go service, and a proxy in front of a service. Fixed mode keeps the configured concurrency limit. Adaptive mode adjusts that limit within the bounds set by the operator.</p>
+    <HardeningBenchmarks/>
     <ComparisonBenchmarks/>
     <QueueBenchmarks/>
     <AdaptationBenchmarks/>

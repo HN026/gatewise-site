@@ -93,7 +93,7 @@ class Stack:
             except Exception:pass
             time.sleep(.05)
         raise RuntimeError('Service readiness timed out; logs: '+str(self.temp))
-    def start_app(self,profile,tenants=False,priorities=False,untrusted_entry=False,sharing=0,decisions="",resources="",operations="",adaptive_settings=None,route_budgets=False,queue_settings=None,execution_limit=12,reserved=4,reference_rate=300,reference_burst=4):
+    def start_app(self,profile,tenants=False,priorities=False,untrusted_entry=False,sharing=0,decisions="",resources="",operations="",adaptive_settings=None,route_budgets=False,queue_settings=None,execution_limit=12,reserved=4,reference_rate=300,reference_burst=4,service_reservations=None):
         self.queue_settings=queue_settings
         self.execution_limit=execution_limit
         self.reserved=reserved
@@ -117,7 +117,7 @@ class Stack:
             business,admin=addresses[role];self.backends[role]=f'http://127.0.0.1:{business}';self.admins[role]=f'http://127.0.0.1:{admin}'
             service_env={**env,'DATABASE_URL':f'postgres://gatewise:gatewise-local@127.0.0.1:{self.dbport}/{database}?sslmode=disable'}
             args=[str(self.projects/'commerce-backend/bin/commerce-backend'),'-role',role,'-listen',f'127.0.0.1:{business}','-admin-listen',f'127.0.0.1:{admin}','-mode',mode]
-            args += ['-max-concurrent',str(execution_limit),'-reserved-critical',str(reserved),'-rate-per-second',str(reference_rate),'-rate-burst',str(reference_burst)]
+            args += ['-max-concurrent',str(execution_limit),'-reserved-critical',str((service_reservations or {}).get(role,reserved)),'-rate-per-second',str(reference_rate),'-rate-burst',str(reference_burst)]
             if queue_settings:
                 tier='urgent' if priorities else 'critical'
                 args += ['-queue-waiting',str(queue_settings['max_waiting']),'-queue-wait',queue_settings['max_wait'],'-queue-aging',queue_settings.get('aging_after','0s'),'-queue-reserved',str(queue_settings.get('reserved',{}).get(tier,0))]
@@ -142,7 +142,7 @@ class Stack:
             proxy=proxy_port;cfg={'listen_addr':f'127.0.0.1:{proxy}','services':{},'routes':[]}
             if queue_settings:cfg['read_timeout']='5s'
             for role in self.backends:
-                service={'upstream_url':self.backends[role],'max_concurrent':execution_limit,'reserved_critical':reserved}
+                service={'upstream_url':self.backends[role],'max_concurrent':execution_limit,'reserved_critical':(service_reservations or {}).get(role,reserved)}
                 if profile=='proxy-adaptive':service.update(mode='adaptive',adaptive={'min_concurrent':5,'initial_concurrent':12,'interval':'500ms','min_samples':10,'target_latency':'100ms'})
                 if adaptive_settings is not None and profile=='proxy-adaptive':service['adaptive']=adaptive_settings
                 if queue_settings:service['queue']=queue_settings

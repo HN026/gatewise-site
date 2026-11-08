@@ -1,0 +1,15 @@
+{
+  "listen_addr": "0.0.0.0:8080",
+  "shutdown_timeout": "5s",
+  "services": {
+    "orders": {
+      "upstream_url": "${GATEWISE_SERVICE_ORDERS_URL}",
+      "max_concurrent": 20,
+      "reserved_critical": 5
+    }
+  },
+  "routes": [
+    {"path_prefix": "/orders/reports", "service": "orders", "priority": "background"},
+    {"path_prefix": "/orders", "service": "orders", "priority": "critical"}
+  ]
+}

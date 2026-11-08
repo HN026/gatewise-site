@@ -1,0 +1,280 @@
+{
+  "release": "v0.11.1",
+  "source_sha256": "d86b11e6e5ae6df726a5ab525d95a38d29381ba01a61c7e8c4783a74a867dbfd",
+  "gzip_sha256": "364069f3c9c62015450d8f6ddfb77170263d3282c84ad7e00e2d1a31e5bb1923",
+  "before_overhead_sha256": "67c7b38478e21ecd60992ffc9fa70ddfa32ab62981fd7887ad98a21e8459eb3d",
+  "after_overhead_sha256": "ebbc7187bff7f912620625869b00d295a56f8061a6ce40fc32944461589c8441",
+  "criteria": {
+    "dispatch_p95_ms_max": 25,
+    "pool_ceiling": 4,
+    "execution_ceiling": 4,
+    "queue_ceiling": 16,
+    "drain_seconds": 5,
+    "criterion_scope": "Proxy bound applies to active proxy handlers; native semaphore/middleware bounds apply through actual handler return. Remote observer peaks are reported, not incorrectly constrained by proxy admission. No throughput-win gate."
+  },
+  "methodology": {
+    "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+    "cpu": "Apple M4 Pro",
+    "logical_cpus": "12",
+    "memory_bytes": "51539607552",
+    "go": "go version go1.27.3 darwin/arm64",
+    "cases": [
+      {
+        "id": "direct",
+        "profile": "direct",
+        "reserved": 0
+      },
+      {
+        "id": "semaphore",
+        "profile": "semaphore",
+        "reserved": 0
+      },
+      {
+        "id": "rate-100",
+        "profile": "rate",
+        "rate": 100,
+        "reserved": 0
+      },
+      {
+        "id": "rate-300",
+        "profile": "rate",
+        "rate": 300,
+        "reserved": 0
+      },
+      {
+        "id": "rate-900",
+        "profile": "rate",
+        "rate": 900,
+        "reserved": 0
+      },
+      {
+        "id": "fixed-unreserved",
+        "profile": "middleware-fixed",
+        "reserved": 0
+      },
+      {
+        "id": "middleware-fixed",
+        "profile": "middleware-fixed",
+        "queue": false,
+        "reserved": 1
+      },
+      {
+        "id": "middleware-fixed-queue",
+        "profile": "middleware-fixed",
+        "queue": true,
+        "reserved": 1
+      },
+      {
+        "id": "middleware-adaptive",
+        "profile": "middleware-adaptive",
+        "queue": false,
+        "reserved": 1
+      },
+      {
+        "id": "middleware-adaptive-queue",
+        "profile": "middleware-adaptive",
+        "queue": true,
+        "reserved": 1
+      },
+      {
+        "id": "proxy-fixed",
+        "profile": "proxy-fixed",
+        "queue": false,
+        "reserved": 1
+      },
+      {
+        "id": "proxy-fixed-queue",
+        "profile": "proxy-fixed",
+        "queue": true,
+        "reserved": 1
+      },
+      {
+        "id": "proxy-adaptive",
+        "profile": "proxy-adaptive",
+        "queue": false,
+        "reserved": 1
+      },
+      {
+        "id": "proxy-adaptive-queue",
+        "profile": "proxy-adaptive",
+        "queue": true,
+        "reserved": 1
+      },
+      {
+        "id": "fixed-reserved-2",
+        "profile": "middleware-fixed",
+        "reserved": 2
+      },
+      {
+        "id": "fixed-reserved-3",
+        "profile": "middleware-fixed",
+        "reserved": 3
+      },
+      {
+        "id": "fixed-service-reservations",
+        "profile": "middleware-fixed",
+        "reserved": 1,
+        "service_reservations": {
+          "orders": 2,
+          "catalog": 1,
+          "inventory": 1
+        }
+      }
+    ],
+    "phases": [
+      [
+        "healthy",
+        1.5,
+        120,
+        0,
+        0,
+        3000
+      ],
+      [
+        "warmup",
+        1,
+        120,
+        10,
+        0,
+        3000
+      ],
+      [
+        "burst-0",
+        0.1,
+        1800,
+        10,
+        0,
+        3000
+      ],
+      [
+        "relief-0",
+        0.5,
+        60,
+        10,
+        0,
+        3000
+      ],
+      [
+        "burst-1",
+        0.1,
+        1800,
+        10,
+        0,
+        3000
+      ],
+      [
+        "relief-1",
+        0.5,
+        60,
+        10,
+        0,
+        3000
+      ],
+      [
+        "burst-2",
+        0.1,
+        1800,
+        10,
+        0,
+        3000
+      ],
+      [
+        "relief-2",
+        0.5,
+        60,
+        10,
+        0,
+        3000
+      ],
+      [
+        "sustained",
+        3,
+        1800,
+        10,
+        0,
+        3000
+      ],
+      [
+        "background-flood",
+        3,
+        1800,
+        10,
+        0,
+        3000
+      ],
+      [
+        "slowdown",
+        3,
+        600,
+        120,
+        0,
+        3000
+      ],
+      [
+        "errors",
+        2,
+        600,
+        5,
+        10,
+        3000
+      ],
+      [
+        "caller-deadline",
+        0.8,
+        1000,
+        80,
+        0,
+        20
+      ],
+      [
+        "recovery",
+        3,
+        240,
+        0,
+        0,
+        3000
+      ],
+      [
+        "low-traffic",
+        2,
+        10,
+        0,
+        0,
+        3000
+      ]
+    ],
+    "seeds": [
+      101,
+      202,
+      303
+    ],
+    "queue": {
+      "max_waiting": 16,
+      "max_wait": "40ms",
+      "aging_after": "20ms",
+      "reserved": {
+        "critical": 4
+      }
+    },
+    "repeats": 3,
+    "traffic": "Sorted independent uniform arrival times, conditional on exact request count; service and priority shuffled independently. Exactly matched per-phase seed and plan digest across policies. Fresh UUIDs for isolated writes excluded from plan identity. Service mix60/20/20,80%critical except background-flood20%; no retries.100ms useful budget includes scheduling, HTTP, queue and execution. SQLtimeout1s; client3s except deliberate20ms deadline.",
+    "configuration": "Ceiling4 and SQL pool4 per service. Stable adaptive starts4/floor2; reservation1. Fixed reservations0,1,2,3 and per-service orders2/catalog1/inventory1 are predeclared. Other Gatewise policies disabled; proxy adds fourth application process/hop.",
+    "selection": "Criteria and all17cases frozen before confirmatory matrix. Exploratory pilot is excluded; no win gate. Seeds101/202/303 are matched across all cases; rotated case order.",
+    "postgres": "18.6",
+    "image_digest": "docker.io/library/postgres@sha256:123b17998ccaf47e53b502e8c6a1e79afd8f579c6f3eec83c563da026f957395",
+    "container_resources": [
+      {
+        "CPUs": 6,
+        "DiskSize": 100,
+        "Memory": 10240,
+        "USBs": []
+      }
+    ],
+    "gatewise_source_sha256": "ad2a2e02f989a15f72001e5a7fc9ca15274a888c024face631579a945bbf65a6",
+    "commerce-backend_source_sha256": "3b59532de5d3dafb70585bfee74effb463fa8d2875af69060e8d1873a093588d",
+    "harness_sha256": "7a1d1d5bf9e7eb5b5fb71f6d8804d64c46a41f3c641885f58fc57d1e6acf6f90"
+  },
+  "aggregation": "Three paired seeds. Throughput and p95 are medians of run-level values; ranges show seed min/max, not confidence intervals. Refusal/error/deadline percentages pool counts. Service-filtered SQL wait uses that service's real counters, shared by both priorities. Every policy/seed/phase must have the same plan SHA256. Conditional-Poisson arrival times preserve exact offered count; independently shuffled service/priority totals remove periodic ordering. Per-service input ratios can vary between seeds. No win gate or post-hoc scope reclassification.",
+  "overhead": "Same successful empty-body sequential no-op benchmark, five runs per mode before and after on the same host/toolchain. Before uses preserved v0.11.0 source snapshot; after uses v0.11.1. Observer present in all modes. No network/SQL/contended queue waiting; allocated bytes are not retained heap or process RSS. Timing is host-specific. Public decision/context/snapshot views remain detached; no object pooling or lifetime shortening.",
+  "scope": "Middleware holds executing handler permits through return. Proxy limits active proxy handlers; remote cleanup can outlive those requests. Controlled cancellation probe validates that distinction with actual PostgreSQL; no claim that arbitrary remote work can be forcibly stopped. Image built/tested natively with Podman; versioned GHCR image is linux/amd64."
+}
