@@ -3,6 +3,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -21,6 +22,7 @@ type TenantWeight struct {
 	Weight int    `json:"weight"`
 }
 type Config struct {
+	PriorityFlows bool              `json:"priority_flows"`
 	Tenants       []TenantWeight    `json:"tenants"`
 	UniqueNoisy   bool              `json:"unique_noisy"`
 	URLs          map[string]string `json:"urls"`
@@ -31,25 +33,29 @@ type Config struct {
 	RunID         string            `json:"run_id"`
 }
 type Row struct {
-	Role, Priority        string
-	Tenant, Reason        string
-	Code                  int
-	Latency, Lag, Arrival float64
-	Limit                 int
+	ChainVerified, EpochMatched, CohortMismatch bool
+	Role, Priority                              string
+	Tenant, Reason                              string
+	Code                                        int
+	Latency, Lag, Arrival                       float64
+	Limit                                       int
 }
 type Traffic struct {
-	RejectionReasons map[string]int `json:"rejection_reasons"`
-	Statuses         map[string]int `json:"statuses"`
-	Sent             int            `json:"sent"`
-	Successful       int            `json:"successful"`
-	Rejected         int            `json:"rejected_503"`
-	Errors           int            `json:"backend_5xx"`
-	Transport        int            `json:"transport_errors"`
-	Other            int            `json:"other_statuses"`
-	P95              *float64       `json:"successful_p95_ms"`
-	Timely           float64        `json:"successful_within_100ms_per_offered_second"`
-	Dispatch         *float64       `json:"dispatch_p95_ms"`
-	Arrival          *float64       `json:"arrival_p95_ms"`
+	ChainVerified     int            `json:"chain_verified"`
+	CohortComparisons int            `json:"cohort_comparisons"`
+	CohortMismatches  int            `json:"cohort_mismatches"`
+	RejectionReasons  map[string]int `json:"rejection_reasons"`
+	Statuses          map[string]int `json:"statuses"`
+	Sent              int            `json:"sent"`
+	Successful        int            `json:"successful"`
+	Rejected          int            `json:"rejected_503"`
+	Errors            int            `json:"backend_5xx"`
+	Transport         int            `json:"transport_errors"`
+	Other             int            `json:"other_statuses"`
+	P95               *float64       `json:"successful_p95_ms"`
+	Timely            float64        `json:"successful_within_100ms_per_offered_second"`
+	Dispatch          *float64       `json:"dispatch_p95_ms"`
+	Arrival           *float64       `json:"arrival_p95_ms"`
 }
 
 func percentile(v []float64) *float64 {
@@ -65,6 +71,15 @@ func summarize(rows []Row, seconds float64) Traffic {
 	var lat, lag, arrival []float64
 	for _, r := range rows {
 		t.Sent++
+		if r.ChainVerified {
+			t.ChainVerified++
+		}
+		if r.EpochMatched {
+			t.CohortComparisons++
+		}
+		if r.CohortMismatch {
+			t.CohortMismatches++
+		}
 		t.Statuses[strconv.Itoa(r.Code)]++
 		if r.Code == 503 {
 			t.RejectionReasons[r.Reason]++
@@ -187,9 +202,20 @@ func main() {
 					body = []byte(fmt.Sprintf(`{"product_id":%d,"quantity":1}`, 1+i%997))
 				}
 			}
+			if c.PriorityFlows {
+				role = "orders"
+				method = "GET"
+				body = nil
+				priority = []string{"urgent", "normal", "batch", "batch", "batch"}[i%5]
+				path = "/orders/flows/" + priority
+			}
 			req, e := http.NewRequest(method, c.URLs[role]+path, bytes.NewReader(body))
 			if e != nil {
 				panic(e)
+			}
+			if c.PriorityFlows {
+				actor := sha256.Sum256([]byte(fmt.Sprintf("synthetic-actor-%d", i%64)))
+				req.Header.Set("X-Gatewise-Priority", fmt.Sprintf("v1;%s;%x", priority, actor))
 			}
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Idempotency-Key", fmt.Sprintf("%s-%d", c.RunID, i))
@@ -198,6 +224,7 @@ func main() {
 			}
 			sent := time.Now()
 			code, limit := 0, 0
+			chainVerified, epochMatched, cohortMismatch := false, false, false
 			reason := ""
 			resp, e := client.Do(req)
 			if e == nil {
@@ -209,11 +236,30 @@ func main() {
 					}
 					_ = json.Unmarshal(body, &rejection)
 					switch rejection.Reason {
-					case "tenant_concurrency_limit", "tenant_registry_full", "concurrency_limit", "critical_capacity_reserved":
+					case "tenant_concurrency_limit", "tenant_registry_full", "concurrency_limit", "critical_capacity_reserved", "tier_capacity_reserved", "cohort_limited":
 						reason = rejection.Reason
 					default:
 						reason = "other_503"
 					}
+				} else if c.PriorityFlows && resp.StatusCode == 200 {
+					var flow struct {
+						Upstream struct {
+							Tier   string
+							Bucket int
+							Epoch  int64
+						}
+						Downstream struct {
+							Priority struct {
+								Tier   string
+								Bucket int
+								Epoch  int64
+							}
+						}
+					}
+					e = json.NewDecoder(io.LimitReader(resp.Body, 65536)).Decode(&flow)
+					chainVerified = e == nil && flow.Upstream.Tier == priority && flow.Downstream.Priority.Tier == priority
+					epochMatched = flow.Upstream.Epoch == flow.Downstream.Priority.Epoch
+					cohortMismatch = epochMatched && flow.Upstream.Bucket != flow.Downstream.Priority.Bucket
 				} else {
 					_, e = io.Copy(io.Discard, resp.Body)
 				}
@@ -224,7 +270,7 @@ func main() {
 				limit, _ = strconv.Atoi(resp.Header.Get("X-Gatewise-Limit"))
 			}
 			end := time.Now()
-			r := Row{Role: role, Priority: priority, Tenant: tenantGroup, Reason: reason, Code: code, Latency: float64(end.Sub(sent)) / 1e6, Lag: float64(sent.Sub(due)) / 1e6, Arrival: float64(end.Sub(due)) / 1e6, Limit: limit}
+			r := Row{ChainVerified: chainVerified, EpochMatched: epochMatched, CohortMismatch: cohortMismatch, Role: role, Priority: priority, Tenant: tenantGroup, Reason: reason, Code: code, Latency: float64(end.Sub(sent)) / 1e6, Lag: float64(sent.Sub(due)) / 1e6, Arrival: float64(end.Sub(due)) / 1e6, Limit: limit}
 			mu.Lock()
 			rows = append(rows, r)
 			mu.Unlock()
@@ -238,7 +284,7 @@ func main() {
 	traffic := map[string]Traffic{}
 	services := map[string]map[string]Traffic{}
 	min, max := 0, 0
-	for _, priority := range []string{"critical", "background"} {
+	for _, priority := range priorityNames(c.PriorityFlows) {
 		var subset []Row
 		for _, r := range rows {
 			if r.Priority == priority {
@@ -249,7 +295,7 @@ func main() {
 	}
 	for _, role := range []string{"orders", "catalog", "inventory"} {
 		services[role] = map[string]Traffic{}
-		for _, priority := range []string{"critical", "background"} {
+		for _, priority := range priorityNames(c.PriorityFlows) {
 			var subset []Row
 			for _, r := range rows {
 				if r.Role == role && r.Priority == priority {
@@ -301,4 +347,11 @@ func gcd(a, b int) int {
 		a, b = b, a%b
 	}
 	return a
+}
+
+func priorityNames(flows bool) []string {
+	if flows {
+		return []string{"urgent", "normal", "batch"}
+	}
+	return []string{"critical", "background"}
 }

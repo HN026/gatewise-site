@@ -15,6 +15,7 @@ import (
 
 	"github.com/HN026/gatewise/internal/admission"
 	"github.com/HN026/gatewise/middleware"
+	prioritypkg "github.com/HN026/gatewise/priority"
 )
 
 const DefaultMaxConcurrent = 100
@@ -25,6 +26,7 @@ type Service struct {
 	ReservedCritical int
 	Adaptive         *middleware.AdaptiveConfig
 	Tenants          *middleware.TenantConfig
+	Priorities       *prioritypkg.Config
 }
 
 type Route struct {
@@ -52,6 +54,7 @@ type rawConfig struct {
 		Mode             string       `json:"mode"`
 		Adaptive         *rawAdaptive `json:"adaptive"`
 		Tenants          *rawTenant   `json:"tenants"`
+		Priorities       *rawPriority `json:"priorities"`
 		MaxConcurrent    *int         `json:"max_concurrent"`
 		ReservedCritical int          `json:"reserved_critical"`
 	} `json:"services"`
@@ -164,7 +167,17 @@ func LoadWithEnv(filename, envFile string) (Config, error) {
 		if reserved < 0 || reserved > limit {
 			return Config{}, fmt.Errorf("service %s reserved_critical must be between 0 and max_concurrent", name)
 		}
-		a, err := parseAdaptive(name, service.Mode, service.Adaptive, lookup, limit, reserved)
+		pc, err := parsePriority(name, service.Priorities, lookup, limit, reserved)
+		if err != nil {
+			return Config{}, err
+		}
+		adaptiveReserved := reserved
+		if pc != nil {
+			for _, tier := range pc.Tiers {
+				adaptiveReserved += tier.Reserved
+			}
+		}
+		a, err := parseAdaptive(name, service.Mode, service.Adaptive, lookup, limit, adaptiveReserved)
 		if err != nil {
 			return Config{}, err
 		}
@@ -172,7 +185,7 @@ func LoadWithEnv(filename, envFile string) (Config, error) {
 		if err != nil {
 			return Config{}, err
 		}
-		c.Services[name] = Service{Upstream: target, MaxConcurrent: limit, ReservedCritical: reserved, Adaptive: a, Tenants: t}
+		c.Services[name] = Service{Upstream: target, MaxConcurrent: limit, ReservedCritical: reserved, Adaptive: a, Tenants: t, Priorities: pc}
 	}
 	prefixes := map[string]bool{}
 	for _, r := range raw.Routes {
@@ -193,7 +206,12 @@ func LoadWithEnv(filename, envFile string) (Config, error) {
 		if priority == "" {
 			priority = admission.Critical
 		}
-		if priority != admission.Critical && priority != admission.Background {
+		if policy := c.Services[r.Service].Priorities; policy != nil {
+			p, _ := prioritypkg.New(*policy, c.Services[r.Service].MaxConcurrent)
+			if !p.Valid(string(priority)) {
+				return Config{}, fmt.Errorf("route priority must name a configured tier")
+			}
+		} else if priority != admission.Critical && priority != admission.Background {
 			return Config{}, fmt.Errorf("route %q priority must be critical or background", r.Prefix)
 		}
 		var latencyTarget time.Duration

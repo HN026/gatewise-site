@@ -137,12 +137,12 @@ export const metricFamilies = [
 export const pageSections: Record<PageId, readonly (readonly [string, string])[]> = {
   overview: [],
   problem: [['basics', 'Request basics'], ['overload', 'Overload problem'], ['alternatives', 'Alternative approaches'], ['design-decisions', 'Gatewise decisions'], ['evolution', 'Implementation layers'], ['architecture', 'Architecture'], ['admission', 'Admission rules'], ['lifecycle', 'Request lifetime'], ['adaptive', 'Adaptive controller'], ['operations', 'Deployment constraints'], ['references', 'References']],
-  installation: [['source', 'Download source'], ['configure', 'Configure'], ['run', 'Run'], ['verify', 'Verify'], ['adaptive-setup', 'Enable adaptive mode'], ['tenant-isolation', 'Tenant isolation'], ['validate-config', 'Validate configuration'], ['tuning', 'Choose limits'], ['deployment', 'Deployment'], ['library-deployment', 'Go application'], ['proxy-deployment', 'Proxy service']],
-  examples: [['application-model', 'Application model'], ['run-the-demo', 'Run the demo'], ['postman-scenarios', 'Postman scenarios'], ['tenant-isolation', 'Tenant isolation'], ['reproduce-benchmarks', 'Reproduce benchmarks']],
-  benchmarks: [['tenant-isolation', 'Tenant isolation · v0.3.0'], ['recorded-results', 'Service overload · v0.2.0'], ['service-results', 'Per-service results'], ['controller-validation', 'Controller validation'], ['methodology', 'Methodology'], ['resources-and-limitations', 'Resources and limitations'], ['reproduction', 'Reproduction']],
-  metrics: [['benchmark-metrics', 'Benchmark metrics'], ['prometheus-integration', 'Prometheus integration'], ['grafana-dashboard', 'Grafana dashboard'], ['controller-feedback', 'Controller feedback'], ['tenant-feedback', 'Tenant diagnostics'], ['metric-families', 'Metric families']],
+  installation: [['source', 'Download source'], ['configure', 'Configure'], ['run', 'Run'], ['verify', 'Verify'], ['adaptive-setup', 'Enable adaptive mode'], ['tenant-isolation', 'Tenant isolation'], ['priority-propagation', 'Priority propagation'], ['validate-config', 'Validate configuration'], ['tuning', 'Choose limits'], ['deployment', 'Deployment'], ['library-deployment', 'Go application'], ['proxy-deployment', 'Proxy service']],
+  examples: [['application-model', 'Application model'], ['run-the-demo', 'Run the demo'], ['postman-scenarios', 'Postman scenarios'], ['tenant-isolation', 'Tenant isolation'], ['priority-chain', 'Priority service chain'], ['reproduce-benchmarks', 'Reproduce benchmarks']],
+  benchmarks: [['priority-chain', 'Priority chain · v0.4.0'], ['tenant-isolation', 'Tenant isolation · v0.3.0'], ['recorded-results', 'Service overload · v0.2.0'], ['service-results', 'Per-service results'], ['controller-validation', 'Controller validation'], ['methodology', 'Methodology'], ['resources-and-limitations', 'Resources and limitations'], ['reproduction', 'Reproduction']],
+  metrics: [['benchmark-metrics', 'Benchmark metrics'], ['prometheus-integration', 'Prometheus integration'], ['grafana-dashboard', 'Grafana dashboard'], ['controller-feedback', 'Controller feedback'], ['tenant-feedback', 'Tenant diagnostics'], ['priority-diagnostics', 'Priority diagnostics'], ['metric-families', 'Metric families']],
   versions: [['latest', 'Latest release'], ['install-version', 'Install a version'], ['release-history', 'Release history'], ['upgrading', 'Upgrading']],
-  reference: [['proxy-configuration', 'Proxy configuration'], ['environment-overrides', 'Environment overrides'], ['public-go-api', 'Public Go API'], ['http-responses', 'HTTP responses'], ['scope', 'Scope']],
+  reference: [['priority-reference', 'Priority API and wire format'], ['proxy-configuration', 'Proxy configuration'], ['environment-overrides', 'Environment overrides'], ['public-go-api', 'Public Go API'], ['http-responses', 'HTTP responses'], ['scope', 'Scope']],
 };
 
 export const adaptiveInstallationExample = `guard, err := middleware.NewService(middleware.ServiceConfig{
@@ -189,3 +189,19 @@ export const tenantProxyExample = JSON.stringify({
     tenants: {max_concurrent:4, max_tracked:1024, idle_ttl:'5m', header:'X-Tenant-ID', trusted_proxies:['10.0.0.0/24'], missing_policy:'reject', overflow_policy:'reject', limits:{premium:8}},
   } },
 }, null, 2);
+
+export const priorityMiddlewareExample = `// Add github.com/HN026/gatewise/priority to your imports.
+guard, err := middleware.NewService(middleware.ServiceConfig{
+    Name: "orders", MaxConcurrent: 20,
+    Priorities: &priority.Config{
+        Tiers: []priority.Tier{
+            {Name: "urgent", Reserved: 5},
+            {Name: "normal", Reserved: 3},
+            {Name: "batch", Reserved: 0},
+        },
+        CriticalTier: "urgent", BackgroundTier: "batch",
+        TrustedProxies: []string{"10.0.0.0/24"}, // Replace with your ingress.
+    },
+})
+if err != nil { log.Fatal(err) }`;
+export const priorityProxyExample = JSON.stringify({listen_addr:'127.0.0.1:8080',services:{orders:{upstream_url:'http://127.0.0.1:9090',max_concurrent:20,priorities:{tiers:[{name:'urgent',reserved:5},{name:'normal',reserved:3},{name:'batch',reserved:0}],critical_tier:'urgent',background_tier:'batch',trusted_proxies:['10.0.0.0/24']}}},routes:[{path_prefix:'/checkout',service:'orders',priority:'urgent'},{path_prefix:'/reports',service:'orders',priority:'batch'}]},null,2);

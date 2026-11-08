@@ -7,8 +7,10 @@ import (
 	"errors"
 	"github.com/HN026/gatewise-examples/commerce/internal/store"
 	"github.com/HN026/gatewise/middleware"
+	"github.com/HN026/gatewise/priority"
 	"io"
 	"net/http"
+	"net/url"
 	"runtime"
 	"strconv"
 	"sync"
@@ -186,7 +188,11 @@ func (a *API) Products(w http.ResponseWriter, r *http.Request) {
 		a.fail(w, r, e)
 		return
 	}
-	JSON(w, 200, map[string]any{"products": products})
+	result := map[string]any{"products": products}
+	if m, ok := priority.FromContext(r.Context()); ok {
+		result["priority"] = m
+	}
+	JSON(w, 200, result)
 }
 func (a *API) Reserve(w http.ResponseWriter, r *http.Request) {
 	key := r.Header.Get("Idempotency-Key")
@@ -226,4 +232,36 @@ func (a *API) Stock(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	JSON(w, 200, map[string]any{"product_id": id, "available": n})
+}
+
+// Flow performs a real database-backed downstream read. This demo operation is
+// read-only; downstream failure does not leave a partially committed checkout.
+func (a *API) Flow(base string) http.HandlerFunc {
+	target, err := url.Parse(base)
+	if err != nil {
+		panic(err)
+	}
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.Proxy = nil
+	client := &http.Client{Transport: priority.Transport{Base: transport, Hosts: []string{target.Host}}, Timeout: 2 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	return func(w http.ResponseWriter, r *http.Request) {
+		req, e := http.NewRequestWithContext(r.Context(), "GET", base+"/catalog/products?limit=10", nil)
+		if e != nil {
+			JSON(w, 500, map[string]string{"error": "request_build_failed"})
+			return
+		}
+		resp, e := client.Do(req)
+		if e != nil {
+			JSON(w, 502, map[string]string{"error": "catalog_unavailable"})
+			return
+		}
+		defer resp.Body.Close()
+		var downstream map[string]any
+		if json.NewDecoder(io.LimitReader(resp.Body, 65536)).Decode(&downstream) != nil {
+			JSON(w, 502, map[string]string{"error": "catalog_response_invalid"})
+			return
+		}
+		upstream, _ := priority.FromContext(r.Context())
+		JSON(w, resp.StatusCode, map[string]any{"upstream": upstream, "downstream": downstream, "reason": downstream["reason"]})
+	}
 }

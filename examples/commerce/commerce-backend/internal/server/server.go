@@ -8,10 +8,12 @@ import (
 	"github.com/HN026/gatewise-examples/commerce/internal/store"
 	"github.com/HN026/gatewise/metrics"
 	"github.com/HN026/gatewise/middleware"
+	"github.com/HN026/gatewise/priority"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -23,9 +25,20 @@ func Run(ctx context.Context, c config.Config) error {
 		return e
 	}
 	defer s.DB.Close()
+	var pc *priority.Config
+	if c.Priorities {
+		pc = &priority.Config{Tiers: []priority.Tier{{Name: "urgent", Reserved: 2}, {Name: "normal", Reserved: 1}, {Name: "batch"}}, TrustedProxies: nil, Cohorts: &priority.Cohorts{Buckets: 128, Rotation: 2 * time.Second, Seed: "demo-only-cohort-seed"}}
+	}
+	if pc != nil && c.PriorityTrusted != "" {
+		pc.TrustedProxies = strings.Split(c.PriorityTrusted, ",")
+	}
 	var g *middleware.Service
 	if c.Mode != "direct" && c.Mode != "semaphore" {
 		cfg := middleware.ServiceConfig{Name: c.Role, MaxConcurrent: c.MaxConcurrent, ReservedCritical: c.Reserved}
+		if pc != nil {
+			cfg.ReservedCritical = 0
+			cfg.Priorities = pc
+		}
 		if c.TenantLimit > 0 {
 			resolver, err := middleware.TrustedTenantHeader("X-Demo-Tenant", []string{"127.0.0.1/32", "::1/128"})
 			if err != nil {
@@ -62,14 +75,43 @@ func Run(ctx context.Context, c config.Config) error {
 		if g != nil {
 			return g.Middleware(p, h)
 		}
+		if pc != nil {
+			policy, err := priority.New(*pc, c.MaxConcurrent)
+			if err != nil {
+				panic(err)
+			}
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				resolved, m, err := policy.Resolve(r, string(p), time.Now())
+				if err != nil {
+					status := 400
+					if errors.Is(err, priority.ErrUntrusted) {
+						status = 403
+					}
+					handler.JSON(w, status, map[string]string{"reason": err.Error()})
+					return
+				}
+				w.Header().Set("X-Gatewise-Resolved-Priority", m.Tier)
+				w.Header().Set("X-Gatewise-Priority-Source", m.Source)
+				h.ServeHTTP(w, resolved)
+			})
+		}
 		return h
 	}
 	switch c.Role {
 	case "orders":
+		if c.Priorities && c.CatalogURL != "" {
+			for _, tier := range []string{"urgent", "normal", "batch"} {
+				mux.Handle("GET /orders/flows/"+tier, protect(middleware.Priority(tier), a.Flow(c.CatalogURL)))
+			}
+		}
 		mux.Handle("POST /orders/checkout", protect(middleware.Critical, a.Checkout))
 		mux.Handle("GET /orders/{id}", protect(middleware.Critical, a.Get))
 	case "catalog":
-		mux.Handle("GET /catalog/products", protect(middleware.Critical, a.Products))
+		catalogPriority := middleware.Critical
+		if c.Priorities {
+			catalogPriority = "batch"
+		}
+		mux.Handle("GET /catalog/products", protect(catalogPriority, a.Products))
 	case "inventory":
 		mux.Handle("POST /inventory/reservations", protect(middleware.Critical, a.Reserve))
 		mux.Handle("GET /inventory/stock/{id}", protect(middleware.Critical, a.Stock))

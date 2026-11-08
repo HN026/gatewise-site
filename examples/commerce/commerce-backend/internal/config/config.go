@@ -9,6 +9,9 @@ import (
 )
 
 type Config struct {
+	PriorityTrusted                                                 string
+	Priorities                                                      bool
+	CatalogURL                                                      string
 	TenantLimit, TenantMaxTracked                                   int
 	TenantIdleTTL                                                   time.Duration
 	Listen, AdminListen, DatabaseURL, Mode, Role                    string
@@ -25,6 +28,9 @@ func Load(args []string) (Config, error) {
 		}
 		return d
 	}
+	f.StringVar(&c.PriorityTrusted, "priority-trusted-proxies", "127.0.0.1/32,::1/128", "demo trusted immediate peers; empty trusts none")
+	f.BoolVar(&c.Priorities, "priorities", false, "enable example ordered tiers and trusted loopback propagation")
+	f.StringVar(&c.CatalogURL, "catalog-url", "", "optional downstream catalog base URL")
 	f.StringVar(&c.Listen, "listen", env("COMMERCE_LISTEN_ADDR", "127.0.0.1:9195"), "business HTTP address")
 	f.StringVar(&c.AdminListen, "admin-listen", env("COMMERCE_ADMIN_ADDR", "127.0.0.1:9196"), "loopback-only benchmark controls")
 	f.StringVar(&c.Mode, "mode", env("COMMERCE_MODE", "direct"), "direct, fixed or adaptive")

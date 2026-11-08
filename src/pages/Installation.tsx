@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { middlewareExample, proxyExample, adaptiveInstallationExample, adaptiveProxyInstallationExample, tenantMiddlewareExample, tenantProxyExample } from '../data/content';
-import { CodeBlock, Note, PageTitle, Section, Table, Tabs } from '../components/ui';
+import { middlewareExample, proxyExample, adaptiveInstallationExample, adaptiveProxyInstallationExample, tenantMiddlewareExample, tenantProxyExample, priorityMiddlewareExample, priorityProxyExample } from '../data/content';
+import { Diagram, CodeBlock, Note, PageTitle, Section, Table, Tabs } from '../components/ui';
 
 export default function Installation() {
   const [mode, setMode] = useState('middleware');
@@ -11,11 +11,11 @@ export default function Installation() {
     <Section id="source" title="1. Choose an integration"><p>Choose Go middleware to protect handlers inside your application. Choose the standalone proxy to protect an existing HTTP backend without changing its code.</p></Section>
     <Tabs label="Installation mode" value={mode} onChange={setMode} options={[{ value: 'middleware', label: 'Go middleware' }, { value: 'proxy', label: 'Standalone proxy' }]} />
     {mode === 'middleware' ? <>
-      <Section id="configure" title="2. Create an application module"><p>In an existing Go module, run <code>go get github.com/HN026/gatewise@v0.3.0</code>. For a new application:</p><CodeBlock filename="Terminal" language="shell" code={'mkdir my-service\ncd my-service\ngo mod init example.com/my-service\ngo get github.com/HN026/gatewise@v0.3.0'} /></Section>
+      <Section id="configure" title="2. Create an application module"><p>In an existing Go module, run <code>go get github.com/HN026/gatewise@v0.4.0</code>. For a new application:</p><CodeBlock filename="Terminal" language="shell" code={'mkdir my-service\ncd my-service\ngo mod init example.com/my-service\ngo get github.com/HN026/gatewise@v0.4.0'} /></Section>
       <Section id="run" title="3. Add middleware and start the server"><p>Save this as <code>main.go</code>. In this example, both routes share a configurable limit of 20 concurrent requests; background requests can occupy at most 15 slots.</p><CodeBlock filename="main.go" code={middlewareExample} /><CodeBlock filename="Terminal" language="shell" code={'go mod tidy\ngo run .'} /></Section>
       <Section id="verify" title="4. Send a request"><CodeBlock filename="Another terminal" language="shell" code={'curl -i -X POST http://127.0.0.1:8080/checkout'} /><p>With this example configuration, expect <code>204 No Content</code>, <code>X-Gatewise-Mode: fixed</code> and <code>X-Gatewise-Limit: 20</code>. These minimal handlers return immediately. Replace their bodies with your application logic. The limit response header reflects the configured example ceiling.</p></Section>
     </> : <>
-      <Section id="configure" title="2. Build and configure the proxy"><CodeBlock filename="Terminal" language="shell" code={'git clone --branch v0.3.0 https://github.com/HN026/gatewise.git\ncd gatewise\ngo build -o bin/gatewise ./cmd/gatewise'} /><p>Save this as <code>configs/orders.json</code>. Replace <code>upstream_url</code> with your backend and set <code>max_concurrent</code> and <code>reserved_critical</code> for its capacity. The more specific background prefix takes precedence.</p><CodeBlock filename="configs/orders.json" language="json" code={proxyExample} /></Section>
+      <Section id="configure" title="2. Build and configure the proxy"><CodeBlock filename="Terminal" language="shell" code={'git clone --branch v0.4.0 https://github.com/HN026/gatewise.git\ncd gatewise\ngo build -o bin/gatewise ./cmd/gatewise'} /><p>Save this as <code>configs/orders.json</code>. Replace <code>upstream_url</code> with your backend and set <code>max_concurrent</code> and <code>reserved_critical</code> for its capacity. The more specific background prefix takes precedence.</p><CodeBlock filename="configs/orders.json" language="json" code={proxyExample} /></Section>
       <Section id="run" title="3. Start the proxy"><p>Keep your existing backend running at the configured <code>upstream_url</code>. Start Gatewise from the repository directory. An empty dotenv path uses the JSON configuration and process environment without loading a local dotenv file.</p><CodeBlock filename="Terminal" language="shell" code={'./bin/gatewise -config configs/orders.json -env-file ""'} /></Section>
       <Section id="verify" title="4. Verify health and forwarding"><CodeBlock filename="Another terminal" language="shell" code={'curl -i http://127.0.0.1:8080/healthz\ncurl -i http://127.0.0.1:8080/orders/hello'} /><p>Health returns 200 independently of backend availability. The forwarding example strips <code>/orders</code> and sends <code>/hello</code> to your backend; replace it with an endpoint your service supports. The backend status and body pass through. An unreachable upstream returns 502.</p></Section>
     </>}
@@ -51,6 +51,37 @@ export default function Installation() {
       <p>Tenant admission precedes service admission. A service rejection releases the tenant reservation; cancellation does not release it until the handler returns. Tenant rejections do not contribute latency/failure samples or saturation to the adaptive controller. A service-wide limit can still reject a tenant below its individual cap.</p>
       <CodeBlock filename="Proxy environment overrides · example values" language="shell" code={'GATEWISE_SERVICE_ORDERS_TENANT_MAX_CONCURRENT=4\nGATEWISE_SERVICE_ORDERS_TENANT_MAX_TRACKED=1024\nGATEWISE_SERVICE_ORDERS_TENANT_IDLE_TTL=5m\nGATEWISE_SERVICE_ORDERS_TENANT_HEADER=X-Tenant-ID\nGATEWISE_SERVICE_ORDERS_TENANT_TRUSTED_PROXIES=10.0.0.0/24\nGATEWISE_SERVICE_ORDERS_TENANT_MISSING_POLICY=reject\nGATEWISE_SERVICE_ORDERS_TENANT_OVERFLOW_POLICY=reject'} />
       <p>Omit the tenant configuration or leave <code>Tenants</code> nil to disable it. Tenant environment overrides can enable the policy and must provide a complete valid header/trust/limit configuration. Validate the resolved proxy configuration before startup. See <a href="#/examples/tenant-isolation">the tenant demo</a> and <a href="#/benchmarks/tenant-isolation">measured isolation results</a>.</p>
+    </Section>
+    <Section id="priority-propagation" title="Priority tiers and trusted propagation">
+ <Diagram name="priority-chain" caption="Ingress establishes importance; every service applies its own local limits. Editable diagram source is included." />
+      <p>v0.4.0 adds optional ordered tiers. List 2–8 tiers from highest to lowest. With the example ceiling of 20, batch work can occupy at most 12 slots; normal and batch together at most 15. Urgent work can use any available slot. Reservations protect higher tiers from combined lower-tier occupancy; they do not preempt running work or guarantee response latency.</p>
+      {mode === 'middleware' ? <CodeBlock filename="Priority-aware guard construction" code={priorityMiddlewareExample} /> : <CodeBlock filename="configs/orders.json · ordered tiers" language="json" code={priorityProxyExample} />}
+      <p>Leave <code>ReservedCritical</code> / <code>reserved_critical</code> at zero when configuring tiers. The last tier must reserve zero; total reservations cannot exceed the ceiling. Adaptive minimum must exceed their sum. Critical and Background map to the configured compatibility tiers, defaulting to highest and lowest respectively. Existing integrations without priority configuration retain their original admission rules.</p>
+      <p>Missing HTTP metadata uses the server-owned route priority. Supplied metadata requires a trusted immediate peer; no configured peers means HTTP priority metadata is rejected. Forwarded IP headers establish no trust. Trusted ingress must authenticate callers and strip or overwrite caller-supplied metadata. Malformed metadata returns 400, an untrusted source 403, and capacity/cohort rejection 503.</p>
+      <CodeBlock filename="Authenticated application context and outbound client" code={`// Your authentication/authorization layer chooses these values.
+ctx := priority.With(r.Context(), "urgent", authenticatedActorID)
+r = r.WithContext(ctx)
+// Pass r through guard.Middleware before executing the handler.
+// Inside the admitted handler, preserve that resolved context:
+client := &http.Client{Transport: priority.Transport{
+    Hosts: []string{"catalog.internal:8080"}, // Exact host:port allowlist.
+}}
+req, err := http.NewRequestWithContext(r.Context(), "GET",
+    "http://catalog.internal:8080/catalog/products", nil)
+if err != nil { /* handle error */ }
+// resp, err := client.Do(req); always close resp.Body when successful.`} />
+      <p>Construct and reuse the outbound client at startup. The transport clones requests, removes caller-supplied priority metadata and propagates only policy-resolved context to allowed hosts. Configure the downstream service to trust its actual immediate upstream peer. The proxy overwrites outbound priority metadata with its resolved context; it never forwards an unresolved caller value. Apply your normal TLS, redirect and destination-security policies as well.</p>
+      <h3>Optional deterministic cohorts</h3><p>Set <code>Cohorts</code> to enable rotating within-tier ordering. Example values are 128 buckets and a 30s rotation. Supply the same protected seed, bucket count and rotation across participating services; Go contexts can carry a stable authenticated actor identifier through <code>priority.With</code>. An actor is converted to an opaque HMAC key before propagation. Without a stable actor, a random request-scoped key is created; that provides request-chain consistency, not user-level fairness.</p>
+      <CodeBlock filename="Optional cohort configuration" code={`// Add to priority.Config; read the seed from your secret configuration.
+Cohorts: &priority.Cohorts{
+    Buckets: 128, Rotation: 30 * time.Second, Seed: cohortSeed,
+},
+// Proxy equivalent inside priorities:
+// "cohorts": {"buckets":128,"rotation":"30s","seed":""}
+// GATEWISE_SERVICE_ORDERS_PRIORITY_COHORT_SEED supplies the seed.`} />
+      <p>Seeds require 16–256 bytes, rotation 1s–24h and buckets 2–1,024. The receiving service recalculates the current bucket from the opaque key and UTC epoch. Synchronized clocks are required for cross-service ordering; a rotation boundary or clock skew can change the bucket between hops. Rotation changes preference, but does not guarantee every actor admission or eliminate collisions.</p>
+      <p>For each applicable capacity boundary, compute remaining capacity divided by its budget; use the smallest fraction. Admit a bucket only when bucket / bucket-count is below that fraction, subject to all hard limits. Empty capacity admits every bucket. Different occupancy at different services can yield different admission decisions for the same cohort. Cohort rejection does not create a latency/error sample or independently mark the adaptive controller saturated. This is immediate shedding; no waiting queue or capacity borrowing is introduced.</p>
+      <p>Keep tier definitions consistent across a chain. An unknown incoming tier fails explicitly instead of silently changing importance. See <a href="#/examples/priority-chain">the runnable service-chain example</a> and <a href="#/reference/priority-reference">the API and wire contract</a>.</p>
     </Section>
     <Section id="validate-config" title="Validate proxy configuration">
       <p>Check resolved configuration before startup with Gatewise v0.2.0 or newer. This command validates JSON, dotenv and environment overrides without opening a listener or contacting upstream services:</p>

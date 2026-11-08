@@ -22,6 +22,10 @@ const (
 	ConcurrencyLimit         Decision = "concurrency_limit"
 	CriticalCapacityReserved Decision = "critical_capacity_reserved"
 	InvalidPriority          Decision = "invalid_priority"
+	TierCapacityReserved     Decision = "tier_capacity_reserved"
+	CohortLimited            Decision = "cohort_limited"
+	PriorityInvalid          Decision = "priority_metadata_invalid"
+	PriorityUntrusted        Decision = "priority_metadata_untrusted"
 )
 
 // Limiter makes total and background accounting one atomic decision under a short
@@ -30,30 +34,80 @@ const (
 type Limiter struct {
 	mu                                  sync.Mutex
 	limit, reserved, active, background int
+	tiers                               []Tier
+	counts                              []int
+	legacy                              bool
 }
 
 func New(limit, reserved int) *Limiter {
 	if limit <= 0 || reserved < 0 || reserved > limit {
 		panic("admission: invalid limit or reservation")
 	}
-	return &Limiter{limit: limit, reserved: reserved}
+	return &Limiter{limit: limit, reserved: reserved, tiers: []Tier{{Critical, reserved}, {Background, 0}}, counts: make([]int, 2), legacy: true}
 }
 
 // TryAcquire never waits for capacity. Admitted work requires one matching Release.
-func (l *Limiter) TryAcquire(priority Priority) Decision {
+type Tier struct {
+	Name     Priority
+	Reserved int
+}
+
+// NewTiers accepts validated, highest-first tiers. Prefix reservations protect
+// higher tiers from the combined occupancy of every lower tier.
+func NewTiers(limit int, tiers []Tier) *Limiter {
+	reserved := 0
+	for _, t := range tiers {
+		reserved += t.Reserved
+	}
+	return &Limiter{limit: limit, reserved: reserved, tiers: append([]Tier(nil), tiers...), counts: make([]int, len(tiers))}
+}
+func (l *Limiter) index(p Priority) int {
+	for i, t := range l.tiers {
+		if t.Name == p {
+			return i
+		}
+	}
+	return -1
+}
+func (l *Limiter) TryAcquire(p Priority) Decision { return l.TryAcquireCohort(p, -1, 0) }
+func (l *Limiter) TryAcquireCohort(p Priority, bucket, buckets int) Decision {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	if priority != Critical && priority != Background {
+	index := l.index(p)
+	if index < 0 {
 		return InvalidPriority
 	}
 	if l.active >= l.limit {
 		return ConcurrencyLimit
 	}
-	if priority == Background && l.background >= l.limit-l.reserved {
-		return CriticalCapacityReserved
+	headroom, budget := l.limit-l.active, l.limit
+	reserved := 0
+	for boundary := 1; boundary <= index; boundary++ {
+		reserved += l.tiers[boundary-1].Reserved
+		occupied := 0
+		for _, n := range l.counts[boundary:] {
+			occupied += n
+		}
+		cap := l.limit - reserved
+		if occupied >= cap {
+			if l.legacy {
+				return CriticalCapacityReserved
+			}
+			return TierCapacityReserved
+		}
+		if float64(cap-occupied)/float64(cap) < float64(headroom)/float64(budget) {
+			headroom = cap - occupied
+			budget = cap
+		}
+	}
+	// Gate stable cohorts by current headroom; no rank overrides hard capacity.
+	// Empty eligible capacity admits all buckets. Queuing/fair-share borrowing is separate.
+	if buckets > 0 && bucket >= 0 && float64(bucket)/float64(buckets) >= float64(headroom)/float64(budget) {
+		return CohortLimited
 	}
 	l.active++
-	if priority == Background {
+	l.counts[index]++
+	if index == len(l.tiers)-1 {
 		l.background++
 	}
 	return Admitted
@@ -62,8 +116,13 @@ func (l *Limiter) TryAcquire(priority Priority) Decision {
 func (l *Limiter) Release(priority Priority) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
+	index := l.index(priority)
+	if index < 0 || l.counts[index] == 0 {
+		panic("admission: unmatched release")
+	}
 	l.active--
-	if priority == Background {
+	l.counts[index]--
+	if index == len(l.tiers)-1 {
 		l.background--
 	}
 }
@@ -84,4 +143,15 @@ func (l *Limiter) SetLimit(limit int) {
 		panic("admission: limit below reservation")
 	}
 	l.limit = limit
+}
+
+// TierCounts returns a detached snapshot in configured order.
+func (l *Limiter) TierCounts() map[Priority]int {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	m := make(map[Priority]int, len(l.tiers))
+	for i, t := range l.tiers {
+		m[t.Name] = l.counts[i]
+	}
+	return m
 }

@@ -67,3 +67,11 @@ Run `python3 tenant_benchmark.py --output results/tenant-results.json` separatel
 The shared comparison interface in comparison.py supplies application URLs and metadata to the same Go generator. A new implementation needs an actual adapter, version/configuration provenance and the same measurement contract. No Cinnamon implementation is included. Direct comparison requires access to real code and permission to publish measurements.
 
 Hard tenant caps intentionally do not borrow unused capacity. Registry overflow rejects new identities by default; known active identities are never evicted. Missing/overflow shared buckets are opt-in in the library and are separately bounded. Identity churn cannot create unbounded tracking, but allowing a caller to invent identities defeats the intended per-tenant policy.
+
+## Priority chain
+
+Run `python3 run.py --profile middleware-fixed --priorities` or `--profile proxy-adaptive --priorities`. Orders flows call the database-backed catalog API; priority and rotating cohort diagnostics are returned for both hops. Import `postman/Priorities.postman_collection.json` with the printed environment, or add `--verify`. Loopback peers and the public seed are for this disposable demo only. Run tenant and priority contract modes separately.
+
+`python3 priority_benchmark.py --output results/priority-results.json` measures three repetitions of four integration modes across baseline, two downstream-pressure levels and recovery. The shared proxy serves both hops, retaining at most four application processes. All SQL pools have four connections; catalog admission is six and orders twelve. One unmeasured stable-key probe runs between phases. No application retries are used in measured traffic.
+
+`python3 validate_priority.py --output results/priority-validation.json` exercises trusted and untrusted orders entries during downstream SQL pressure. It preserves trust on the internal proxy-to-backend hop and checks that forged forwarding headers do not promote a caller.

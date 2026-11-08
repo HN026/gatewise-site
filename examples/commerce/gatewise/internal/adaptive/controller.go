@@ -46,9 +46,12 @@ func New(limiter *admission.Limiter, c Config) *Controller {
 // Begin coordinates the admission decision and measurement generation. There is
 // no capacity wait. Total/background saturation can justify cautious growth.
 func (c *Controller) Begin(priority admission.Priority, now time.Time) (admission.Decision, uint64) {
+	return c.BeginCohort(priority, now, -1, 0)
+}
+func (c *Controller) BeginCohort(priority admission.Priority, now time.Time, bucket, buckets int) (admission.Decision, uint64) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	decision := c.limiter.TryAcquire(priority)
+	decision := c.limiter.TryAcquireCohort(priority, bucket, buckets)
 	state := c.limiter.Snapshot()
 	if c.start.IsZero() {
 		c.reset(now)
@@ -56,7 +59,7 @@ func (c *Controller) Begin(priority admission.Priority, now time.Time) (admissio
 	if decision == admission.Admitted && state.Active == 1 && !c.lastSample.IsZero() && now.Sub(c.lastSample) > 2*c.config.Interval {
 		c.reset(now)
 	}
-	if decision != admission.Admitted || state.Active >= state.Limit || (priority == admission.Background && state.Background >= state.Limit-state.ReservedCritical) {
+	if decision != admission.Admitted && decision != admission.CohortLimited || state.Active >= state.Limit || (priority == admission.Background && state.Background >= state.Limit-state.ReservedCritical) {
 		c.saturated = true
 	}
 	return decision, c.generation

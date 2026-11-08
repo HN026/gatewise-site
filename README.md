@@ -53,10 +53,12 @@ Measurements were made on macOS with Podman. They are local production-style wor
 
 ## Releases and deployment
 
-The site targets Gatewise v0.3.0. Add published versions to `src/data/releases.ts`, newest first, with verified GitHub timestamps, IST dates, requirements, upgrade notes and tag-specific downloads. The Versions page and sidebar use this shared source. Never change an existing release tag to update the site.
+The site targets Gatewise v0.4.0. Add published versions to `src/data/releases.ts`, newest first, with verified GitHub timestamps, IST dates, requirements, upgrade notes and tag-specific downloads. The Versions page and sidebar use this shared source. Never change an existing release tag to update the site.
 
 The Pages workflow type-checks/builds and deploys `main`. Library: https://github.com/HN026/gatewise · Site: https://hn026.github.io/gatewise-site/ · License: MIT.
 
 ## Tenant-isolation evidence
 
 `python3 examples/commerce/tenant_benchmark.py --output /tmp/tenant-results.json` runs three repeats across ten adapters, using the included snapshots. Export the full passed report with `python3 tools/export_tenant_benchmark.py --report /tmp/tenant-results.json` in a Matplotlib environment. Current tenant figures are separate from the retained v0.2.0 service-overload experiment. The adapter interface preserves application, generator and measurement contracts; the recorded Cinnamon audit does not claim that a direct Cinnamon comparison has been completed.
+
+Priority-chain reproduction: `python3 examples/commerce/priority_benchmark.py --output /tmp/priority-results.json`; publish a complete passed 12-run report with `python3 tools/export_priority_benchmark.py --report /tmp/priority-results.json` in a Matplotlib environment. Historical v0.2/v0.3 measurements retain their original labels.
