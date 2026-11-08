@@ -9,6 +9,8 @@ import (
 )
 
 type Config struct {
+	AdaptiveProfile                                                 string
+	RouteBudgets                                                    bool
 	OperationsMode, ReplicaURL                                      string
 	DecisionMode                                                    string
 	ResourceMode                                                    string
@@ -32,6 +34,8 @@ func Load(args []string) (Config, error) {
 		}
 		return d
 	}
+	f.StringVar(&c.AdaptiveProfile, "adaptive-profile", "legacy", "legacy or stable")
+	f.BoolVar(&c.RouteBudgets, "route-budgets", false, "example report latency budget500ms")
 	f.StringVar(&c.OperationsMode, "operations", "", "operation demo: disabled, fixed, pool or balanced")
 	f.StringVar(&c.ReplicaURL, "replica-url", "", "physical standby database URL")
 	f.StringVar(&c.ResourceMode, "resources", "", "real resource regulators: disabled, enforce or observe")

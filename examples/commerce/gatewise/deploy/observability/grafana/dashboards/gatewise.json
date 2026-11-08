@@ -8,7 +8,7 @@
   ],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 6,
+  "version": 7,
   "refresh": "5s",
   "time": {
     "from": "now-15m",
@@ -1818,6 +1818,173 @@
           "refId": "A",
           "expr": "histogram_quantile(0.95, sum by (le,service,kind) (rate(gatewise_work_duration_seconds_bucket{service=~\"$service\"}[$__rate_interval])))",
           "legendFormat": "{{service}} / {{kind}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 41,
+      "title": "Adaptive control ratio",
+      "type": "timeseries",
+      "description": "Last evaluated evidence and current pending window. No feedback does not imply healthy operation. Legacy remains the default; stable is opt-in.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 176
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "gatewise_controller_control_ratio{service=~\"$service\"}",
+          "legendFormat": "{{service}} / control"
+        },
+        {
+          "refId": "B",
+          "expr": "gatewise_controller_last_p90_ratio{service=~\"$service\"}",
+          "legendFormat": "{{service}} / aggregate p90"
+        },
+        {
+          "refId": "C",
+          "expr": "gatewise_controller_smoothed_ratio{service=~\"$service\"}",
+          "legendFormat": "{{service}} / stable EWMA"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 42,
+      "title": "Pending adaptive samples",
+      "type": "timeseries",
+      "description": "Last evaluated evidence and current pending window. No feedback does not imply healthy operation. Legacy remains the default; stable is opt-in.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 176
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "gatewise_controller_pending_samples{service=~\"$service\"}",
+          "legendFormat": "{{service}} / pending"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 43,
+      "title": "Sparse and signal-limited evaluations",
+      "type": "timeseries",
+      "description": "Last evaluated evidence and current pending window. No feedback does not imply healthy operation. Legacy remains the default; stable is opt-in.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 184
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "gatewise_controller_sparse_window{service=~\"$service\"}",
+          "legendFormat": "{{service}} / sparse hold"
+        },
+        {
+          "refId": "B",
+          "expr": "gatewise_controller_external_limit{service=~\"$service\"}",
+          "legendFormat": "{{service}} / external ceiling"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 44,
+      "title": "Current adaptive interval",
+      "type": "timeseries",
+      "description": "Last evaluated evidence and current pending window. No feedback does not imply healthy operation. Legacy remains the default; stable is opt-in.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 184
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "gatewise-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "gatewise_controller_window_interval_seconds{service=~\"$service\"}",
+          "legendFormat": "{{service}} / eligible interval"
         }
       ],
       "fieldConfig": {

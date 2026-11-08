@@ -22,7 +22,7 @@ type TenantWeight struct {
 	Weight int    `json:"weight"`
 }
 type Config struct {
- OperationWork bool `json:"operation_work"`
+	OperationWork bool              `json:"operation_work"`
 	ResourceWork  string            `json:"resource_work"`
 	PriorityFlows bool              `json:"priority_flows"`
 	Tenants       []TenantWeight    `json:"tenants"`
@@ -35,6 +35,7 @@ type Config struct {
 	RunID         string            `json:"run_id"`
 }
 type Row struct {
+	ScheduledSeconds                            float64
 	CompletionSeconds                           float64
 	Allocation                                  string
 	ChainVerified, EpochMatched, CohortMismatch bool
@@ -45,6 +46,7 @@ type Row struct {
 	Limit                                       int
 }
 type Traffic struct {
+	ScheduledTimely     float64        `json:"successful_within_100ms_from_schedule_per_offered_second"`
 	Allocations         map[string]int `json:"allocations"`
 	FirstSuccessSeconds *float64       `json:"first_success_seconds"`
 	ChainVerified       int            `json:"chain_verified"`
@@ -101,6 +103,9 @@ func summarize(rows []Row, seconds float64) Traffic {
 				t.FirstSuccessSeconds = &v
 			}
 			lat = append(lat, r.Latency)
+			if r.Arrival <= 100 {
+				t.ScheduledTimely += 1 / seconds
+			}
 			if r.Latency <= 100 {
 				t.Timely += 1 / seconds
 			}
@@ -270,7 +275,13 @@ func main() {
 					body = nil
 				}
 			}
-			if c.OperationWork {role="orders";priority="critical";method="POST";path="/orders/operations/transaction";body=[]byte("{}")}
+			if c.OperationWork {
+				role = "orders"
+				priority = "critical"
+				method = "POST"
+				path = "/orders/operations/transaction"
+				body = []byte("{}")
+			}
 			req, e := http.NewRequest(method, c.URLs[role]+path, bytes.NewReader(body))
 			if e != nil {
 				panic(e)
@@ -337,7 +348,7 @@ func main() {
 				allocation = resp.Header.Get("X-Gatewise-Tenant-Admission")
 			}
 			end := time.Now()
-			r := Row{CompletionSeconds: end.Sub(start).Seconds(), Allocation: allocation, ChainVerified: chainVerified, EpochMatched: epochMatched, CohortMismatch: cohortMismatch, Role: role, Priority: priority, Tenant: tenantGroup, Reason: reason, Code: code, Latency: float64(end.Sub(sent)) / 1e6, Lag: float64(sent.Sub(due)) / 1e6, Arrival: float64(end.Sub(due)) / 1e6, Limit: limit}
+			r := Row{ScheduledSeconds: due.Sub(start).Seconds(), CompletionSeconds: end.Sub(start).Seconds(), Allocation: allocation, ChainVerified: chainVerified, EpochMatched: epochMatched, CohortMismatch: cohortMismatch, Role: role, Priority: priority, Tenant: tenantGroup, Reason: reason, Code: code, Latency: float64(end.Sub(sent)) / 1e6, Lag: float64(sent.Sub(due)) / 1e6, Arrival: float64(end.Sub(due)) / 1e6, Limit: limit}
 			mu.Lock()
 			rows = append(rows, r)
 			mu.Unlock()
@@ -403,7 +414,22 @@ func main() {
 			tenantServices[group][role] = summarize(selected, c.Seconds)
 		}
 	}
-	out := map[string]any{"tenant_traffic": tenantTraffic, "tenant_services": tenantServices, "scheduled": count, "sent": len(rows), "dropped_schedules": dropped, "offered_seconds": c.Seconds, "elapsed_including_drain_seconds": elapsed, "start_rps": c.StartRPS, "end_rps": c.EndRPS, "traffic": traffic, "services": services, "observed_min_limit": min, "observed_max_limit": max}
+	timeline := []map[string]any{}
+	for second := 0; second < int(math.Ceil(c.Seconds)); second++ {
+		duration := math.Min(1, c.Seconds-float64(second))
+		group := map[string]Traffic{}
+		for _, priority := range priorityNames(c.PriorityFlows) {
+			subset := []Row{}
+			for _, r := range rows {
+				if r.Priority == priority && r.ScheduledSeconds >= float64(second) && r.ScheduledSeconds < float64(second+1) {
+					subset = append(subset, r)
+				}
+			}
+			group[priority] = summarize(subset, duration)
+		}
+		timeline = append(timeline, map[string]any{"start_seconds": second, "seconds": duration, "traffic": group})
+	}
+	out := map[string]any{"timeline": timeline, "tenant_traffic": tenantTraffic, "tenant_services": tenantServices, "scheduled": count, "sent": len(rows), "dropped_schedules": dropped, "offered_seconds": c.Seconds, "elapsed_including_drain_seconds": elapsed, "start_rps": c.StartRPS, "end_rps": c.EndRPS, "traffic": traffic, "services": services, "observed_min_limit": min, "observed_max_limit": max}
 	if e := json.NewEncoder(os.Stdout).Encode(out); e != nil {
 		panic(e)
 	}

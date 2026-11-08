@@ -1,0 +1,547 @@
+{
+  "source_sha256": "a28db6f8e469e729d970748798b4b02c682a4122ca58ca4c8bac648df68d75a9",
+  "gzip_sha256": "35d5ac96c6d5054bcc1cff2232b3de7f637d986ac01b89cb27dfd71430461c8a",
+  "runtime_source_sha256": "a2837dd50cdeb23bc862fee01a7de2cdfa6429bcd93e4a4c74c44585cdb2f589",
+  "started_at": "2026-11-08T14:29:12.423651+00:00",
+  "finished_at": "2026-11-08T14:47:53.542411+00:00",
+  "aggregation": "Rates, successful p95 and motion counts are medians of three run-level outcomes. Rejection/error percentages pool request counts. SQL wait is total duration / acquisitions that waited, for all services. Chart whiskers are observed min/max, not confidence intervals.",
+  "recovery": "First pair of consecutive full1s bins with >=95% critical requests successfully completed within100ms of schedule and no server/transport errors. Zero means the pair starts with the phase. Censored runs remain counted separately.",
+  "settling": "Worst service time until sampled baseline stays within one slot of its final1s median; at least1s observed. Missing/censored values retained in per-run summaries.",
+  "criteria": {
+    "overall_useful_ratio_min": 0.95,
+    "degradation_useful_ratio_min": 0.9,
+    "degradation_p95_ratio_max": 1.25,
+    "p95_budget_floor_ms": 100,
+    "recovery_useful_ratio_min": 0.95,
+    "recovery_extra_bin_seconds_max": 1,
+    "periodic_adjustment_ratio_max": 0.8,
+    "periodic_variation_ratio_max": 1.1,
+    "noninjected_error_rate_extra_max": 0.005,
+    "key_phases": [
+      "capacity-loss",
+      "gradual-25",
+      "gradual-45",
+      "mixed-cost"
+    ],
+    "recovery_phases": [
+      "loss-recovery",
+      "gradual-recovery",
+      "error-recovery",
+      "mixed-recovery",
+      "signal-recovery"
+    ],
+    "interpretation": "Per HTTP deployment, median run outcomes compared with each retained legacy configuration; periodic stability compared with the smaller baseline median. A recovery bin qualifies at >=95% scheduled critical success within100ms with zero server/transport errors, requiring two consecutive full1s bins. Zero means the first pair starts at phase start, not instantaneous recovery. Preset configuration footprint is measured; this is not a human tuning-effort study."
+  },
+  "comparison_checks": [
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "overall useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "noninjected critical error rate remains bounded",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "capacity-loss useful critical work retained90%",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "capacity-loss critical p95 regression bounded",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "gradual-25 useful critical work retained90%",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "gradual-25 critical p95 regression bounded",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "gradual-45 useful critical work retained90%",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "gradual-45 critical p95 regression bounded",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "mixed-cost useful critical work retained90%",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "mixed-cost critical p95 regression bounded",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "mixed-recovery useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "mixed-recovery qualifying recovery not lost/delayed beyond one bin",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "signal-recovery useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "signal-recovery qualifying recovery not lost/delayed beyond one bin",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "gradual-recovery useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "gradual-recovery qualifying recovery not lost/delayed beyond one bin",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "error-recovery useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "error-recovery qualifying recovery not lost/delayed beyond one bin",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "loss-recovery useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "loss-recovery qualifying recovery not lost/delayed beyond one bin",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "overall useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "noninjected critical error rate remains bounded",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "capacity-loss useful critical work retained90%",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "capacity-loss critical p95 regression bounded",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "gradual-25 useful critical work retained90%",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "gradual-25 critical p95 regression bounded",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "gradual-45 useful critical work retained90%",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "gradual-45 critical p95 regression bounded",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "mixed-cost useful critical work retained90%",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "mixed-cost critical p95 regression bounded",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "mixed-recovery useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "mixed-recovery qualifying recovery not lost/delayed beyond one bin",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "signal-recovery useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "signal-recovery qualifying recovery not lost/delayed beyond one bin",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "gradual-recovery useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "gradual-recovery qualifying recovery not lost/delayed beyond one bin",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "error-recovery useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "error-recovery qualifying recovery not lost/delayed beyond one bin",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "loss-recovery useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "loss-recovery qualifying recovery not lost/delayed beyond one bin",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": null,
+      "name": "periodic adjustment count reduced at least20%",
+      "pass": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "baseline": null,
+      "name": "periodic sampled variation does not regress beyond10%",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "overall useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "noninjected critical error rate remains bounded",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "capacity-loss useful critical work retained90%",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "capacity-loss critical p95 regression bounded",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "gradual-25 useful critical work retained90%",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "gradual-25 critical p95 regression bounded",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "gradual-45 useful critical work retained90%",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "gradual-45 critical p95 regression bounded",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "mixed-cost useful critical work retained90%",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "mixed-cost critical p95 regression bounded",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "mixed-recovery useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "mixed-recovery qualifying recovery not lost/delayed beyond one bin",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "signal-recovery useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "signal-recovery qualifying recovery not lost/delayed beyond one bin",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "gradual-recovery useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "gradual-recovery qualifying recovery not lost/delayed beyond one bin",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "error-recovery useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "error-recovery qualifying recovery not lost/delayed beyond one bin",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "loss-recovery useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-defaults",
+      "name": "loss-recovery qualifying recovery not lost/delayed beyond one bin",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "overall useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "noninjected critical error rate remains bounded",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "capacity-loss useful critical work retained90%",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "capacity-loss critical p95 regression bounded",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "gradual-25 useful critical work retained90%",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "gradual-25 critical p95 regression bounded",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "gradual-45 useful critical work retained90%",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "gradual-45 critical p95 regression bounded",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "mixed-cost useful critical work retained90%",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "mixed-cost critical p95 regression bounded",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "mixed-recovery useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "mixed-recovery qualifying recovery not lost/delayed beyond one bin",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "signal-recovery useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "signal-recovery qualifying recovery not lost/delayed beyond one bin",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "gradual-recovery useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "gradual-recovery qualifying recovery not lost/delayed beyond one bin",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "error-recovery useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "error-recovery qualifying recovery not lost/delayed beyond one bin",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "loss-recovery useful critical work retained95%",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": "legacy-tuned",
+      "name": "loss-recovery qualifying recovery not lost/delayed beyond one bin",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": null,
+      "name": "periodic adjustment count reduced at least20%",
+      "pass": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "baseline": null,
+      "name": "periodic sampled variation does not regress beyond10%",
+      "pass": true
+    }
+  ],
+  "limitations": "Local sequential workload, exploratory selection before fixed confirmatory matrix, no long-term or multi-host qualification, no measurement of human tuning effort. Legacy defaults already require zero advanced overrides. Priority feedback uses histogram bucket estimates. No SQL contention provider or tenant-sharing policy enabled in this comparison. Controlled signal input tests coordination, not detection.",
+  "matplotlib": "3.11.2",
+  "images": [
+    "adaptation-comparison.png",
+    "adaptation-trace.png"
+  ]
+}

@@ -12,15 +12,16 @@ import (
 type Source interface{ Statistics() operation.Statistics }
 
 type collector struct {
-	workAdmitted, workRejected, workCompleted, workDuration                                                                                                                    *prometheus.Desc
-	budgetBytes, budgetLimit, budgetActive, budgetTracked, budgetTrackingLimit, budgetFallback, budgetExpired, budgetAttempts, budgetProposals, budgetRejected, budgetAdmitted *prometheus.Desc
-	decisionInfo, proposals, signalState, signalValue, signalThreshold, signalTime, signalAccepted, signalDropped, signalFailures                                              *prometheus.Desc
-	sharingDemand, sharingShares, sharingPause, sharingActive, sharingAdmissions                                                                                               *prometheus.Desc
-	resolutions                                                                                                                                                                *prometheus.Desc
-	tenantLimit, tenantTracked, tenantTrackingLimit, tenantActive, tenantExpired                                                                                               *prometheus.Desc
-	controllerSamples, controllerRatio, controllerFailures, controllerTime, controllerDecision, controllerSaturated                                                            *prometheus.Desc
-	service                                                                                                                                                                    Source
-	limit, minimum, maximum, reserved, active, info, admitted, rejected, completed, duration, adjustments                                                                      *prometheus.Desc
+	controllerControlRatio, controllerControlFailure, controllerWindowInterval, controllerWindowStart, controllerProfile, controllerSmoothed, controllerPending, controllerSparse, controllerExternal *prometheus.Desc
+	workAdmitted, workRejected, workCompleted, workDuration                                                                                                                                           *prometheus.Desc
+	budgetBytes, budgetLimit, budgetActive, budgetTracked, budgetTrackingLimit, budgetFallback, budgetExpired, budgetAttempts, budgetProposals, budgetRejected, budgetAdmitted                        *prometheus.Desc
+	decisionInfo, proposals, signalState, signalValue, signalThreshold, signalTime, signalAccepted, signalDropped, signalFailures                                                                     *prometheus.Desc
+	sharingDemand, sharingShares, sharingPause, sharingActive, sharingAdmissions                                                                                                                      *prometheus.Desc
+	resolutions                                                                                                                                                                                       *prometheus.Desc
+	tenantLimit, tenantTracked, tenantTrackingLimit, tenantActive, tenantExpired                                                                                                                      *prometheus.Desc
+	controllerSamples, controllerRatio, controllerFailures, controllerTime, controllerDecision, controllerSaturated                                                                                   *prometheus.Desc
+	service                                                                                                                                                                                           Source
+	limit, minimum, maximum, reserved, active, info, admitted, rejected, completed, duration, adjustments                                                                                             *prometheus.Desc
 }
 
 // Register adds one service to registry. Service names must be unique within that
@@ -34,6 +35,9 @@ func Register(registry prometheus.Registerer, service Source) error {
 		return prometheus.NewDesc("gatewise_"+name, help, labels, prometheus.Labels{"service": serviceName})
 	}
 	c := &collector{service: service,
+		controllerControlRatio: desc("controller_control_ratio", "Last control ratio: aggregate p90 for legacy, worst aggregate p90 or well-sampled tier p95 for stable."), controllerControlFailure: desc("controller_control_failure_fraction", "Last failure fraction used for control, including well-sampled tier failures for stable."),
+		controllerWindowInterval: desc("controller_window_interval_seconds", "Current feedback interval, including stable profile local timing offset."), controllerWindowStart: desc("controller_window_started_timestamp_seconds", "Current feedback-window start; no evaluation is implied."),
+		controllerProfile: desc("controller_info", "Selected bounded controller profile.", "profile"), controllerSmoothed: desc("controller_smoothed_ratio", "Stable profile EWMA of the selected normalized control ratio; zero before sufficient feedback."), controllerPending: desc("controller_pending_samples", "Current unevaluated window completions."), controllerSparse: desc("controller_sparse_window", "Last evaluation had fewer than configured minimum samples and held capacity."), controllerExternal: desc("controller_external_limit", "A matching signal ceiling constrained admission in the last evaluated window."),
 		workAdmitted:        desc("work_admitted_total", "Admitted work by bounded integration kind.", "kind"),
 		workRejected:        desc("work_rejected_total", "Admission rejections by bounded integration kind.", "kind"),
 		workCompleted:       desc("work_completed_total", "Completed actual operation lifetimes.", "kind", "outcome"),
@@ -91,7 +95,7 @@ func Register(registry prometheus.Registerer, service Source) error {
 }
 
 func (c *collector) Describe(out chan<- *prometheus.Desc) {
-	for _, desc := range []*prometheus.Desc{c.workAdmitted, c.workRejected, c.workCompleted, c.workDuration, c.budgetBytes, c.budgetLimit, c.budgetActive, c.budgetTracked, c.budgetTrackingLimit, c.budgetFallback, c.budgetExpired, c.budgetAttempts, c.budgetProposals, c.budgetRejected, c.budgetAdmitted, c.decisionInfo, c.proposals, c.signalState, c.signalValue, c.signalThreshold, c.signalTime, c.signalAccepted, c.signalDropped, c.signalFailures, c.sharingDemand, c.sharingShares, c.sharingPause, c.sharingActive, c.sharingAdmissions, c.resolutions, c.limit, c.minimum, c.maximum, c.reserved, c.active, c.info, c.admitted, c.rejected, c.completed, c.duration, c.adjustments, c.controllerSamples, c.controllerRatio, c.controllerFailures, c.controllerTime, c.controllerDecision, c.controllerSaturated, c.tenantLimit, c.tenantTracked, c.tenantTrackingLimit, c.tenantActive, c.tenantExpired} {
+	for _, desc := range []*prometheus.Desc{c.controllerControlRatio, c.controllerControlFailure, c.controllerWindowInterval, c.controllerWindowStart, c.controllerProfile, c.controllerSmoothed, c.controllerPending, c.controllerSparse, c.controllerExternal, c.workAdmitted, c.workRejected, c.workCompleted, c.workDuration, c.budgetBytes, c.budgetLimit, c.budgetActive, c.budgetTracked, c.budgetTrackingLimit, c.budgetFallback, c.budgetExpired, c.budgetAttempts, c.budgetProposals, c.budgetRejected, c.budgetAdmitted, c.decisionInfo, c.proposals, c.signalState, c.signalValue, c.signalThreshold, c.signalTime, c.signalAccepted, c.signalDropped, c.signalFailures, c.sharingDemand, c.sharingShares, c.sharingPause, c.sharingActive, c.sharingAdmissions, c.resolutions, c.limit, c.minimum, c.maximum, c.reserved, c.active, c.info, c.admitted, c.rejected, c.completed, c.duration, c.adjustments, c.controllerSamples, c.controllerRatio, c.controllerFailures, c.controllerTime, c.controllerDecision, c.controllerSaturated, c.tenantLimit, c.tenantTracked, c.tenantTrackingLimit, c.tenantActive, c.tenantExpired} {
 		out <- desc
 	}
 }
@@ -204,6 +208,26 @@ func (c *collector) Collect(out chan<- prometheus.Metric) {
 		}
 		gauge(c.controllerTime, timestamp)
 		gauge(c.controllerDecision, 1, e.Decision, e.Reason)
+		gauge(c.controllerControlRatio, e.ControlRatio)
+		gauge(c.controllerControlFailure, e.ControlFailureFraction)
+		gauge(c.controllerWindowInterval, e.WindowInterval.Seconds())
+		windowStart := 0.0
+		if !e.WindowStartedAt.IsZero() {
+			windowStart = float64(e.WindowStartedAt.UnixNano()) / 1e9
+		}
+		gauge(c.controllerWindowStart, windowStart)
+		gauge(c.controllerProfile, 1, e.Profile)
+		gauge(c.controllerSmoothed, e.SmoothedControlRatio)
+		gauge(c.controllerPending, float64(e.PendingSamples))
+		sparse, external := 0.0, 0.0
+		if e.SparseWindow {
+			sparse = 1
+		}
+		if e.ExternalLimit {
+			external = 1
+		}
+		gauge(c.controllerSparse, sparse)
+		gauge(c.controllerExternal, external)
 		saturated := 0.0
 		if e.Saturated {
 			saturated = 1

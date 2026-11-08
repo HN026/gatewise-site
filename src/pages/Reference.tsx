@@ -5,7 +5,18 @@ import { CodeBlock, Note, PageTitle, Section, Table } from '../components/ui';
 export default function Reference() {
   const [filter, setFilter] = useState('');
   const rows = configuration.filter(r => r.join(' ').toLowerCase().includes(filter.toLowerCase()));
-  return <div className="container"><PageTitle title="Configuration and API reference">Proxy configuration, environment overrides, public Go interfaces and rejection responses.</PageTitle><Section id="operation-reference" title="Operation and SQL APIs"><Table headers={['API','Contract']} rows={[
+  return <div className="container"><PageTitle title="Configuration and API reference">Proxy configuration, environment overrides, public Go interfaces and rejection responses.</PageTitle><Section id="adaptive-profiles" title="Adaptive profiles and diagnostics"><Table headers={['Setting or field','Contract']} rows={[
+ ['AdaptiveConfig.Profile / adaptive.profile','legacy (default) or stable (opt-in). Mode must be adaptive. Unknown profiles reject at startup; profile selection does not erase explicit interval, samples, bounds or targets.'],
+ ['GATEWISE_SERVICE_<NAME>_ADAPTIVE_PROFILE','Process environment / dotenv override for an adaptive proxy service. Explicit empty/invalid values reject. Restart to apply a profile change.'],
+ ['ControllerState.P90Ratio','Original aggregate bucket-estimated normalized p90, retained for compatibility.'],
+ ['ControlRatio / ControlPriority','Legacy uses aggregate p90. Stable takes the maximum of aggregate p90 and p95 from configured tiers with at least 10 samples. Ties select a deterministic diagnostic name.'],
+ ['ControlFailureFraction','Legacy aggregate fraction; stable also considers failure fractions from well-sampled tiers.'],
+ ['SmoothedControlRatio','Stable EWMA of selected control ratios, weight 1/2 per full evaluation. Zero before sufficient feedback; unused/zero for legacy. Not an estimated latency target.'],
+ ['SparseWindow / ExternalLimit','Last evaluation used sparse feedback, or observed a binding signal ceiling. These describe a completed window, not instantaneous provider state.'],
+ ['PendingSamples / WindowStartedAt / WindowInterval','Current unevaluated window; interval includes stable local timing offset. No periodic evaluation or healthy state is implied by no completions.'],
+ ['Decision / Reason','Bounded outcomes include min_bound, max_bound, healthy_confirmation, latency_headroom, tier_confirmation, latency_trend, no_saturation, sparse_feedback and external_limit, alongside existing adjustment reasons.'],
+ ['HealthyStreak / PressureStreak','Consecutive evaluated full-window classifications. Sparse/idle handling clears streaks.']
+]}/><p><a href="#/installation/stable-adaptive">Exact preset rules</a> describe sample eligibility, operator bounds and rollback. Adjustment counters retain existing reason families; the profile does not change admission priorities, tenant policies or permit lifetimes.</p></Section><Section id="operation-reference" title="Operation and SQL APIs"><Table headers={['API','Contract']} rows={[
  ['operation.New(Config)','Transport-neutral, process-local engine. Reuses the HTTP limiter, priorities, tenant rules, signal decisions, byte/key budgets and adaptive controller.'],
  ['Engine.Begin(ctx, Request)','Never queues. Returns Permit or error. Metadata is supplied by trusted application code; Kind is bounded to operation/http. Same-engine active nesting returns ErrNested.'],
  ['Engine.Do(ctx, Request, fn)','Calls fn with the admitted context; finishes exactly once on return or panic. Errors remain application-owned; no retry.'],

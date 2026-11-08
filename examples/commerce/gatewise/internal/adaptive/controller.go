@@ -8,26 +8,40 @@ import (
 )
 
 type Config struct {
+	Profile              string
 	Min, Max, MinSamples int
 	Interval             time.Duration
 }
 type Adjustment struct {
-	Previous, Limit, Samples int
-	Reason                   string
-	P90Ratio                 float64
+	Profile, ControlPriority             string
+	ControlRatio, ControlFailureFraction float64
+	Previous, Limit, Samples             int
+	Reason                               string
+	P90Ratio                             float64
 }
 
 // Evaluation describes the last completed feedback window, including hold decisions.
 type Evaluation struct {
-	EvaluatedAt               time.Time
-	Samples                   int
-	P90Ratio, FailureFraction float64
-	PreviousLimit, Limit      int
-	Saturated                 bool
-	Decision, Reason          string
+	ControlRatio, ControlFailureFraction          float64
+	ControlPriority                               string
+	Profile                                       string
+	SmoothedControlRatio                          float64
+	SparseWindow, ExternalLimit                   bool
+	PressureStreak, HealthyStreak, PendingSamples int
+	WindowStartedAt                               time.Time
+	WindowInterval                                time.Duration
+	EvaluatedAt                                   time.Time
+	Samples                                       int
+	P90Ratio, FailureFraction                     float64
+	PreviousLimit, Limit                          int
+	Saturated                                     bool
+	Decision, Reason                              string
 }
 
 type Controller struct {
+	stable            stableState
+	interval          time.Duration
+	externallyLimited bool
 	mu                sync.Mutex
 	limiter           *admission.Limiter
 	config            Config
@@ -40,7 +54,17 @@ type Controller struct {
 }
 
 func New(limiter *admission.Limiter, c Config) *Controller {
-	return &Controller{limiter: limiter, config: c}
+	if c.Profile == "" {
+		c.Profile = "legacy"
+	}
+	stable := newStableState()
+	if c.Profile == "stable" {
+		stable.tiers = make(map[admission.Priority]*tierFeedback)
+		for name := range limiter.TierCounts() {
+			stable.tiers[name] = &tierFeedback{}
+		}
+	}
+	return &Controller{limiter: limiter, config: c, stable: stable, interval: c.Interval}
 }
 
 // Begin coordinates the admission decision and measurement generation. There is
@@ -59,11 +83,30 @@ func (c *Controller) BeginBudget(priority admission.Priority, now time.Time, buc
 	if c.start.IsZero() {
 		c.reset(now)
 	}
-	if decision == admission.Admitted && state.Active == 1 && !c.lastSample.IsZero() && now.Sub(c.lastSample) > 2*c.config.Interval {
+	idleInterval := 2 * c.config.Interval
+	if c.config.Profile == "stable" {
+		idleInterval = scaledInterval(c.config.Interval, 4)
+		if idleInterval < 3*time.Second {
+			idleInterval = 3 * time.Second
+		}
+	}
+	if decision == admission.Admitted && state.Active == 1 && !c.lastSample.IsZero() && now.Sub(c.lastSample) > idleInterval {
+		c.stable.idle()
 		c.reset(now)
 	}
-	if decision != admission.Admitted && decision != admission.CohortLimited && decision != admission.SignalConcurrencyLimit || state.Active >= state.Limit || (priority == admission.Background && state.Background >= state.Limit-state.ReservedCritical) {
-		c.saturated = true
+	binding := ceiling > 0 && ceiling < state.Limit
+	if c.config.Profile == "stable" && binding {
+		c.externallyLimited = true
+	} else if c.config.Profile == "stable" {
+		// Occupying the last slot is not evidence of unmet demand. Only a local
+		// capacity refusal can justify growth; signal/cohort vetoes cannot.
+		if decision == admission.ConcurrencyLimit || decision == admission.CriticalCapacityReserved || decision == admission.TierCapacityReserved {
+			c.saturated = true
+		}
+	} else {
+		if decision != admission.Admitted && decision != admission.CohortLimited && decision != admission.SignalConcurrencyLimit || state.Active >= state.Limit || (priority == admission.Background && state.Background >= state.Limit-state.ReservedCritical) {
+			c.saturated = true
+		}
 	}
 	return decision, c.generation
 }
@@ -88,13 +131,26 @@ func (c *Controller) End(priority admission.Priority, generation uint64, now tim
 		}
 	}
 	c.histogram[bucket]++
+	if c.config.Profile == "stable" {
+		if t := c.stable.tiers[priority]; t != nil {
+			t.histogram[bucket]++
+			t.samples++
+			if failed {
+				t.failures++
+			}
+		}
+	}
 	c.samples++
 	c.lastSample = now
 	if failed {
 		c.failures++
 	}
-	if now.Sub(c.start) < c.config.Interval || c.samples < c.config.MinSamples {
-		return nil
+	sparse := false
+	if now.Sub(c.start) < c.interval || c.samples < c.config.MinSamples {
+		if c.config.Profile != "stable" || now.Sub(c.start) < scaledInterval(c.config.Interval, 4) || c.samples < 3 || c.saturated {
+			return nil
+		}
+		sparse = true
 	}
 	rank := (c.samples*9 + 9) / 10
 	cumulative := 0
@@ -111,7 +167,11 @@ func (c *Controller) End(priority admission.Priority, generation uint64, now tim
 	current := c.limiter.Snapshot().Limit
 	next := current
 	reason := ""
-	if p90 > 1 || c.failures*5 >= c.samples {
+	controlRatio, controlFailure, controlPriority := p90, float64(c.failures)/float64(c.samples), "aggregate"
+	if c.config.Profile == "stable" {
+		controlRatio, controlFailure, controlPriority = c.controlFeedback(p90, controlFailure)
+		next, reason = c.stableDecision(current, controlRatio, controlFailure, sparse, p90)
+	} else if p90 > 1 || c.failures*5 >= c.samples {
 		step := current / 3
 		if step < 1 {
 			step = 1
@@ -140,7 +200,8 @@ func (c *Controller) End(priority admission.Priority, generation uint64, now tim
 	if evaluationReason == "" {
 		evaluationReason = "no_change"
 	}
-	c.last = Evaluation{EvaluatedAt: now, Samples: c.samples, P90Ratio: p90,
+	c.last = Evaluation{ControlRatio: controlRatio, ControlFailureFraction: controlFailure, ControlPriority: controlPriority, Profile: c.config.Profile, SmoothedControlRatio: c.stable.ratio, SparseWindow: sparse, ExternalLimit: c.externallyLimited, PressureStreak: c.stable.pressure, HealthyStreak: c.stable.healthy,
+		EvaluatedAt: now, Samples: c.samples, P90Ratio: p90,
 		FailureFraction: float64(c.failures) / float64(c.samples), PreviousLimit: current,
 		Limit: next, Saturated: c.saturated, Decision: decision, Reason: evaluationReason}
 	samples := c.samples
@@ -150,12 +211,20 @@ func (c *Controller) End(priority admission.Priority, generation uint64, now tim
 	}
 	c.limiter.SetLimit(next)
 	c.generation++
-	return &Adjustment{Previous: current, Limit: next, Samples: samples, Reason: reason, P90Ratio: p90}
+	return &Adjustment{Profile: c.config.Profile, ControlPriority: controlPriority, ControlRatio: controlRatio, ControlFailureFraction: controlFailure, Previous: current, Limit: next, Samples: samples, Reason: reason, P90Ratio: p90}
 }
 
 func (c *Controller) reset(now time.Time) {
 	c.start = now
+	c.externallyLimited = false
+	c.interval = c.config.Interval
+	if c.config.Profile == "stable" {
+		c.interval = c.stable.interval(c.config.Interval)
+	}
 	c.histogram = [8]int{}
+	for _, t := range c.stable.tiers {
+		*t = tierFeedback{}
+	}
 	c.samples = 0
 	c.failures = 0
 	c.saturated = false
@@ -166,5 +235,10 @@ func (c *Controller) reset(now time.Time) {
 func (c *Controller) Snapshot() Evaluation {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return c.last
+	last := c.last
+	last.Profile = c.config.Profile
+	last.PendingSamples = c.samples
+	last.WindowStartedAt = c.start
+	last.WindowInterval = c.interval
+	return last
 }

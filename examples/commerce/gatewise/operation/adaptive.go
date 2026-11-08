@@ -9,6 +9,8 @@ import (
 // AdaptiveConfig enables request-driven adjustment when attached to Config.
 // Zero fields select conservative defaults. MaxConcurrent remains the ceiling.
 type AdaptiveConfig struct {
+	// Profile is legacy (default) or stable (opt-in). Operator bounds remain hard.
+	Profile           string
 	MinConcurrent     int
 	InitialConcurrent int
 	Interval          time.Duration
@@ -18,6 +20,12 @@ type AdaptiveConfig struct {
 
 func normalizeAdaptive(c Config) (AdaptiveConfig, error) {
 	a := *c.Adaptive
+	if a.Profile == "" {
+		a.Profile = "legacy"
+	}
+	if a.Profile != "legacy" && a.Profile != "stable" {
+		return a, fmt.Errorf("gatewise: adaptive Profile must be legacy or stable")
+	}
 	if c.ReservedCritical >= c.MaxConcurrent {
 		return a, fmt.Errorf("gatewise: adaptive mode needs nonreserved capacity")
 	}
@@ -70,13 +78,21 @@ func (s *Engine) Snapshot() ServiceState {
 // zero until both interval and sample requirements are met. Decision is one of
 // not_evaluated, hold, increase or decrease. These are observations, not controls.
 type ControllerState struct {
-	Enabled                   bool
-	EvaluatedAt               time.Time
-	Samples                   int
-	P90Ratio, FailureFraction float64
-	PreviousLimit, Limit      int
-	Saturated                 bool
-	Decision, Reason          string
+	ControlRatio, ControlFailureFraction          float64
+	ControlPriority                               string
+	Profile                                       string
+	SmoothedControlRatio                          float64
+	SparseWindow, ExternalLimit                   bool
+	PressureStreak, HealthyStreak, PendingSamples int
+	WindowStartedAt                               time.Time
+	WindowInterval                                time.Duration
+	Enabled                                       bool
+	EvaluatedAt                                   time.Time
+	Samples                                       int
+	P90Ratio, FailureFraction                     float64
+	PreviousLimit, Limit                          int
+	Saturated                                     bool
+	Decision, Reason                              string
 }
 
 func (s *Engine) ControllerSnapshot() ControllerState {
@@ -84,7 +100,8 @@ func (s *Engine) ControllerSnapshot() ControllerState {
 		return ControllerState{Decision: "not_evaluated", Reason: "fixed_mode"}
 	}
 	e := s.controller.Snapshot()
-	state := ControllerState{Enabled: true, EvaluatedAt: e.EvaluatedAt, Samples: e.Samples,
+	state := ControllerState{ControlRatio: e.ControlRatio, ControlFailureFraction: e.ControlFailureFraction, ControlPriority: e.ControlPriority, Profile: e.Profile, SmoothedControlRatio: e.SmoothedControlRatio, SparseWindow: e.SparseWindow, ExternalLimit: e.ExternalLimit, PressureStreak: e.PressureStreak, HealthyStreak: e.HealthyStreak, PendingSamples: e.PendingSamples, WindowStartedAt: e.WindowStartedAt, WindowInterval: e.WindowInterval,
+		Enabled: true, EvaluatedAt: e.EvaluatedAt, Samples: e.Samples,
 		P90Ratio: e.P90Ratio, FailureFraction: e.FailureFraction,
 		PreviousLimit: e.PreviousLimit, Limit: e.Limit, Saturated: e.Saturated,
 		Decision: e.Decision, Reason: e.Reason}

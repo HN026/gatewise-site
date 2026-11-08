@@ -73,7 +73,7 @@ func Run(ctx context.Context, c config.Config) error {
 			}
 		}
 		if c.Mode == "adaptive" {
-			cfg.Adaptive = &middleware.AdaptiveConfig{MinConcurrent: c.Minimum, InitialConcurrent: c.Initial, Interval: c.Interval, MinSamples: c.MinSamples, TargetLatency: c.Target}
+			cfg.Adaptive = &middleware.AdaptiveConfig{Profile: c.AdaptiveProfile, MinConcurrent: c.Minimum, InitialConcurrent: c.Initial, Interval: c.Interval, MinSamples: c.MinSamples, TargetLatency: c.Target}
 		}
 		g, e = middleware.NewService(cfg)
 		if e != nil {
@@ -99,6 +99,9 @@ func Run(ctx context.Context, c config.Config) error {
 			})
 		}
 		if g != nil {
+			if c.RouteBudgets && p == middleware.Background {
+				return g.Middleware(p, h, middleware.WithLatencyTarget(500*time.Millisecond))
+			}
 			return g.Middleware(p, h)
 		}
 		if pc != nil {

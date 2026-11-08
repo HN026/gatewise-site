@@ -103,7 +103,7 @@ func New(c Config) (*Engine, error) {
 		s.limiter = admission.NewTiers(initial, tiers)
 	}
 	if c.Adaptive != nil {
-		s.controller = adaptive.New(s.limiter, adaptive.Config{Min: s.adaptive.MinConcurrent, Max: c.MaxConcurrent, Interval: s.adaptive.Interval, MinSamples: s.adaptive.MinSamples})
+		s.controller = adaptive.New(s.limiter, adaptive.Config{Profile: s.adaptive.Profile, Min: s.adaptive.MinConcurrent, Max: c.MaxConcurrent, Interval: s.adaptive.Interval, MinSamples: s.adaptive.MinSamples})
 	}
 	return s, nil
 }

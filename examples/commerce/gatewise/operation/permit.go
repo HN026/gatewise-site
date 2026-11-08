@@ -79,7 +79,7 @@ func (p *Permit) Finish(outcome Outcome) {
 			if change != nil {
 				s.statistics.adjustment(change.Previous, change.Limit, change.Reason)
 				if s.logger != nil {
-					s.logger.Info("concurrency limit adjusted", "service", s.name, "previous", change.Previous, "limit", change.Limit, "reason", change.Reason, "p90_ratio", change.P90Ratio, "samples", change.Samples)
+					s.logger.Info("concurrency limit adjusted", "service", s.name, "previous", change.Previous, "limit", change.Limit, "reason", change.Reason, "p90_ratio", change.P90Ratio, "control_ratio", change.ControlRatio, "control_priority", change.ControlPriority, "control_failure_fraction", change.ControlFailureFraction, "profile", change.Profile, "samples", change.Samples)
 				}
 			}
 		} else {

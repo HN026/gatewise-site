@@ -1,0 +1,233 @@
+{
+  "info": {
+    "name": "Gatewise stable adaptive profile",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Opt-in stable profile with default adaptive settings, SQL-backed services and optional controlled decision signals. Run run.py --profile middleware-adaptive/proxy-adaptive --controller-profile stable --decisions enforce --verify. Sparse check uses a5.2s idle reset and three spaced requests; script timeout15s. This tests behavior/diagnostics, not production capacity or a statistical confidence guarantee."
+  },
+  "item": [
+    {
+      "name": "Restore healthy service",
+      "request": {
+        "method": "PUT",
+        "url": "{{orders_admin}}/control",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"work_multiplier\": 1, \"sql_delay_ms\": 0, \"failure_every\": 0}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"control succeeds\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Verify stable middleware or proxy",
+      "request": {
+        "method": "GET",
+        "url": "{{orders_url}}/orders/seed-1",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"request succeeds\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"selected profile is visible\",()=>{pm.expect(pm.response.headers.get('X-Gatewise-Controller')).eql('stable');pm.expect(pm.response.headers.get('X-Gatewise-Mode')).eql('adaptive');const n=Number(pm.response.headers.get('X-Gatewise-Limit'));pm.expect(n).within(5,12);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Inspect bounded controller diagnostics",
+      "request": {
+        "method": "GET",
+        "url": "{{orders_url}}/metrics",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"metrics succeed\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"profile and pending-window metrics exported\",()=>{const t=pm.response.text();for(const name of ['gatewise_controller_info','gatewise_controller_smoothed_ratio','gatewise_controller_pending_samples','gatewise_controller_sparse_window','gatewise_controller_external_limit','gatewise_controller_window_interval_seconds'])pm.expect(t).includes(name);pm.expect(t).includes('profile=\"stable\"');});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Evaluate fast server failures",
+      "request": {
+        "method": "GET",
+        "url": "{{orders_url}}/healthz",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const send=(method,url,body,headers={})=>new Promise((resolve,reject)=>pm.sendRequest({method,url,header:{'Content-Type':'application/json',...headers},...(body===undefined?{}:{body:{mode:'raw',raw:JSON.stringify(body)}})},(err,res)=>err?reject(err):resolve(res)));",
+              "const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));",
+              "const base=pm.environment.get('orders_url'),admin=pm.environment.get('orders_admin');",
+              "const gauge=(text,name)=>{const line=text.split('\\n').find(l=>l.startsWith(name+'{')&&l.includes('service=\"orders\"'));return line?Number(line.trim().split(/\\s+/)[1]):NaN;};",
+              "(async()=>{try{",
+              " await send('PUT',admin+'/control',{work_multiplier:1,sql_delay_ms:0,failure_every:1});",
+              " for(let wave=0;wave<2;wave++){for(let i=0;i<16;i++){const r=await send('POST',base+'/orders/checkout',{amount_cents:1},{'Idempotency-Key':'adaptive-failure-'+pm.variables.replaceIn('{{$guid}}')});if(r.code!==500)throw new Error('expected injected SQL failure, got '+r.code);}if(wave===0)await sleep(1300);}",
+              " const m=await send('GET',base+'/metrics');",
+              " pm.test('fast server errors are not healthy growth',()=>{pm.expect(gauge(m.text(),'gatewise_controller_last_failure_fraction')).to.be.at.least(.2);pm.expect(gauge(m.text(),'gatewise_concurrency_limit')).within(5,12);});",
+              " }catch(e){pm.test('failure evaluation completes',()=>{throw e;});}finally{await send('PUT',admin+'/control',{work_multiplier:1,sql_delay_ms:0,failure_every:0});}})();"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Healthy recovery remains usable",
+      "request": {
+        "method": "GET",
+        "url": "{{orders_url}}/orders/seed-1",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"healthy request succeeds\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sparse feedback does not invent capacity",
+      "request": {
+        "method": "GET",
+        "url": "{{orders_url}}/healthz",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const send=(method,url,body,headers={})=>new Promise((resolve,reject)=>pm.sendRequest({method,url,header:{'Content-Type':'application/json',...headers},...(body===undefined?{}:{body:{mode:'raw',raw:JSON.stringify(body)}})},(err,res)=>err?reject(err):resolve(res)));",
+              "const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));",
+              "const base=pm.environment.get('orders_url'),admin=pm.environment.get('orders_admin');",
+              "const gauge=(text,name)=>{const line=text.split('\\n').find(l=>l.startsWith(name+'{')&&l.includes('service=\"orders\"'));return line?Number(line.trim().split(/\\s+/)[1]):NaN;};",
+              "(async()=>{try{",
+              " await sleep(5200);let limit=null;",
+              " for(let i=0;i<3;i++){const r=await send('GET',base+'/orders/seed-1');pm.test('sparse request '+i+' succeeds',()=>pm.expect(r.code).eql(200));const current=Number(r.headers.get('X-Gatewise-Limit'));if(limit===null)limit=current;else pm.test('sparse feedback holds capacity '+i,()=>pm.expect(current).eql(limit));if(i<2)await sleep(2200);}",
+              " const m=await send('GET',base+'/metrics');pm.test('sparse window is an observable hold',()=>pm.expect(gauge(m.text(),'gatewise_controller_sparse_window')).eql(1));",
+              " }catch(e){pm.test('sparse evaluation completes',()=>{throw e;});}})();"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Verify signal ceiling interaction when configured",
+      "request": {
+        "method": "GET",
+        "url": "{{orders_url}}/healthz",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const send=(method,url,body,headers={})=>new Promise((resolve,reject)=>pm.sendRequest({method,url,header:{'Content-Type':'application/json',...headers},...(body===undefined?{}:{body:{mode:'raw',raw:JSON.stringify(body)}})},(err,res)=>err?reject(err):resolve(res)));",
+              "const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));",
+              "const base=pm.environment.get('orders_url'),admin=pm.environment.get('orders_admin');",
+              "const gauge=(text,name)=>{const line=text.split('\\n').find(l=>l.startsWith(name+'{')&&l.includes('service=\"orders\"'));return line?Number(line.trim().split(/\\s+/)[1]):NaN;};",
+              "(async()=>{if(pm.environment.get('decision_mode')!=='enforce')return;try{",
+              " await send('PUT',admin+'/signals/primary',{state:'measured',value:1});await sleep(250);",
+              " let initial=null;",
+              " for(let wave=0;wave<2;wave++){for(let i=0;i<16;i++){const r=await send('GET',base+'/orders/seed-1');if(initial===null)initial=Number(r.headers.get('X-Gatewise-Limit'));pm.test('signal-limited request stays usable '+wave+'-'+i,()=>{pm.expect(r.code).eql(200);pm.expect(Number(r.headers.get('X-Gatewise-Effective-Limit'))).eql(4);});}if(wave===0)await sleep(1300);}",
+              " const m=await send('GET',base+'/metrics');pm.test('external ceiling does not justify baseline growth',()=>{pm.expect(gauge(m.text(),'gatewise_controller_external_limit')).eql(1);pm.expect(gauge(m.text(),'gatewise_concurrency_limit')).eql(initial);});",
+              " }catch(e){pm.test('signal coordination completes',()=>{throw e;});}finally{await send('PUT',admin+'/signals/primary',{state:'measured',value:0});}})();"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Finish with healthy traffic",
+      "request": {
+        "method": "GET",
+        "url": "{{orders_url}}/orders/seed-1",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"final request succeeds\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
