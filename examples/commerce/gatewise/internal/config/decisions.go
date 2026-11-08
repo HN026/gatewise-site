@@ -3,11 +3,27 @@ package config
 import (
 	"fmt"
 	"github.com/HN026/gatewise/decision"
+	"github.com/HN026/gatewise/middleware"
 	"strings"
 	"time"
 )
 
 type rawDecisions struct {
+	Cost *struct {
+		TrustedPeers []string `json:"trusted_peers"`
+	} `json:"cost_metadata"`
+	Budgets []struct {
+		Name          string `json:"name"`
+		Resource      string `json:"resource"`
+		MaxWriteBytes int64  `json:"max_write_bytes"`
+		Keys          *struct {
+			MaxConcurrent int    `json:"max_concurrent"`
+			MaxTracked    int    `json:"max_tracked"`
+			IdleTTL       string `json:"idle_ttl"`
+			Missing       string `json:"missing"`
+			Overflow      string `json:"overflow"`
+		} `json:"keys"`
+	} `json:"budgets"`
 	Mode    decision.Mode `json:"mode"`
 	Signals []struct {
 		Name         string          `json:"name"`
@@ -43,6 +59,24 @@ func parseDecisions(service string, raw *rawDecisions, lookup func(string) (stri
 			return nil, nil, fmt.Errorf("service %s: invalid signal max_age", service)
 		}
 		config.Rules = append(config.Rules, decision.Rule{Name: s.Name, Scope: s.Scope, Threshold: s.Threshold, MaxAge: age, OnUnknown: s.OnUnknown, UnknownLimit: s.UnknownLimit, Pressure: s.Pressure})
+	}
+	for _, b := range raw.Budgets {
+		budget := decision.Budget{Name: b.Name, Resource: b.Resource, MaxWriteBytes: b.MaxWriteBytes}
+		if b.Keys != nil {
+			ttl := time.Duration(0)
+			var err error
+			if b.Keys.IdleTTL != "" {
+				ttl, err = time.ParseDuration(b.Keys.IdleTTL)
+				if err != nil || ttl <= 0 {
+					return nil, nil, fmt.Errorf("invalid key idle TTL")
+				}
+			}
+			budget.Keys = &decision.KeyBudget{MaxConcurrent: b.Keys.MaxConcurrent, MaxTracked: b.Keys.MaxTracked, IdleTTL: ttl, Missing: b.Keys.Missing, Overflow: b.Keys.Overflow}
+		}
+		config.Budgets = append(config.Budgets, budget)
+	}
+	if len(config.Budgets) > 0 && raw.Cost == nil {
+		return nil, nil, fmt.Errorf("proxy budgets require trusted cost_metadata")
 	}
 	engine, err := decision.New(config)
 	if err != nil {
@@ -82,4 +116,11 @@ func parseDecisions(service string, raw *rawDecisions, lookup func(string) (stri
 		return nil, nil, err
 	}
 	return engine, collectors, nil
+}
+
+func parseCost(raw *rawDecisions) (middleware.CostResolver, error) {
+	if raw == nil || raw.Cost == nil {
+		return nil, nil
+	}
+	return middleware.TrustedCostHeader(raw.Cost.TrustedPeers)
 }

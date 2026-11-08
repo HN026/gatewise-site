@@ -1,0 +1,11 @@
+{
+  "source_sha256": "8c5db9d2f302487822e3c4425b47e5e9f724a48cbb63dcc55ae421e293f63a83",
+  "overhead_sha256": "15251ac48ed1d1f22cf3a918d81f1589ebd177649b4e1b1a48487c2f62556770",
+  "aggregation": "Median run-level probe/success rates and successful p95; pooled rejection/error percentages. Runtime means pool staggered samples over three services/repeats. Byte/key peaks use maximum instrumented peak across services/repeats. SQL wait averages divide total duration by acquisitions that waited.",
+  "limitations": "Local short workload, explicit GC/page cleanup between phases. Sampled memory/goroutine feedback can overshoot or oscillate. Goroutine workers wait; no CPU scheduler-health claim. Source failures/unknown fallback are retained in raw traces.",
+  "matplotlib": "3.11.2",
+  "images": [
+    "resource-isolation.png",
+    "resource-pressure.png"
+  ]
+}

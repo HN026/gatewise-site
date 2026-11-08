@@ -38,8 +38,9 @@ type Rule struct {
 	Pressure     Effect
 }
 type Config struct {
-	Mode  Mode
-	Rules []Rule
+	Mode    Mode
+	Rules   []Rule
+	Budgets []Budget
 }
 
 // Observation timestamps describe measurement time, not delivery time. Unknown
@@ -76,9 +77,11 @@ type Result struct {
 	Priority, Resource, Reason, Stage string
 	Evaluation                        Evaluation
 	Stages                            []Stage
+	Budgets                           []BudgetAssessment
 }
 
 func (r Result) Clone() Result {
+	r.Budgets = append([]BudgetAssessment(nil), r.Budgets...)
 	r.Stages = append([]Stage(nil), r.Stages...)
 	r.Evaluation.Assessments = append([]Assessment(nil), r.Evaluation.Assessments...)
 	return r
@@ -94,7 +97,7 @@ func FromContext(ctx context.Context) (Result, bool) {
 	return r.Clone(), ok
 }
 func NewResult(priority, resource string) Result {
-	return Result{Priority: priority, Resource: resource, Stages: []Stage{{Name: "identity", State: "not_evaluated"}, {Name: "signals", State: "not_evaluated"}, {Name: "tenant", State: "not_evaluated"}, {Name: "capacity", State: "not_evaluated"}}}
+	return Result{Priority: priority, Resource: resource, Stages: []Stage{{Name: "identity", State: "not_evaluated"}, {Name: "signals", State: "not_evaluated"}, {Name: "resources", State: "not_evaluated"}, {Name: "tenant", State: "not_evaluated"}, {Name: "capacity", State: "not_evaluated"}}}
 }
 func (r *Result) Mark(stage, reason string) {
 	for i := range r.Stages {
@@ -136,6 +139,7 @@ type SignalSnapshot struct {
 type Engine struct {
 	mu      sync.Mutex
 	mode    Mode
+	budgets []budgetState
 	slots   []slot
 	indices map[string]int
 	running bool
@@ -148,10 +152,13 @@ func New(c Config) (*Engine, error) {
 	if c.Mode != Enforce && c.Mode != Observe {
 		return nil, fmt.Errorf("decision: mode must be enforce or observe")
 	}
-	if len(c.Rules) < 1 || len(c.Rules) > 32 {
-		return nil, fmt.Errorf("decision: configure 1..32 signals")
+	if len(c.Rules) == 0 && len(c.Budgets) == 0 || len(c.Rules) > 32 {
+		return nil, fmt.Errorf("decision: configure signals or resource budgets; at most 32 signals")
 	}
 	e := &Engine{mode: c.Mode, indices: make(map[string]int, len(c.Rules))}
+	if err := e.initBudgets(c.Budgets); err != nil {
+		return nil, err
+	}
 	for _, r := range c.Rules {
 		if !ValidName(r.Name) {
 			return nil, fmt.Errorf("decision: invalid signal name")

@@ -11,6 +11,7 @@ type DecisionState struct {
 	Mode      decision.Mode
 	Last      decision.Result
 	Proposals [3]uint64 // allow, limit, reject; includes only evaluated signals.
+	Budgets   []decision.BudgetSnapshot
 	Signals   []decision.SignalSnapshot
 }
 
@@ -34,7 +35,8 @@ func (s *Service) DecisionSnapshot() DecisionState {
 		return DecisionState{}
 	}
 	signals := s.decisions.Snapshot()
+	budgets := s.decisions.BudgetSnapshot()
 	s.statistics.mu.Lock()
 	defer s.statistics.mu.Unlock()
-	return DecisionState{Enabled: true, Mode: s.decisions.Mode(), Last: s.statistics.lastDecision.Clone(), Proposals: s.statistics.proposals, Signals: signals}
+	return DecisionState{Budgets: budgets, Enabled: true, Mode: s.decisions.Mode(), Last: s.statistics.lastDecision.Clone(), Proposals: s.statistics.proposals, Signals: signals}
 }

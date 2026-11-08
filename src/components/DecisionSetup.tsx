@@ -16,6 +16,6 @@ export function DecisionSetup({mode}:{mode:string}) {
  ['Multiple signals','The smallest matching cap wins; an explicit reject takes precedence. A healthy source cannot cancel another source’s pressure.'],
  ]}/>
  <p>For in-process integration, call <code>engine.Publish(name, observation)</code> from your own background measurement loop instead of running collectors. A custom <code>decision.Provider</code> implements <code>Sample(context.Context) (decision.Observation, error)</code>. Providers must honour cancellation. A stuck provider can retain one worker per signal; Gatewise does not spawn unlimited replacements.</p>
- <Note label="Release boundary">This release supplies the decision and observation mechanism. The demo uses controlled providers to test it against real SQL services. Automatic memory, goroutine, write-load and hot-key regulators belong to the next release. Thresholds and fallback values here are examples that need validation for your service.</Note>
+ <Note label="Release boundary">v0.6.0 introduced this decision and observation mechanism. Its controlled-provider demo tests signal delivery and combination against real SQL services. v0.7.0 adds measured memory/goroutine providers and write-byte/key reservations; continue with resource setup below. Thresholds and fallback values here are examples that need validation for your service.</Note>
  </Section>;
 }

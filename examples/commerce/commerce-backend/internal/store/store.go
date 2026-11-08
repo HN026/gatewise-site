@@ -40,7 +40,7 @@ func Open(ctx context.Context, url string, pool int, timeout time.Duration, role
 		"inventory": {`CREATE TABLE IF NOT EXISTS stock(id int PRIMARY KEY,available bigint NOT NULL CHECK(available>=0))`, `INSERT INTO stock SELECT i,1000 FROM generate_series(1,20000) i ON CONFLICT DO NOTHING`, `CREATE TABLE IF NOT EXISTS reservations(id text PRIMARY KEY,idempotency_key text UNIQUE NOT NULL,product_id int NOT NULL REFERENCES stock(id),quantity int NOT NULL CHECK(quantity>0))`},
 	}
 	// Idempotent schema initialization; seed only newly created databases.
-	for _, q := range append([]string{`CREATE TABLE IF NOT EXISTS reports(name text PRIMARY KEY,total bigint NOT NULL,updated_at timestamptz NOT NULL DEFAULT now())`}, schemas[role]...) {
+	for _, q := range append([]string{`CREATE TABLE IF NOT EXISTS resource_writes(key text PRIMARY KEY,payload bytea NOT NULL)`,`CREATE TABLE IF NOT EXISTS reports(name text PRIMARY KEY,total bigint NOT NULL,updated_at timestamptz NOT NULL DEFAULT now())`}, schemas[role]...) {
 		if _, e = db.ExecContext(ctx, q); e != nil {
 			db.Close()
 			return nil, e

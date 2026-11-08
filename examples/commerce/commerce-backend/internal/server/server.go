@@ -2,11 +2,11 @@ package server
 
 import (
 	"context"
- "github.com/HN026/gatewise/decision"
 	"errors"
 	"github.com/HN026/gatewise-examples/commerce/internal/config"
 	"github.com/HN026/gatewise-examples/commerce/internal/handler"
 	"github.com/HN026/gatewise-examples/commerce/internal/store"
+	"github.com/HN026/gatewise/decision"
 	"github.com/HN026/gatewise/metrics"
 	"github.com/HN026/gatewise/middleware"
 	"github.com/HN026/gatewise/priority"
@@ -33,13 +33,31 @@ func Run(ctx context.Context, c config.Config) error {
 	if pc != nil && c.PriorityTrusted != "" {
 		pc.TrustedProxies = strings.Split(c.PriorityTrusted, ",")
 	}
+	var work *resourceWork
+	if c.ResourceMode != "" {
+		work = newResources()
+	}
 	var g *middleware.Service
- var engine *decision.Engine
- var collectors []decision.Collector
+	var engine *decision.Engine
+	var collectors []decision.Collector
 	if c.Mode != "direct" && c.Mode != "semaphore" {
 		cfg := middleware.ServiceConfig{Name: c.Role, MaxConcurrent: c.MaxConcurrent, ReservedCritical: c.Reserved}
-		if c.DecisionMode!="" { engine,collectors,e=signalEngine(c.DecisionMode,c.AdminListen);if e!=nil {return e};cfg.Decisions=engine }
- if pc != nil {
+		if c.DecisionMode != "" {
+			engine, collectors, e = signalEngine(c.DecisionMode, c.AdminListen)
+			if e != nil {
+				return e
+			}
+			cfg.Decisions = engine
+		}
+		if work != nil && c.ResourceMode != "disabled" {
+			engine, collectors, e = resourceEngine(c.ResourceMode, work)
+			if e != nil {
+				return e
+			}
+			cfg.Decisions = engine
+			cfg.CostResolver = plannedCost
+		}
+		if pc != nil {
 			cfg.ReservedCritical = 0
 			cfg.Priorities = pc
 		}
@@ -104,6 +122,15 @@ func Run(ctx context.Context, c config.Config) error {
 		}
 		return h
 	}
+	if work != nil {
+		for _, kind := range []string{"allocation", "fanout", "write", "key_write"} {
+			var h http.Handler = work.operation(kind, s)
+			if g != nil {
+				h = g.Middleware(middleware.Critical, h, middleware.WithResource(kind))
+			}
+			mux.Handle("POST /"+c.Role+"/resource/"+kind, work.parse(h))
+		}
+	}
 	switch c.Role {
 	case "orders":
 		if c.Priorities && c.CatalogURL != "" {
@@ -139,7 +166,17 @@ func Run(ctx context.Context, c config.Config) error {
 	admin := http.NewServeMux()
 	admin.HandleFunc("GET /state", a.State)
 	admin.HandleFunc("PUT /control", a.Update)
- if c.DecisionMode!="" { controls:=newSignals();admin.Handle("GET /signals/{name}",controls);admin.Handle("PUT /signals/{name}",controls) }
+	if work != nil {
+		admin.HandleFunc("GET /resource/state", work.state)
+		admin.HandleFunc("GET /resource/persisted", work.persisted(s))
+		admin.HandleFunc("PUT /resource/control", work.control)
+		admin.HandleFunc("GET /resource/signals/{name}", work.observation)
+	}
+	if c.DecisionMode != "" {
+		controls := newSignals()
+		admin.Handle("GET /signals/{name}", controls)
+		admin.Handle("PUT /signals/{name}", controls)
+	}
 	l, e := net.Listen("tcp", c.Listen)
 	if e != nil {
 		return e
@@ -154,8 +191,21 @@ func Run(ctx context.Context, c config.Config) error {
 	errs := make(chan error, 2)
 	go func() { errs <- servers[0].Serve(l) }()
 	go func() { errs <- servers[1].Serve(al) }()
- collectorCtx,stopCollectors:=context.WithCancel(ctx);defer stopCollectors()
- if engine!=nil { done:=make(chan struct{});go func(){defer close(done);_ = engine.Run(collectorCtx,collectors)}();defer func(){stopCollectors();<-done;for _,c:=range collectors {c.Provider.(*decision.HTTPProvider).Close()}}() }
+	collectorCtx, stopCollectors := context.WithCancel(ctx)
+	defer stopCollectors()
+	if engine != nil {
+		done := make(chan struct{})
+		go func() { defer close(done); _ = engine.Run(collectorCtx, collectors) }()
+		defer func() {
+			stopCollectors()
+			<-done
+			for _, c := range collectors {
+				if closer, ok := c.Provider.(interface{ Close() }); ok {
+					closer.Close()
+				}
+			}
+		}()
+	}
 	select {
 	case <-ctx.Done():
 	case e = <-errs:

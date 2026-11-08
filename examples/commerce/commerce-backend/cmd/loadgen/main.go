@@ -22,6 +22,7 @@ type TenantWeight struct {
 	Weight int    `json:"weight"`
 }
 type Config struct {
+	ResourceWork  string            `json:"resource_work"`
 	PriorityFlows bool              `json:"priority_flows"`
 	Tenants       []TenantWeight    `json:"tenants"`
 	UniqueNoisy   bool              `json:"unique_noisy"`
@@ -218,6 +219,56 @@ func main() {
 				priority = []string{"urgent", "normal", "batch", "batch", "batch"}[i%5]
 				path = "/orders/flows/" + priority
 			}
+			var operationCost string
+			if c.ResourceWork != "" {
+				priority = "critical"
+				tenantGroup = "pressure"
+				kind := c.ResourceWork
+				key := "hot"
+				size, workers := 0, 0
+				switch kind {
+				case "allocation":
+					size = 8 << 20
+				case "fanout":
+					workers = 32
+				case "write":
+					size = 128 << 10
+					key = fmt.Sprintf("write-%d", i%32)
+				case "key_write":
+					size = 16 << 10
+				case "healthy":
+					kind = "write"
+					size = 1024
+					key = fmt.Sprintf("healthy-%d", i%32)
+				}
+				method = "POST"
+				path = "/" + role + "/resource/" + kind
+				if i%5 == 0 {
+					tenantGroup = "probe"
+					if kind == "key_write" {
+						key = fmt.Sprintf("cold-%d", (i/5)%16)
+					} else {
+						method = "GET"
+						switch role {
+						case "orders":
+							path = "/orders/seed-1"
+						case "catalog":
+							path = "/catalog/products?limit=5"
+						case "inventory":
+							path = "/inventory/stock/1"
+						}
+					}
+				}
+				if method == "POST" {
+					body, _ = json.Marshal(map[string]any{"bytes": size, "workers": workers, "key": key})
+					if kind == "write" || kind == "key_write" {
+						cost, _ := json.Marshal(map[string]any{"write_bytes": size, "key": key})
+						operationCost = string(cost)
+					}
+				} else {
+					body = nil
+				}
+			}
 			req, e := http.NewRequest(method, c.URLs[role]+path, bytes.NewReader(body))
 			if e != nil {
 				panic(e)
@@ -227,6 +278,9 @@ func main() {
 				req.Header.Set("X-Gatewise-Priority", fmt.Sprintf("v1;%s;%x", priority, actor))
 			}
 			req.Header.Set("Content-Type", "application/json")
+			if operationCost != "" {
+				req.Header.Set("X-Gatewise-Cost", operationCost)
+			}
 			req.Header.Set("Idempotency-Key", fmt.Sprintf("%s-%d", c.RunID, i))
 			if tenantID != "" {
 				req.Header.Set("X-Demo-Tenant", tenantID)
@@ -246,7 +300,7 @@ func main() {
 					}
 					_ = json.Unmarshal(body, &rejection)
 					switch rejection.Reason {
-					case "signal_pressure", "signal_unavailable", "signal_concurrency_limit", "tenant_concurrency_limit", "tenant_registry_full", "concurrency_limit", "critical_capacity_reserved", "tier_capacity_reserved", "cohort_limited", "tenant_share_reserved":
+					case "write_bytes_limit", "hot_key_limit", "resource_key_registry_full", "resource_accounting_exhausted", "signal_pressure", "signal_unavailable", "signal_concurrency_limit", "tenant_concurrency_limit", "tenant_registry_full", "concurrency_limit", "critical_capacity_reserved", "tier_capacity_reserved", "cohort_limited", "tenant_share_reserved":
 						reason = rejection.Reason
 					default:
 						reason = "other_503"

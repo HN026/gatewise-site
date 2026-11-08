@@ -1,0 +1,14 @@
+{
+  "arch": "arm64",
+  "container_limit_bytes": 268435456,
+  "goroutines": 1,
+  "memory": {
+    "Source": "cgroup_v2",
+    "UsedBytes": 6299648,
+    "LimitBytes": 268435456,
+    "Ratio": 0.023468017578125,
+    "ObservedAt": "2026-11-08T10:08:04.561616298Z"
+  },
+  "os": "linux",
+  "passed": true
+}
