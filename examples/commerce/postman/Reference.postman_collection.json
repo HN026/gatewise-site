@@ -1,0 +1,128 @@
+{
+  "info": {
+    "name": "Commerce independent reference policies",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Configure slow isolated transaction",
+      "request": {
+        "method": "PUT",
+        "url": "{{orders_admin}}/control",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"work_multiplier\": 1, \"sql_delay_ms\": 120, \"failure_every\": 0}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"control accepted\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Inspect reference configuration",
+      "request": {
+        "method": "GET",
+        "url": "{{orders_admin}}/reference/state",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"reference state available\",()=>pm.response.to.have.status(200));",
+              "const s=pm.response.json();const mode=pm.environment.get('expected_mode');",
+              "pm.test(\"reference mode matches environment\",()=>pm.expect(s.mode).to.eql(mode));",
+              "pm.test(\"reference policy configured\",()=>{if(mode==='semaphore'){pm.expect(s.execution_limit).to.be.above(0);pm.expect(s.rate_per_second).to.eql(0);}else{pm.expect(s.rate_per_second).to.be.above(0);pm.expect(s.burst).to.be.above(0);pm.expect(s.execution_limit).to.eql(0);}});",
+              "pm.collectionVariables.set('before_reference',JSON.stringify(s));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Run bounded concurrent checkout requests",
+      "request": {
+        "method": "GET",
+        "url": "{{orders_url}}/healthz",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"service healthy\",()=>pm.response.to.have.status(200));",
+              "const mode=pm.environment.get('expected_mode');",
+              "const jobs=Array.from({length:20},(_,i)=>new Promise(resolve=>pm.sendRequest({url:pm.environment.get('orders_url')+'/orders/checkout',method:'POST',header:{'Content-Type':'application/json','Idempotency-Key':pm.variables.replaceIn('{{$guid}}')},body:{mode:'raw',raw:JSON.stringify({amount_cents:100})}},(err,res)=>resolve({err,status:res?.code,body:res?.json()}))));",
+              "Promise.all(jobs).then(outcomes=>{",
+              " pm.test(\"all responses are successes or explicit reference refusals\",()=>{outcomes.forEach(o=>{pm.expect(o.err).to.eql(null);pm.expect([201,mode==='rate'?429:503]).to.include(o.status);if(o.status!==201){pm.expect(o.body.reason).to.eql(mode==='rate'?'static_rate_limit':'concurrency_limit');}})});",
+              " pm.test(\"some real work completed\",()=>pm.expect(outcomes.filter(o=>o.status===201).length).to.be.above(0));",
+              " pm.sendRequest(pm.environment.get('orders_admin')+'/reference/state',(err,res)=>{",
+              "  pm.test(\"observer available after traffic\",()=>pm.expect(err).to.eql(null));const s=res.json();const b=JSON.parse(pm.collectionVariables.get('before_reference'));",
+              "  pm.test(\"execution permits released\",()=>pm.expect(s.active).to.eql(0));",
+              "  pm.test(\"all reference outcomes accounted\",()=>pm.expect(s.admitted-b.admitted+s.rejected-b.rejected).to.eql(20));",
+              "  pm.test(\"semaphore respects its ceiling\",()=>{if(mode==='semaphore')pm.expect(s.peak).to.be.at.most(s.execution_limit);});",
+              " });",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Restore healthy transactions",
+      "request": {
+        "method": "PUT",
+        "url": "{{orders_admin}}/control",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"work_multiplier\": 1, \"sql_delay_ms\": 0, \"failure_every\": 0}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"healthy configuration restored\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,2768 @@
+{
+  "release": "v0.11.0",
+  "source_sha256": "da3f1f04576d711e15fcd7fae35471c2bc915fdf22d45deedad33def4df2bbbb",
+  "gzip_sha256": "2678476ca2d7f818f5251530ef8f3c92f5c71aa5a3ce4b098af257531aa3dcee",
+  "overhead_sha256": "d834458bff5213dbddcfbe0041b7e5049be9ffcf8df559d2c52bfb0398b8c5ed",
+  "criteria": {
+    "all_schedules_delivered": true,
+    "dispatch_p95_ms_max": 25,
+    "unexpected_transport_errors": 0,
+    "pool_maximum": 4,
+    "execution_maximum_when_bounded": 4,
+    "queue_maximum": 16,
+    "drain_timeout_seconds": 5,
+    "comparison": "Report every policy and outcome; neither usefulness nor latency gates require Gatewise to beat a reference. SQL/error and caller-deadline failures are deliberate workload outcomes, not erased or defined as measurement failures."
+  },
+  "scope_analysis": {
+    "analyzed_at": "2026-11-08T16:16:38.835334+00:00",
+    "post_hoc": true,
+    "original_protocol_passed": false,
+    "integrity": [
+      {
+        "case": "direct",
+        "repeat": 1,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "direct",
+        "repeat": 1,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "direct",
+        "repeat": 1,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "direct",
+        "repeat": 1,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "direct",
+        "repeat": 1,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "direct",
+        "repeat": 1,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "direct",
+        "repeat": 1,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "direct",
+        "repeat": 1,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "semaphore",
+        "repeat": 1,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "semaphore",
+        "repeat": 1,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "semaphore",
+        "repeat": 1,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "semaphore",
+        "repeat": 1,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "semaphore",
+        "repeat": 1,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "semaphore",
+        "repeat": 1,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "semaphore",
+        "repeat": 1,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "semaphore",
+        "repeat": 1,
+        "name": "execution bounded at4",
+        "pass": true
+      },
+      {
+        "case": "semaphore",
+        "repeat": 1,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "rate-100",
+        "repeat": 1,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "rate-100",
+        "repeat": 1,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "rate-100",
+        "repeat": 1,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "rate-100",
+        "repeat": 1,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "rate-100",
+        "repeat": 1,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "rate-100",
+        "repeat": 1,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "rate-100",
+        "repeat": 1,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "rate-100",
+        "repeat": 1,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "rate-300",
+        "repeat": 1,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "rate-300",
+        "repeat": 1,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "rate-300",
+        "repeat": 1,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "rate-300",
+        "repeat": 1,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "rate-300",
+        "repeat": 1,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "rate-300",
+        "repeat": 1,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "rate-300",
+        "repeat": 1,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "rate-300",
+        "repeat": 1,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "rate-900",
+        "repeat": 1,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "rate-900",
+        "repeat": 1,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "rate-900",
+        "repeat": 1,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "rate-900",
+        "repeat": 1,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "rate-900",
+        "repeat": 1,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "rate-900",
+        "repeat": 1,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "rate-900",
+        "repeat": 1,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "rate-900",
+        "repeat": 1,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 1,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 1,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 1,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 1,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 1,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 1,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 1,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 1,
+        "name": "execution bounded at4",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 1,
+        "name": "controller stays within configured bounds",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 1,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 1,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 1,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 1,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 1,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 1,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 1,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 1,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 1,
+        "name": "execution bounded at4",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 1,
+        "name": "controller stays within configured bounds",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 1,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 1,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 1,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 1,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 1,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 1,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 1,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 1,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 1,
+        "name": "execution bounded at4",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 1,
+        "name": "controller stays within configured bounds",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 1,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 1,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 1,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 1,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 1,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 1,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 1,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 1,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 1,
+        "name": "execution bounded at4",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 1,
+        "name": "controller stays within configured bounds",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 1,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 1,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 1,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 1,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 1,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 1,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 1,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 1,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 1,
+        "name": "execution bounded at4",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 1,
+        "name": "controller stays within configured bounds",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 1,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 1,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 1,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 1,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 1,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 1,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 1,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 1,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 1,
+        "name": "controller stays within configured bounds",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 1,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 1,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 1,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 1,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 1,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 1,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 1,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 1,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 1,
+        "name": "controller stays within configured bounds",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 1,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 1,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 1,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 1,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 1,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 1,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 1,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 1,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 1,
+        "name": "controller stays within configured bounds",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 1,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 1,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 1,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 1,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 1,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 1,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 1,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 1,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 1,
+        "name": "controller stays within configured bounds",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 1,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 2,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 2,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 2,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 2,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 2,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 2,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 2,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 2,
+        "name": "execution bounded at4",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 2,
+        "name": "controller stays within configured bounds",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 2,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 2,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 2,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 2,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 2,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 2,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 2,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 2,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 2,
+        "name": "execution bounded at4",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 2,
+        "name": "controller stays within configured bounds",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 2,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 2,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 2,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 2,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 2,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 2,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 2,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 2,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 2,
+        "name": "execution bounded at4",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 2,
+        "name": "controller stays within configured bounds",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 2,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 2,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 2,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 2,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 2,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 2,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 2,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 2,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 2,
+        "name": "execution bounded at4",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 2,
+        "name": "controller stays within configured bounds",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 2,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 2,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 2,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 2,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 2,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 2,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 2,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 2,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 2,
+        "name": "execution bounded at4",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 2,
+        "name": "controller stays within configured bounds",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 2,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 2,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 2,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 2,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 2,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 2,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 2,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 2,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 2,
+        "name": "controller stays within configured bounds",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 2,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 2,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 2,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 2,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 2,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 2,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 2,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 2,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 2,
+        "name": "controller stays within configured bounds",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 2,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 2,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 2,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 2,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 2,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 2,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 2,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 2,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 2,
+        "name": "controller stays within configured bounds",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 2,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 2,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 2,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 2,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 2,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 2,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 2,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 2,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 2,
+        "name": "controller stays within configured bounds",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 2,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "direct",
+        "repeat": 2,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "direct",
+        "repeat": 2,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "direct",
+        "repeat": 2,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "direct",
+        "repeat": 2,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "direct",
+        "repeat": 2,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "direct",
+        "repeat": 2,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "direct",
+        "repeat": 2,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "direct",
+        "repeat": 2,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "semaphore",
+        "repeat": 2,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "semaphore",
+        "repeat": 2,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "semaphore",
+        "repeat": 2,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "semaphore",
+        "repeat": 2,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "semaphore",
+        "repeat": 2,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "semaphore",
+        "repeat": 2,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "semaphore",
+        "repeat": 2,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "semaphore",
+        "repeat": 2,
+        "name": "execution bounded at4",
+        "pass": true
+      },
+      {
+        "case": "semaphore",
+        "repeat": 2,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "rate-100",
+        "repeat": 2,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "rate-100",
+        "repeat": 2,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "rate-100",
+        "repeat": 2,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "rate-100",
+        "repeat": 2,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "rate-100",
+        "repeat": 2,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "rate-100",
+        "repeat": 2,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "rate-100",
+        "repeat": 2,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "rate-100",
+        "repeat": 2,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "rate-300",
+        "repeat": 2,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "rate-300",
+        "repeat": 2,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "rate-300",
+        "repeat": 2,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "rate-300",
+        "repeat": 2,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "rate-300",
+        "repeat": 2,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "rate-300",
+        "repeat": 2,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "rate-300",
+        "repeat": 2,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "rate-300",
+        "repeat": 2,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "rate-900",
+        "repeat": 2,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "rate-900",
+        "repeat": 2,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "rate-900",
+        "repeat": 2,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "rate-900",
+        "repeat": 2,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "rate-900",
+        "repeat": 2,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "rate-900",
+        "repeat": 2,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "rate-900",
+        "repeat": 2,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "rate-900",
+        "repeat": 2,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 3,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 3,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 3,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 3,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 3,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 3,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 3,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 3,
+        "name": "controller stays within configured bounds",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 3,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 3,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 3,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 3,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 3,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 3,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 3,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 3,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 3,
+        "name": "controller stays within configured bounds",
+        "pass": true
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 3,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 3,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 3,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 3,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 3,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 3,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 3,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 3,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 3,
+        "name": "controller stays within configured bounds",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 3,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 3,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 3,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 3,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 3,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 3,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 3,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 3,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 3,
+        "name": "controller stays within configured bounds",
+        "pass": true
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 3,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "direct",
+        "repeat": 3,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "direct",
+        "repeat": 3,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "direct",
+        "repeat": 3,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "direct",
+        "repeat": 3,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "direct",
+        "repeat": 3,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "direct",
+        "repeat": 3,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "direct",
+        "repeat": 3,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "direct",
+        "repeat": 3,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "semaphore",
+        "repeat": 3,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "semaphore",
+        "repeat": 3,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "semaphore",
+        "repeat": 3,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "semaphore",
+        "repeat": 3,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "semaphore",
+        "repeat": 3,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "semaphore",
+        "repeat": 3,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "semaphore",
+        "repeat": 3,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "semaphore",
+        "repeat": 3,
+        "name": "execution bounded at4",
+        "pass": true
+      },
+      {
+        "case": "semaphore",
+        "repeat": 3,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "rate-100",
+        "repeat": 3,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "rate-100",
+        "repeat": 3,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "rate-100",
+        "repeat": 3,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "rate-100",
+        "repeat": 3,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "rate-100",
+        "repeat": 3,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "rate-100",
+        "repeat": 3,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "rate-100",
+        "repeat": 3,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "rate-100",
+        "repeat": 3,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "rate-300",
+        "repeat": 3,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "rate-300",
+        "repeat": 3,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "rate-300",
+        "repeat": 3,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "rate-300",
+        "repeat": 3,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "rate-300",
+        "repeat": 3,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "rate-300",
+        "repeat": 3,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "rate-300",
+        "repeat": 3,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "rate-300",
+        "repeat": 3,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "rate-900",
+        "repeat": 3,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "rate-900",
+        "repeat": 3,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "rate-900",
+        "repeat": 3,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "rate-900",
+        "repeat": 3,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "rate-900",
+        "repeat": 3,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "rate-900",
+        "repeat": 3,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "rate-900",
+        "repeat": 3,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "rate-900",
+        "repeat": 3,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 3,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 3,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 3,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 3,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 3,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 3,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 3,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 3,
+        "name": "execution bounded at4",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 3,
+        "name": "controller stays within configured bounds",
+        "pass": true
+      },
+      {
+        "case": "fixed-unreserved",
+        "repeat": 3,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 3,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 3,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 3,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 3,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 3,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 3,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 3,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 3,
+        "name": "execution bounded at4",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 3,
+        "name": "controller stays within configured bounds",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed",
+        "repeat": 3,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 3,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 3,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 3,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 3,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 3,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 3,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 3,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 3,
+        "name": "execution bounded at4",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 3,
+        "name": "controller stays within configured bounds",
+        "pass": true
+      },
+      {
+        "case": "middleware-fixed-queue",
+        "repeat": 3,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 3,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 3,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 3,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 3,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 3,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 3,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 3,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 3,
+        "name": "execution bounded at4",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 3,
+        "name": "controller stays within configured bounds",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive",
+        "repeat": 3,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 3,
+        "name": "all scheduled arrivals delivered",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 3,
+        "name": "complete outcome accounting",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 3,
+        "name": "only intentional client deadline transport errors",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 3,
+        "name": "generator dispatch p95 within25ms",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 3,
+        "name": "SQL pool remains bounded",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 3,
+        "name": "all work drains",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 3,
+        "name": "monitoring complete",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 3,
+        "name": "execution bounded at4",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 3,
+        "name": "controller stays within configured bounds",
+        "pass": true
+      },
+      {
+        "case": "middleware-adaptive-queue",
+        "repeat": 3,
+        "name": "waiting bounded or disabled",
+        "pass": true
+      },
+      {
+        "name": "post-hoc sampled proxy admission <=4",
+        "pass": true,
+        "post_hoc": true
+      }
+    ],
+    "backend_expectations": [
+      {
+        "case": "proxy-fixed",
+        "repeat": 1,
+        "name": "execution bounded at4",
+        "pass": false,
+        "backend_peak": 5,
+        "sampled_proxy_active_peak": 4.0,
+        "first_observed_excess_by_service": {
+          "inventory": {
+            "phase": "caller-deadline",
+            "seconds": 16.631420209014323,
+            "peak": 5
+          }
+        }
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 1,
+        "name": "execution bounded at4",
+        "pass": false,
+        "backend_peak": 10,
+        "sampled_proxy_active_peak": 4.0,
+        "first_observed_excess_by_service": {
+          "orders": {
+            "phase": "caller-deadline",
+            "seconds": 16.364532125007827,
+            "peak": 5
+          },
+          "catalog": {
+            "phase": "caller-deadline",
+            "seconds": 16.364727959007723,
+            "peak": 6
+          },
+          "inventory": {
+            "phase": "caller-deadline",
+            "seconds": 16.36489370901836,
+            "peak": 6
+          }
+        }
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 1,
+        "name": "execution bounded at4",
+        "pass": true,
+        "backend_peak": 4,
+        "sampled_proxy_active_peak": 4.0,
+        "first_observed_excess_by_service": {}
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 1,
+        "name": "execution bounded at4",
+        "pass": false,
+        "backend_peak": 7,
+        "sampled_proxy_active_peak": 4.0,
+        "first_observed_excess_by_service": {
+          "catalog": {
+            "phase": "caller-deadline",
+            "seconds": 16.46224454199546,
+            "peak": 5
+          },
+          "inventory": {
+            "phase": "caller-deadline",
+            "seconds": 16.46244208398275,
+            "peak": 5
+          }
+        }
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 2,
+        "name": "execution bounded at4",
+        "pass": true,
+        "backend_peak": 4,
+        "sampled_proxy_active_peak": 4.0,
+        "first_observed_excess_by_service": {}
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 2,
+        "name": "execution bounded at4",
+        "pass": false,
+        "backend_peak": 10,
+        "sampled_proxy_active_peak": 4.0,
+        "first_observed_excess_by_service": {
+          "catalog": {
+            "phase": "caller-deadline",
+            "seconds": 16.40113579199533,
+            "peak": 6
+          },
+          "inventory": {
+            "phase": "caller-deadline",
+            "seconds": 16.401291041984223,
+            "peak": 5
+          },
+          "orders": {
+            "phase": "caller-deadline",
+            "seconds": 16.632940542011056,
+            "peak": 5
+          }
+        }
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 2,
+        "name": "execution bounded at4",
+        "pass": true,
+        "backend_peak": 4,
+        "sampled_proxy_active_peak": 4.0,
+        "first_observed_excess_by_service": {}
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 2,
+        "name": "execution bounded at4",
+        "pass": false,
+        "backend_peak": 7,
+        "sampled_proxy_active_peak": 4.0,
+        "first_observed_excess_by_service": {
+          "catalog": {
+            "phase": "caller-deadline",
+            "seconds": 16.516635375010082,
+            "peak": 5
+          },
+          "inventory": {
+            "phase": "caller-deadline",
+            "seconds": 16.51680050001596,
+            "peak": 5
+          }
+        }
+      },
+      {
+        "case": "proxy-fixed",
+        "repeat": 3,
+        "name": "execution bounded at4",
+        "pass": false,
+        "backend_peak": 5,
+        "sampled_proxy_active_peak": 4.0,
+        "first_observed_excess_by_service": {
+          "orders": {
+            "phase": "caller-deadline",
+            "seconds": 16.207898500026204,
+            "peak": 5
+          }
+        }
+      },
+      {
+        "case": "proxy-fixed-queue",
+        "repeat": 3,
+        "name": "execution bounded at4",
+        "pass": false,
+        "backend_peak": 10,
+        "sampled_proxy_active_peak": 4.0,
+        "first_observed_excess_by_service": {
+          "catalog": {
+            "phase": "caller-deadline",
+            "seconds": 16.48376695800107,
+            "peak": 6
+          },
+          "inventory": {
+            "phase": "caller-deadline",
+            "seconds": 16.483925250009634,
+            "peak": 5
+          },
+          "orders": {
+            "phase": "caller-deadline",
+            "seconds": 16.596057832997758,
+            "peak": 5
+          }
+        }
+      },
+      {
+        "case": "proxy-adaptive",
+        "repeat": 3,
+        "name": "execution bounded at4",
+        "pass": true,
+        "backend_peak": 4,
+        "sampled_proxy_active_peak": 4.0,
+        "first_observed_excess_by_service": {}
+      },
+      {
+        "case": "proxy-adaptive-queue",
+        "repeat": 3,
+        "name": "execution bounded at4",
+        "pass": false,
+        "backend_peak": 7,
+        "sampled_proxy_active_peak": 4.0,
+        "first_observed_excess_by_service": {
+          "catalog": {
+            "phase": "caller-deadline",
+            "seconds": 16.48405912501039,
+            "peak": 5
+          },
+          "inventory": {
+            "phase": "caller-deadline",
+            "seconds": 16.484257250005612,
+            "peak": 5
+          }
+        }
+      }
+    ],
+    "measurement_validated": true,
+    "interpretation": "Original backend<=4 checks are retained, including failures. Proxy<=4 applies to active proxy request lifetimes, not canceled remote handlers still cleaning up. SQL pool stays4. Middleware reference counts actual protected handler lifetime. Post-hoc classification is not all-predeclared-criteria-pass evidence."
+  },
+  "methodology": {
+    "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+    "cpu": "Apple M4 Pro",
+    "logical_cpus": "12",
+    "memory_bytes": "51539607552",
+    "go": "go version go1.27.3 darwin/arm64",
+    "cases": [
+      {
+        "id": "direct",
+        "profile": "direct",
+        "reserved": 0
+      },
+      {
+        "id": "semaphore",
+        "profile": "semaphore",
+        "reserved": 0
+      },
+      {
+        "id": "rate-100",
+        "profile": "rate",
+        "rate": 100,
+        "reserved": 0
+      },
+      {
+        "id": "rate-300",
+        "profile": "rate",
+        "rate": 300,
+        "reserved": 0
+      },
+      {
+        "id": "rate-900",
+        "profile": "rate",
+        "rate": 900,
+        "reserved": 0
+      },
+      {
+        "id": "fixed-unreserved",
+        "profile": "middleware-fixed",
+        "reserved": 0
+      },
+      {
+        "id": "middleware-fixed",
+        "profile": "middleware-fixed",
+        "queue": false,
+        "reserved": 1
+      },
+      {
+        "id": "middleware-fixed-queue",
+        "profile": "middleware-fixed",
+        "queue": true,
+        "reserved": 1
+      },
+      {
+        "id": "middleware-adaptive",
+        "profile": "middleware-adaptive",
+        "queue": false,
+        "reserved": 1
+      },
+      {
+        "id": "middleware-adaptive-queue",
+        "profile": "middleware-adaptive",
+        "queue": true,
+        "reserved": 1
+      },
+      {
+        "id": "proxy-fixed",
+        "profile": "proxy-fixed",
+        "queue": false,
+        "reserved": 1
+      },
+      {
+        "id": "proxy-fixed-queue",
+        "profile": "proxy-fixed",
+        "queue": true,
+        "reserved": 1
+      },
+      {
+        "id": "proxy-adaptive",
+        "profile": "proxy-adaptive",
+        "queue": false,
+        "reserved": 1
+      },
+      {
+        "id": "proxy-adaptive-queue",
+        "profile": "proxy-adaptive",
+        "queue": true,
+        "reserved": 1
+      }
+    ],
+    "phases": [
+      [
+        "healthy",
+        1.5,
+        120,
+        0,
+        0,
+        3000
+      ],
+      [
+        "warmup",
+        1,
+        120,
+        10,
+        0,
+        3000
+      ],
+      [
+        "burst-0",
+        0.1,
+        1800,
+        10,
+        0,
+        3000
+      ],
+      [
+        "relief-0",
+        0.5,
+        60,
+        10,
+        0,
+        3000
+      ],
+      [
+        "burst-1",
+        0.1,
+        1800,
+        10,
+        0,
+        3000
+      ],
+      [
+        "relief-1",
+        0.5,
+        60,
+        10,
+        0,
+        3000
+      ],
+      [
+        "burst-2",
+        0.1,
+        1800,
+        10,
+        0,
+        3000
+      ],
+      [
+        "relief-2",
+        0.5,
+        60,
+        10,
+        0,
+        3000
+      ],
+      [
+        "sustained",
+        3,
+        1800,
+        10,
+        0,
+        3000
+      ],
+      [
+        "background-flood",
+        3,
+        1800,
+        10,
+        0,
+        3000
+      ],
+      [
+        "slowdown",
+        3,
+        600,
+        120,
+        0,
+        3000
+      ],
+      [
+        "errors",
+        2,
+        600,
+        5,
+        10,
+        3000
+      ],
+      [
+        "caller-deadline",
+        0.8,
+        1000,
+        80,
+        0,
+        20
+      ],
+      [
+        "recovery",
+        3,
+        240,
+        0,
+        0,
+        3000
+      ],
+      [
+        "low-traffic",
+        2,
+        10,
+        0,
+        0,
+        3000
+      ]
+    ],
+    "queue": {
+      "max_waiting": 16,
+      "max_wait": "40ms",
+      "aging_after": "20ms",
+      "reserved": {
+        "critical": 4
+      }
+    },
+    "repeats": 3,
+    "pool_connections_per_service": 4,
+    "execution_ceiling": 4,
+    "rate_burst": 4,
+    "sql_timeout_ms": 1000,
+    "critical_budget_ms": 100,
+    "report_controller_budget_ms": 500,
+    "traffic": "Open-loop, no retries, 80% critical except background-flood20%, independent60/20/20 orders/catalog/inventory mix.100ms useful-work budget for both priorities includes scheduling+network+queue+handler. SQL delay/failure injection per admitted transaction; everyNth errors are not identical requests across policies. Each phase fully drains before next; controller/token state survives; next phase has no artificial cooldown.",
+    "fairness": "All policies share three service processes, PostgreSQL image, pool sizes, deadlines, route handlers and offered schedule. Semaphore and fixed-unreserved isolate a classless concurrency ceiling. Other Gatewise cases reserve1of4 for critical. Rate limits are per service, classless and do not cap active work;100/300/900 rates predeclared, burst4. Proxy cases add a fourth process and hop and are reported as deployment outcomes, not isolated policy-speed comparisons. The direct/rate cases deliberately have no HTTP concurrency cap. Other Gatewise features off.",
+    "selection": "Exploratory runs revealed the need for a background-heavy phase; they are excluded. Rates, cases, revised workload and integrity criteria fixed before this subsequent confirmatory matrix; no win gate. Fresh databases each run; rotating case order each repeat. Single local host, no production capacity claim.",
+    "postgres": "18.6",
+    "image_digest": "docker.io/library/postgres@sha256:123b17998ccaf47e53b502e8c6a1e79afd8f579c6f3eec83c563da026f957395",
+    "podman_resources": [
+      {
+        "CPUs": 6,
+        "DiskSize": 100,
+        "Memory": 10240,
+        "USBs": []
+      }
+    ],
+    "gatewise_source_sha256": "feecdf9a90f7f5f5a9a778ecaa6a0b98fb15a337fc109870bdd2acc65f044158",
+    "commerce-backend_source_sha256": "a5d3c0e3d03889f6dc7e836f483d8679e52b0ef82ca23f88cbc32e2600bda0e4",
+    "harness_sha256": "bf1aa620593c925a9570f22e7b3f5516955606d48b903383f9c6e548832284d8",
+    "analysis_sha256": "311530c3b2c1be29630d5d100f416d00004843a1558dbcb9838669c4f53b8bae",
+    "wrapper_sha256": "51cbc5a28892db8e613d5e6ca31bd2d4930033d42ff84107055d4e584dedcedc"
+  },
+  "aggregation": "Each throughput and successful p95 is the median of three run-level values. Whiskers show min/max repeats, not confidence intervals. Rejection, server error and deadline percentages pool counts. Both priorities use100ms whole-schedule useful-work budget. Successful p95 excludes refusals/errors. Queue p95 includes successful immediate admissions with zero wait. Pool waits are real database/sql deltas shared by all priorities of a service; never attributable to one priority. All-service pool waits sum3services. Recovery is end of first whole1s bin meeting90% timely/offered critical work and retaining it through3s recovery; null if not attained in all repeats. Proxy adds a hop; rate/direct do not cap active work. The original protocol verdict and all backend-bound failures remain in scope_analysis. Post-hoc lifetime classification distinguishes proxy admission from canceled remote work. Measurement validation is not all-original-criteria-pass evidence or an advantage claim.",
+  "chart_source": "tools/export_comparison.py",
+  "harness": "examples/commerce/comparison_recorded.py (byte-identical measured collection protocol); comparison_benchmark.py adds explicit post-hoc analysis. The default comparison_protocol.py changes hardware metadata portability only, not workload or collection logic.",
+  "overhead": "commerce-backend/tests/baseline/baseline_test.go, BenchmarkSuccessfulHandler; sequential no-op, observer present in all cases, pre-created request/writer, empty body, no network/SQL/contention/actual queue waiting. Rate1e15 avoids refusals. Adaptive stable profile. Enabled queue tests immediate admission only."
+}

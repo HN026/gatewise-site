@@ -93,7 +93,7 @@ class Stack:
             except Exception:pass
             time.sleep(.05)
         raise RuntimeError('Service readiness timed out; logs: '+str(self.temp))
-    def start_app(self,profile,tenants=False,priorities=False,untrusted_entry=False,sharing=0,decisions="",resources="",operations="",adaptive_settings=None,route_budgets=False,queue_settings=None,execution_limit=12,reserved=4):
+    def start_app(self,profile,tenants=False,priorities=False,untrusted_entry=False,sharing=0,decisions="",resources="",operations="",adaptive_settings=None,route_budgets=False,queue_settings=None,execution_limit=12,reserved=4,reference_rate=300,reference_burst=4):
         self.queue_settings=queue_settings
         self.execution_limit=execution_limit
         self.reserved=reserved
@@ -107,7 +107,7 @@ class Stack:
         if sharing:tenants=True;self.tenants_enabled=True
         self.sharing_ceiling=sharing
         self.stop_app();self.databases=[];self.backends={};self.admins={};self.urls={}
-        mode=profile.removeprefix('middleware-') if profile.startswith('middleware-') else ('semaphore' if profile=='semaphore' else 'direct')
+        mode=profile.removeprefix('middleware-') if profile.startswith('middleware-') else (profile if profile in ['semaphore','rate'] else 'direct')
         env={k:v for k,v in os.environ.items() if not k.startswith(('GATEWISE_','COMMERCE_'))}
         proxy_port=port() if profile.startswith('proxy-') else None
         addresses={role:(port(),port()) for role in ['orders','catalog','inventory']}
@@ -117,7 +117,7 @@ class Stack:
             business,admin=addresses[role];self.backends[role]=f'http://127.0.0.1:{business}';self.admins[role]=f'http://127.0.0.1:{admin}'
             service_env={**env,'DATABASE_URL':f'postgres://gatewise:gatewise-local@127.0.0.1:{self.dbport}/{database}?sslmode=disable'}
             args=[str(self.projects/'commerce-backend/bin/commerce-backend'),'-role',role,'-listen',f'127.0.0.1:{business}','-admin-listen',f'127.0.0.1:{admin}','-mode',mode]
-            args += ['-max-concurrent',str(execution_limit),'-reserved-critical',str(reserved)]
+            args += ['-max-concurrent',str(execution_limit),'-reserved-critical',str(reserved),'-rate-per-second',str(reference_rate),'-rate-burst',str(reference_burst)]
             if queue_settings:
                 tier='urgent' if priorities else 'critical'
                 args += ['-queue-waiting',str(queue_settings['max_waiting']),'-queue-wait',queue_settings['max_wait'],'-queue-aging',queue_settings.get('aging_after','0s'),'-queue-reserved',str(queue_settings.get('reserved',{}).get(tier,0))]
@@ -202,7 +202,7 @@ class Stack:
     def __exit__(self,*_):self.close()
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--projects',type=pathlib.Path,default=ROOT);p.add_argument('--engine',default=os.environ.get('CONTAINER_ENGINE','podman'));p.add_argument('--profile',choices=['direct','proxy-fixed','proxy-adaptive','middleware-fixed','middleware-adaptive'],default='middleware-adaptive');p.add_argument('--controller-profile',choices=['legacy','stable'],default='',help='use controller defaults with selected profile; adaptive deployments only');p.add_argument('--queue',action='store_true',help='bounded waiting:16 slots,40ms maximum,20ms aging,4 critical slots');p.add_argument('--max-concurrent',type=int,default=12);p.add_argument('--reserved-critical',type=int,default=4);p.add_argument('--route-budgets',action='store_true',help='example500ms report latency budget');p.add_argument('--operations',choices=['disabled','fixed','pool','balanced'],default='',help='SQL/worker/physical-standby example');p.add_argument('--resources',choices=['disabled','enforce','observe'],default='',help='real resource regulators and pressure operations');p.add_argument('--decisions',choices=['enforce','observe'],default='',help='controlled providers for decision-engine validation');p.add_argument('--tenants',action='store_true',help='enable example tenant limits: 2 per tenant, 32 identities, 2s idle TTL');p.add_argument('--sharing',type=int,default=0,help='enable tenant sharing with this borrowing ceiling (example: 4)');p.add_argument('--priorities',action='store_true',help='enable priority tiers, cohorts and orders-to-catalog flow');p.add_argument('--monitor',action='store_true',help='start optional local Prometheus and Grafana');p.add_argument('--verify',action='store_true',help='run the Postman contract and clean up');a=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--projects',type=pathlib.Path,default=ROOT);p.add_argument('--engine',default=os.environ.get('CONTAINER_ENGINE','podman'));p.add_argument('--profile',choices=['direct','semaphore','rate','proxy-fixed','proxy-adaptive','middleware-fixed','middleware-adaptive'],default='middleware-adaptive');p.add_argument('--rate-per-second',type=float,default=300);p.add_argument('--rate-burst',type=int,default=4);p.add_argument('--controller-profile',choices=['legacy','stable'],default='',help='use controller defaults with selected profile; adaptive deployments only');p.add_argument('--queue',action='store_true',help='bounded waiting:16 slots,40ms maximum,20ms aging,4 critical slots');p.add_argument('--max-concurrent',type=int,default=12);p.add_argument('--reserved-critical',type=int,default=4);p.add_argument('--route-budgets',action='store_true',help='example500ms report latency budget');p.add_argument('--operations',choices=['disabled','fixed','pool','balanced'],default='',help='SQL/worker/physical-standby example');p.add_argument('--resources',choices=['disabled','enforce','observe'],default='',help='real resource regulators and pressure operations');p.add_argument('--decisions',choices=['enforce','observe'],default='',help='controlled providers for decision-engine validation');p.add_argument('--tenants',action='store_true',help='enable example tenant limits: 2 per tenant, 32 identities, 2s idle TTL');p.add_argument('--sharing',type=int,default=0,help='enable tenant sharing with this borrowing ceiling (example: 4)');p.add_argument('--priorities',action='store_true',help='enable priority tiers, cohorts and orders-to-catalog flow');p.add_argument('--monitor',action='store_true',help='start optional local Prometheus and Grafana');p.add_argument('--verify',action='store_true',help='run the Postman contract and clean up');a=p.parse_args()
     if a.queue and a.profile=='direct':p.error('--queue requires middleware or proxy')
     if a.queue and a.priorities:p.error('run focused queue and priority demo contracts separately')
     if a.controller_profile and not a.profile.endswith('adaptive'):p.error('--controller-profile requires an adaptive deployment')
@@ -215,7 +215,7 @@ def main():
     if a.priorities and a.profile=='direct':p.error('--priorities needs proxy or middleware admission')
     if a.tenants and a.profile=='direct':p.error('--tenants needs proxy or middleware admission')
     with Stack(a.projects,a.engine) as stack:
-        stack.build();stack.start_db();stack.start_app(a.profile,a.tenants,a.priorities,sharing=a.sharing,decisions=a.decisions,resources=a.resources,operations=a.operations,adaptive_settings={"profile":a.controller_profile} if a.controller_profile else None,route_budgets=a.route_budgets,queue_settings={'max_waiting':16,'max_wait':'40ms','aging_after':'20ms','reserved':{'critical':4}} if a.queue else None,execution_limit=a.max_concurrent,reserved=a.reserved_critical);environment=stack.environment()
+        stack.build();stack.start_db();stack.start_app(a.profile,a.tenants,a.priorities,sharing=a.sharing,decisions=a.decisions,resources=a.resources,operations=a.operations,adaptive_settings={"profile":a.controller_profile} if a.controller_profile else None,route_budgets=a.route_budgets,queue_settings={'max_waiting':16,'max_wait':'40ms','aging_after':'20ms','reserved':{'critical':4}} if a.queue else None,execution_limit=a.max_concurrent,reserved=a.reserved_critical,reference_rate=a.rate_per_second,reference_burst=a.rate_burst);environment=stack.environment()
         print(json.dumps({'services':stack.urls,'backends':stack.backends,'metrics':[url+'/metrics' for url in stack.metrics_urls],'controls':stack.admins,'postman_environment':str(environment),'profile':a.profile}),flush=True)
         monitoring=None
         try:
@@ -223,7 +223,7 @@ def main():
                 from monitor import Monitoring
                 monitoring=Monitoring(stack);monitoring.start();print(json.dumps({'grafana':monitoring.grafana+'/d/gatewise-commerce','prometheus':monitoring.prometheus}),flush=True)
             if a.verify:
-                subprocess.run(['postman','collection','run',str(ROOT/'postman'/('Queue.postman_collection.json' if a.queue else 'Adaptive.postman_collection.json' if a.controller_profile=='stable' else 'Operations.postman_collection.json' if a.operations else 'Resources.postman_collection.json' if a.resources else 'Signals.postman_collection.json' if a.decisions else 'Sharing.postman_collection.json' if a.sharing else 'Priorities.postman_collection.json' if a.priorities else ('Tenants.postman_collection.json' if a.tenants else 'Commerce.postman_collection.json'))),'-e',str(environment),'--no-report-events','--timeout-request','5000','--timeout-script','15000'],check=True)
+                subprocess.run(['postman','collection','run',str(ROOT/'postman'/('Reference.postman_collection.json' if a.profile in ['semaphore','rate'] else 'Queue.postman_collection.json' if a.queue else 'Adaptive.postman_collection.json' if a.controller_profile=='stable' else 'Operations.postman_collection.json' if a.operations else 'Resources.postman_collection.json' if a.resources else 'Signals.postman_collection.json' if a.decisions else 'Sharing.postman_collection.json' if a.sharing else 'Priorities.postman_collection.json' if a.priorities else ('Tenants.postman_collection.json' if a.tenants else 'Commerce.postman_collection.json'))),'-e',str(environment),'--no-report-events','--timeout-request','5000','--timeout-script','15000'],check=True)
                 subprocess.run(['postman','status'],cwd=ROOT,check=False)
             else:
                 print('Ctrl+C stops this example and removes its PostgreSQL volume.',flush=True)
