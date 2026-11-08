@@ -179,8 +179,27 @@ func (p *Policy) Resolve(r *http.Request, fallback string, now time.Time) (*http
 		m.Source = "context"
 		m.Bucket = -1
 	}
+	ctx, m, err := p.finalize(r.Context(), m, now)
+	return r.WithContext(ctx), m, err
+}
+
+// ResolveContext accepts only application-authenticated context metadata. A
+// previously HTTP-resolved context retains its bounded source and cohort key.
+func (p *Policy) ResolveContext(ctx context.Context, fallback string, now time.Time) (context.Context, Metadata, error) {
+	m := Metadata{Tier: p.Map(fallback), Source: "context", Bucket: -1}
+	if local, ok := FromContext(ctx); ok {
+		m = local
+		m.Tier = p.Map(m.Tier)
+		if !m.resolved {
+			m.Source = "context"
+		}
+		m.Bucket = -1
+	}
+	return p.finalize(ctx, m, now)
+}
+func (p *Policy) finalize(ctx context.Context, m Metadata, now time.Time) (context.Context, Metadata, error) {
 	if !p.known[m.Tier] || len(m.identity) > 128 {
-		return r, m, ErrInvalid
+		return ctx, m, ErrInvalid
 	}
 	if p.config.Cohorts != nil {
 		c := p.config.Cohorts
@@ -189,7 +208,7 @@ func (p *Policy) Resolve(r *http.Request, fallback string, now time.Time) (*http
 			if len(input) == 0 {
 				input = make([]byte, 32)
 				if _, e := rand.Read(input); e != nil {
-					return r, m, ErrInvalid
+					return ctx, m, ErrInvalid
 				}
 			}
 			h := hmac.New(sha256.New, []byte(c.Seed))
@@ -206,7 +225,7 @@ func (p *Policy) Resolve(r *http.Request, fallback string, now time.Time) (*http
 	}
 	m.identity = ""
 	m.resolved = true
-	return r.WithContext(context.WithValue(r.Context(), contextKey{}, m)), m, nil
+	return context.WithValue(ctx, contextKey{}, m), m, nil
 }
 
 // Inject removes caller metadata and writes only policy-resolved context metadata.

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/HN026/gatewise-examples/commerce/internal/config"
 	"github.com/HN026/gatewise-examples/commerce/internal/handler"
+	"github.com/HN026/gatewise-examples/commerce/internal/operations"
 	"github.com/HN026/gatewise-examples/commerce/internal/store"
 	"github.com/HN026/gatewise/decision"
 	"github.com/HN026/gatewise/metrics"
@@ -131,6 +132,16 @@ func Run(ctx context.Context, c config.Config) error {
 			mux.Handle("POST /"+c.Role+"/resource/"+kind, work.parse(h))
 		}
 	}
+	var ops *operations.Manager
+	if c.OperationsMode != "" {
+		ops, e = operations.New(ctx, s.DB, c.DatabaseURL, c.ReplicaURL, c.OperationsMode)
+		if e != nil {
+			return e
+		}
+		defer ops.Close()
+		mux.Handle("POST /orders/operations/transaction", protect(middleware.Critical, ops.Transaction))
+		mux.Handle("GET /orders/operations/replica", protect(middleware.Critical, ops.ReadReplica))
+	}
 	switch c.Role {
 	case "orders":
 		if c.Priorities && c.CatalogURL != "" {
@@ -154,6 +165,11 @@ func Run(ctx context.Context, c config.Config) error {
 	mux.HandleFunc("GET /healthz", a.Health)
 	registry := prometheus.NewRegistry()
 	registry.MustRegister(prometheus.NewGoCollector())
+	if ops != nil {
+		if e = ops.Register(registry); e != nil {
+			return e
+		}
+	}
 	if g != nil {
 		if e = metrics.Register(registry, g); e != nil {
 			return e
@@ -166,6 +182,14 @@ func Run(ctx context.Context, c config.Config) error {
 	admin := http.NewServeMux()
 	admin.HandleFunc("GET /state", a.State)
 	admin.HandleFunc("PUT /control", a.Update)
+	if ops != nil {
+		admin.HandleFunc("GET /operations/state", ops.State)
+		admin.HandleFunc("PUT /operations/control", ops.Control)
+		admin.HandleFunc("POST /operations/stream", ops.Stream)
+		admin.HandleFunc("DELETE /operations/stream", ops.Stream)
+		admin.HandleFunc("POST /operations/pool", ops.Pool)
+		admin.HandleFunc("DELETE /operations/pool", ops.Pool)
+	}
 	if work != nil {
 		admin.HandleFunc("GET /resource/state", work.state)
 		admin.HandleFunc("GET /resource/persisted", work.persisted(s))

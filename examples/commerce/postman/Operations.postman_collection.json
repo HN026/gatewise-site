@@ -1,0 +1,392 @@
+{
+  "info": {
+    "name": "Gatewise SQL and worker operations",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Run run.py --operations pool/fixed/disabled --verify. Real primary and physical standby. Lifetime probes use sqlguard in every mode; disabled bypasses guards only for public SQL writes/reads. Podman fault injection is validated by operation_benchmark.py, not by this portable collection. All admin controls are isolated loopback fixtures."
+  },
+  "item": [
+    {
+      "name": "Stop automatic worker submissions",
+      "request": {
+        "method": "PUT",
+        "url": "{{orders_admin}}/operations/control",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"enabled\": false, \"delay_ms\": 120, \"jobs\": 0}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"request succeeds\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Inspect configured budgets",
+      "request": {
+        "method": "GET",
+        "url": "{{orders_admin}}/operations/state",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"request succeeds\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"separate budgets and bounded queue\",()=>{const s=pm.response.json();pm.expect(s.storage.MaxConcurrent).eql(4);pm.expect(s.worker.MaxConcurrent).eql(6);pm.expect(s.queue_capacity).eql(16);pm.expect(s.mode).eql(pm.environment.get(\"operation_mode\"));});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Commit a real primary transaction",
+      "request": {
+        "method": "POST",
+        "url": "{{orders_url}}/orders/operations/transaction",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"request succeeds\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"transaction committed\",()=>pm.expect(pm.response.json().status).eql(\"ok\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Read the physical standby",
+      "request": {
+        "method": "GET",
+        "url": "{{orders_url}}/orders/operations/replica",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"request succeeds\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"follower query returned a count\",()=>pm.expect(pm.response.json().rows).to.be.at.least(0));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Open a tracked SQL stream",
+      "request": {
+        "method": "POST",
+        "url": "{{orders_admin}}/operations/stream",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"request succeeds\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"stream consumed first row\",()=>pm.expect(pm.response.json().first_row).eql(1));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Verify stream lifetime after HTTP return",
+      "request": {
+        "method": "GET",
+        "url": "{{orders_admin}}/operations/state",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"request succeeds\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"stream still owns one permit and connection\",()=>{const s=pm.response.json();pm.expect(s.stream_open).eql(true);pm.expect(s.storage.Active).eql(1);pm.expect(s.pool.InUse).eql(1);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Close SQL stream",
+      "request": {
+        "method": "DELETE",
+        "url": "{{orders_admin}}/operations/stream",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"request succeeds\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"close releases permit and connection\",()=>{const s=pm.response.json();pm.expect(s.storage.Active).eql(0);pm.expect(s.pool.InUse).eql(0);pm.expect(s.stream_open).eql(false);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Exhaust pool with external consumers",
+      "request": {
+        "method": "POST",
+        "url": "{{orders_admin}}/operations/pool",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"count\": 4}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"request succeeds\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"all connections held outside SQL guard\",()=>{const s=pm.response.json();pm.expect(s.pool_held).eql(4);pm.expect(s.storage.Active).eql(0);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Database acquisition observes deadline",
+      "request": {
+        "method": "POST",
+        "url": "{{orders_url}}/orders/operations/transaction",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"pool wait returns deadline response\",()=>pm.response.to.have.status(504));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Release external pool holders",
+      "request": {
+        "method": "DELETE",
+        "url": "{{orders_admin}}/operations/pool",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"request succeeds\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"timeout left no leaked SQL permit\",()=>{const s=pm.response.json();pm.expect(s.storage.Active).eql(0);pm.expect(s.pool.InUse).eql(0);pm.expect(s.pool_held).eql(0);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Primary recovers after exhaustion",
+      "request": {
+        "method": "POST",
+        "url": "{{orders_url}}/orders/operations/transaction",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"request succeeds\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Submit independent background jobs",
+      "request": {
+        "method": "PUT",
+        "url": "{{orders_admin}}/operations/control",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"enabled\": false, \"delay_ms\": 20, \"jobs\": 3}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"request succeeds\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Verify worker drain",
+      "request": {
+        "method": "GET",
+        "url": "{{orders_admin}}/operations/state",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "setTimeout(()=>{},500);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"request succeeds\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"jobs processed and permits drained\",()=>{const s=pm.response.json();pm.expect(s.jobs.started).to.be.at.least(3);pm.expect(s.queue_length).eql(0);pm.expect(s.worker.Active).eql(0);pm.expect(s.storage.Active).eql(0);pm.expect(s.pool.InUse).eql(0);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Inspect operation metrics",
+      "request": {
+        "method": "GET",
+        "url": "{{orders_backend}}/metrics",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"request succeeds\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"bounded operation kind and outcomes exported\",()=>{const text=pm.response.text();pm.expect(text).includes(\"gatewise_work_admitted_total\");pm.expect(text).includes('kind=\"operation\"');pm.expect(text).includes(\"orders_storage\");pm.expect(text).includes(\"gatewise_work_completed_total\");});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

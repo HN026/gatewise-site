@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/HN026/gatewise/decision"
 	"github.com/HN026/gatewise/internal/trust"
+	"github.com/HN026/gatewise/operation"
 	"io"
 	"net/http"
 	"strings"
@@ -14,7 +15,7 @@ import (
 
 const CostHeader = "X-Gatewise-Cost"
 
-var ErrUntrustedCostSource = errors.New("gatewise: untrusted operation metadata")
+var ErrUntrustedCostSource = operation.ErrUntrustedCost
 var ErrInvalidCost = errors.New("gatewise: invalid operation metadata")
 
 // CostResolver must derive logical write cost and keys from authenticated,

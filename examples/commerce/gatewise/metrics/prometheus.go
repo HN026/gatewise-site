@@ -4,25 +4,29 @@ package metrics
 
 import (
 	"fmt"
-	"github.com/HN026/gatewise/middleware"
+	"github.com/HN026/gatewise/operation"
 	"github.com/prometheus/client_golang/prometheus"
+	"reflect"
 )
 
+type Source interface{ Statistics() operation.Statistics }
+
 type collector struct {
+	workAdmitted, workRejected, workCompleted, workDuration                                                                                                                    *prometheus.Desc
 	budgetBytes, budgetLimit, budgetActive, budgetTracked, budgetTrackingLimit, budgetFallback, budgetExpired, budgetAttempts, budgetProposals, budgetRejected, budgetAdmitted *prometheus.Desc
 	decisionInfo, proposals, signalState, signalValue, signalThreshold, signalTime, signalAccepted, signalDropped, signalFailures                                              *prometheus.Desc
 	sharingDemand, sharingShares, sharingPause, sharingActive, sharingAdmissions                                                                                               *prometheus.Desc
 	resolutions                                                                                                                                                                *prometheus.Desc
 	tenantLimit, tenantTracked, tenantTrackingLimit, tenantActive, tenantExpired                                                                                               *prometheus.Desc
 	controllerSamples, controllerRatio, controllerFailures, controllerTime, controllerDecision, controllerSaturated                                                            *prometheus.Desc
-	service                                                                                                                                                                    *middleware.Service
+	service                                                                                                                                                                    Source
 	limit, minimum, maximum, reserved, active, info, admitted, rejected, completed, duration, adjustments                                                                      *prometheus.Desc
 }
 
 // Register adds one service to registry. Service names must be unique within that
 // registry. The caller owns the HTTP handler and can use promhttp.HandlerFor.
-func Register(registry prometheus.Registerer, service *middleware.Service) error {
-	if registry == nil || service == nil {
+func Register(registry prometheus.Registerer, service Source) error {
+	if registry == nil || service == nil || reflect.ValueOf(service).Kind() == reflect.Ptr && reflect.ValueOf(service).IsNil() {
 		return fmt.Errorf("gatewise metrics: registry and service are required")
 	}
 	serviceName := service.Statistics().Name
@@ -30,6 +34,10 @@ func Register(registry prometheus.Registerer, service *middleware.Service) error
 		return prometheus.NewDesc("gatewise_"+name, help, labels, prometheus.Labels{"service": serviceName})
 	}
 	c := &collector{service: service,
+		workAdmitted:        desc("work_admitted_total", "Admitted work by bounded integration kind.", "kind"),
+		workRejected:        desc("work_rejected_total", "Admission rejections by bounded integration kind.", "kind"),
+		workCompleted:       desc("work_completed_total", "Completed actual operation lifetimes.", "kind", "outcome"),
+		workDuration:        desc("work_duration_seconds", "Duration through actual completion, including SQL stream/transaction lifetime.", "kind"),
 		budgetBytes:         desc("resource_write_bytes_in_flight", "Reserved planned logical write bytes; includes short pre-admission reservations.", "budget"),
 		budgetLimit:         desc("resource_write_bytes_limit", "Configured concurrent planned logical write-byte budget.", "budget"),
 		budgetActive:        desc("resource_reservations_in_flight", "Active resource reservations; held until handler return.", "budget"),
@@ -83,7 +91,7 @@ func Register(registry prometheus.Registerer, service *middleware.Service) error
 }
 
 func (c *collector) Describe(out chan<- *prometheus.Desc) {
-	for _, desc := range []*prometheus.Desc{c.budgetBytes, c.budgetLimit, c.budgetActive, c.budgetTracked, c.budgetTrackingLimit, c.budgetFallback, c.budgetExpired, c.budgetAttempts, c.budgetProposals, c.budgetRejected, c.budgetAdmitted, c.decisionInfo, c.proposals, c.signalState, c.signalValue, c.signalThreshold, c.signalTime, c.signalAccepted, c.signalDropped, c.signalFailures, c.sharingDemand, c.sharingShares, c.sharingPause, c.sharingActive, c.sharingAdmissions, c.resolutions, c.limit, c.minimum, c.maximum, c.reserved, c.active, c.info, c.admitted, c.rejected, c.completed, c.duration, c.adjustments, c.controllerSamples, c.controllerRatio, c.controllerFailures, c.controllerTime, c.controllerDecision, c.controllerSaturated, c.tenantLimit, c.tenantTracked, c.tenantTrackingLimit, c.tenantActive, c.tenantExpired} {
+	for _, desc := range []*prometheus.Desc{c.workAdmitted, c.workRejected, c.workCompleted, c.workDuration, c.budgetBytes, c.budgetLimit, c.budgetActive, c.budgetTracked, c.budgetTrackingLimit, c.budgetFallback, c.budgetExpired, c.budgetAttempts, c.budgetProposals, c.budgetRejected, c.budgetAdmitted, c.decisionInfo, c.proposals, c.signalState, c.signalValue, c.signalThreshold, c.signalTime, c.signalAccepted, c.signalDropped, c.signalFailures, c.sharingDemand, c.sharingShares, c.sharingPause, c.sharingActive, c.sharingAdmissions, c.resolutions, c.limit, c.minimum, c.maximum, c.reserved, c.active, c.info, c.admitted, c.rejected, c.completed, c.duration, c.adjustments, c.controllerSamples, c.controllerRatio, c.controllerFailures, c.controllerTime, c.controllerDecision, c.controllerSaturated, c.tenantLimit, c.tenantTracked, c.tenantTrackingLimit, c.tenantActive, c.tenantExpired} {
 		out <- desc
 	}
 }
@@ -95,6 +103,21 @@ func (c *collector) Collect(out chan<- prometheus.Metric) {
 	}
 	counter := func(desc *prometheus.Desc, value uint64, labels ...string) {
 		out <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, float64(value), labels...)
+	}
+	for i, kind := range []string{"operation", "http"} {
+		v := s.Work[i]
+		counter(c.workAdmitted, v.Admitted, kind)
+		counter(c.workRejected, v.Rejected, kind)
+		count := uint64(0)
+		for j, outcome := range []string{"success", "failed", "canceled", "panicked"} {
+			counter(c.workCompleted, v.Completed[j], kind, outcome)
+			count += v.Completed[j]
+		}
+		buckets := map[float64]uint64{}
+		for j, b := range s.DurationBounds {
+			buckets[b] = v.DurationBuckets[j]
+		}
+		out <- prometheus.MustNewConstHistogram(c.workDuration, count, v.DurationSum, buckets, kind)
 	}
 	if s.Decisions.Enabled {
 		gauge(c.decisionInfo, 1, string(s.Decisions.Mode))

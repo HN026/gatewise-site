@@ -1,0 +1,11 @@
+{
+  "source_sha256": "415ee1e318b9c68913c11e62fdfd98ac1a3a5199cca535f8326dd5428ce59c47",
+  "aggregation": "Median per-run critical throughput, timely throughput and successful p95 (not merged global percentile). Pooled rejection/error percentages. Mean SQL wait is total WaitDuration delta / WaitCount delta, including drain. Job counts are median per phase including drain. Lifetime trace is one named run, sampled about100ms.",
+  "limitations": "Short local experiments on one macOS host/Podman VM; not production capacity, OOM prevention, engine-native PostgreSQL enforcement or cluster coordination. Pool signals can oscillate and sampled values can miss transients. Three outside consumers leave one real connection; a SQL admission ceiling of4 still permits waiting even with background restricted. Driver completion is not proof server execution stopped after ambiguous network failure.",
+  "matplotlib": "3.11.2",
+  "images": [
+    "operation-workers.png",
+    "operation-pool-exhaustion.png",
+    "operation-lifetimes.png"
+  ]
+}

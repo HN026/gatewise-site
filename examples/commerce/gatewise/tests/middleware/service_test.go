@@ -110,3 +110,24 @@ func TestPanicAndCanceledContext(t *testing.T) {
 		t.Fatal("panic/cancellation leaked capacity")
 	}
 }
+
+func TestDisabledCostPolicyStripsCallerMetadata(t *testing.T) {
+	guard, err := middleware.NewService(middleware.ServiceConfig{MaxConcurrent: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := httptest.NewRequest("POST", "/write", nil)
+	r.Header.Set(middleware.CostHeader, `{"write_bytes":999}`)
+	h := guard.Middleware(middleware.Critical, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		middleware.InjectCost(r)
+		if value := r.Header.Get(middleware.CostHeader); value != "" {
+			t.Errorf("invented resolved cost metadata: %s", value)
+		}
+		w.WriteHeader(204)
+	}))
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, r)
+	if w.Code != 204 {
+		t.Fatal(w.Code)
+	}
+}
