@@ -13,6 +13,7 @@ export default function Reference() {
  ['sqlguard.New(db, engine, Metadata)','Wraps an existing database/sql pool; does not install a driver or own pool shutdown. Metadata is a local trusted resolver.'],
  ['DB.ExecContext / QueryContext / QueryRowContext','Statement permit through completion; stream permit through Close/terminal iteration; QueryRow released by Scan. Close streams even on early exit.'],
  ['DB.BeginTx / InTx','One permit for the whole transaction. Transaction methods reuse it. InTx commits on success and rolls back on error/panic. Use tx.Context; explicit transaction owners must Commit/Rollback.'],
+ ['regulator.NewSQLPoolContention / Snapshot','Optional sampled 0/1 signal: new WaitCount increments activate; quiet + nonfull pool recover. RecoveryQuiet defaults to 200 ms. Construction ignores historical waits. Use rule threshold 1; not queue depth or availability.'],
  ['regulator.SQLPool','Cached decision provider from finite-pool InUse/MaxOpen; no health query and no queue-depth estimate.'],
  ['postgres.NewReplication / Snapshot','Primary-side physical standby byte backlog and heartbeat freshness. Exactly one named standby required. Failed or ambiguous state becomes unknown.']
 ]}/><p>See <a href="#/installation/operation-setup">lifetime, nesting and driver-timeout rules</a> before integration. HTTP rejection codes remain unchanged; operation rejections are Go errors so applications can choose their transport response.</p></Section><Section id="resource-reference" title="Resource APIs"><Table headers={['API','Contract']} rows={[

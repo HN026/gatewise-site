@@ -2,7 +2,7 @@
   "info": {
     "name": "Gatewise SQL and worker operations",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Run run.py --operations pool/fixed/disabled --verify. Real primary and physical standby. Lifetime probes use sqlguard in every mode; disabled bypasses guards only for public SQL writes/reads. Podman fault injection is validated by operation_benchmark.py, not by this portable collection. All admin controls are isolated loopback fixtures."
+    "description": "Run run.py --operations pool/fixed/disabled --verify. Real primary and physical standby. Lifetime probes use sqlguard in every mode; disabled bypasses guards only for public SQL writes/reads. Podman fault injection is validated by operation_benchmark.py, not by this portable collection. All admin controls are isolated loopback fixtures. v0.8.1: balanced opts into sampled WaitCount pressure and server-owned 3:1 interactive/batch sharing. It does not change existing policies."
   },
   "item": [
     {
@@ -52,7 +52,8 @@
             "type": "text/javascript",
             "exec": [
               "pm.test(\"request succeeds\",()=>pm.response.to.have.status(200));",
-              "pm.test(\"separate budgets and bounded queue\",()=>{const s=pm.response.json();pm.expect(s.storage.MaxConcurrent).eql(4);pm.expect(s.worker.MaxConcurrent).eql(6);pm.expect(s.queue_capacity).eql(16);pm.expect(s.mode).eql(pm.environment.get(\"operation_mode\"));});"
+              "pm.test(\"separate budgets and bounded queue\",()=>{const s=pm.response.json();pm.expect(s.storage.MaxConcurrent).eql(4);pm.expect(s.worker.MaxConcurrent).eql(6);pm.expect(s.queue_capacity).eql(16);pm.expect(s.mode).eql(pm.environment.get(\"operation_mode\"));});",
+              "if(pm.environment.get(\"operation_mode\")===\"balanced\"){pm.test(\"balanced sharing is bounded and pool-wait signal is configured\",()=>{const s=pm.response.json();pm.expect(s.storage_sharing.SharingEnabled).eql(true);pm.expect(s.storage_sharing.MaxTracked).eql(2);pm.expect(s.pool_contention.Pressure).to.be.a(\"boolean\");pm.expect(s.storage_signals.Signals[0].Threshold).eql(1);});}"
             ]
           }
         }
@@ -249,6 +250,24 @@
       ]
     },
     {
+      "name": "Inspect actual pool wait",
+      "request": {
+        "method": "GET",
+        "url": "{{orders_admin}}/operations/state"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if(pm.environment.get(\"operation_mode\")===\"balanced\"){pm.test(\"actual pool waiting activated pressure\",()=>{pm.response.to.have.status(200);const s=pm.response.json();pm.expect(s.pool_held).eql(4);pm.expect(s.pool.WaitCount).to.be.at.least(1);pm.expect(s.pool_contention.Pressure).eql(true);});}"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "name": "Release external pool holders",
       "request": {
         "method": "DELETE",
@@ -319,6 +338,15 @@
       },
       "event": [
         {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if(pm.environment.get(\"operation_mode\")===\"balanced\"){setTimeout(()=>{},500);}"
+            ]
+          }
+        },
+        {
           "listen": "test",
           "script": {
             "type": "text/javascript",
@@ -357,7 +385,8 @@
             "type": "text/javascript",
             "exec": [
               "pm.test(\"request succeeds\",()=>pm.response.to.have.status(200));",
-              "pm.test(\"jobs processed and permits drained\",()=>{const s=pm.response.json();pm.expect(s.jobs.started).to.be.at.least(3);pm.expect(s.queue_length).eql(0);pm.expect(s.worker.Active).eql(0);pm.expect(s.storage.Active).eql(0);pm.expect(s.pool.InUse).eql(0);});"
+              "pm.test(\"jobs processed and permits drained\",()=>{const s=pm.response.json();pm.expect(s.jobs.started).to.be.at.least(3);pm.expect(s.queue_length).eql(0);pm.expect(s.worker.Active).eql(0);pm.expect(s.storage.Active).eql(0);pm.expect(s.pool.InUse).eql(0);});",
+              "if(pm.environment.get(\"operation_mode\")===\"balanced\"){pm.test(\"quiet recovery restores background progress\",()=>{const s=pm.response.json();pm.expect(s.pool_contention.Pressure).eql(false);pm.expect(s.jobs.completed).to.be.at.least(1);pm.expect(s.storage_sharing.Tracked).to.be.at.most(2);});}"
             ]
           }
         }

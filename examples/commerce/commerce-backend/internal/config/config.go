@@ -32,7 +32,7 @@ func Load(args []string) (Config, error) {
 		}
 		return d
 	}
-	f.StringVar(&c.OperationsMode, "operations", "", "operation demo: disabled, fixed or pool")
+	f.StringVar(&c.OperationsMode, "operations", "", "operation demo: disabled, fixed, pool or balanced")
 	f.StringVar(&c.ReplicaURL, "replica-url", "", "physical standby database URL")
 	f.StringVar(&c.ResourceMode, "resources", "", "real resource regulators: disabled, enforce or observe")
 	f.StringVar(&c.DecisionMode, "decisions", "", "controlled decision providers: enforce or observe")
@@ -71,8 +71,8 @@ func Load(args []string) (Config, error) {
 	if c.Role != "orders" && c.Role != "catalog" && c.Role != "inventory" {
 		return c, fmt.Errorf("invalid role")
 	}
-	if c.OperationsMode != "" && (c.Role != "orders" || c.ReplicaURL == "" || c.OperationsMode != "disabled" && c.OperationsMode != "fixed" && c.OperationsMode != "pool") {
-		return c, fmt.Errorf("operations require orders role, replica URL and disabled/fixed/pool mode")
+	if c.OperationsMode != "" && (c.Role != "orders" || c.ReplicaURL == "" || c.OperationsMode != "disabled" && c.OperationsMode != "fixed" && c.OperationsMode != "pool" && c.OperationsMode != "balanced") {
+		return c, fmt.Errorf("operations require orders role, replica URL and disabled/fixed/pool/balanced mode")
 	}
 	if c.DatabaseURL == "" {
 		return c, fmt.Errorf("DATABASE_URL is required")

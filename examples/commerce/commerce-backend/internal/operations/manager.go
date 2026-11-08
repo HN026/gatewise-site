@@ -24,6 +24,7 @@ import (
 
 type metadataKey struct{}
 type Manager struct {
+	contention                                                         *regulator.SQLPoolContention
 	Mode                                                               string
 	Storage, Replica, Workers                                          *operation.Engine
 	db, follower                                                       *sqlguard.DB
@@ -82,13 +83,22 @@ func New(parent context.Context, primary *sql.DB, primaryURL, replicaURL, mode s
 		return fail(err)
 	}
 	var poolEngine *decision.Engine
-	if mode == "pool" {
-		poolEngine, err = decision.New(decision.Config{Rules: []decision.Rule{{Name: "pool", Scope: decision.Scope{Kind: "resource", Key: "background"}, Threshold: .75, MaxAge: time.Second, OnUnknown: "limit", UnknownLimit: 1, Pressure: decision.Effect{MaxConcurrent: 1}}}})
+	if mode == "pool" || mode == "balanced" {
+		poolEngine, err = decision.New(decision.Config{Rules: []decision.Rule{{Name: "pool", Scope: decision.Scope{Kind: "resource", Key: "background"}, Threshold: func() float64 {
+			if mode == "balanced" {
+				return 1
+			}
+			return .75
+		}(), MaxAge: time.Second, OnUnknown: "limit", UnknownLimit: 1, Pressure: decision.Effect{MaxConcurrent: 1}}}})
 		if err != nil {
 			return fail(err)
 		}
 	}
-	m.Storage, err = operation.New(operation.Config{Name: "orders_storage", MaxConcurrent: 4, ReservedCritical: 1, Decisions: poolEngine})
+	storageConfig := operation.Config{Name: "orders_storage", MaxConcurrent: 4, ReservedCritical: 1, Decisions: poolEngine}
+	if mode == "balanced" {
+		storageConfig.Tenants = &operation.TenantConfig{MaxConcurrent: 1, Limits: map[string]int{"interactive": 3, "batch": 1}, MaxTracked: 2, IdleTTL: time.Second, Sharing: &operation.TenantSharingConfig{MaxConcurrent: 4, DemandTTL: 200 * time.Millisecond}}
+	}
+	m.Storage, err = operation.New(storageConfig)
 	if err != nil {
 		return fail(err)
 	}
@@ -120,7 +130,15 @@ func New(parent context.Context, primary *sql.DB, primaryURL, replicaURL, mode s
 		return fail(err)
 	}
 	if poolEngine != nil {
-		m.collect(poolEngine, []decision.Collector{{Name: "pool", Provider: regulator.SQLPool{DB: primary}, Interval: 100 * time.Millisecond, Timeout: 50 * time.Millisecond}})
+		var provider decision.Provider = regulator.SQLPool{DB: primary}
+		if mode == "balanced" {
+			m.contention, err = regulator.NewSQLPoolContention(regulator.SQLPoolContentionConfig{DB: primary, RecoveryQuiet: 200 * time.Millisecond})
+			if err != nil {
+				return fail(err)
+			}
+			provider = m.contention
+		}
+		m.collect(poolEngine, []decision.Collector{{Name: "pool", Provider: provider, Interval: 100 * time.Millisecond, Timeout: 50 * time.Millisecond}})
 	}
 	if replicaEngine != nil {
 		m.collect(replicaEngine, []decision.Collector{{Name: "replication", Provider: m.replication, Interval: 100 * time.Millisecond, Timeout: 80 * time.Millisecond}})
@@ -290,7 +308,12 @@ func (m *Manager) State(out http.ResponseWriter, r *http.Request) {
 	m.mu.Lock()
 	streamOpen, held := m.stream != nil, len(m.holders)
 	m.mu.Unlock()
-	handler.JSON(out, 200, map[string]any{"mode": m.Mode, "storage": m.Storage.Snapshot(), "replica": m.Replica.Snapshot(), "worker": m.Workers.Snapshot(), "storage_work": m.Storage.Statistics().Work, "replica_work": m.Replica.Statistics().Work, "storage_signals": m.Storage.DecisionSnapshot(), "replica_signals": m.Replica.DecisionSnapshot(), "replication": m.replication.Snapshot(), "pool": m.raw.Stats(), "stream_open": streamOpen, "pool_held": held, "queue_length": len(m.queue), "queue_capacity": cap(m.queue), "workers_enabled": m.enabled.Load(), "jobs": map[string]uint64{"submitted": m.submitted.Load(), "dropped": m.dropped.Load(), "started": m.started.Load(), "completed": m.completed.Load(), "rejected": m.rejected.Load(), "failed": m.failed.Load(), "canceled": m.canceled.Load()}})
+	handler.JSON(out, 200, map[string]any{"mode": m.Mode, "storage": m.Storage.Snapshot(), "storage_sharing": m.Storage.TenantSnapshot(), "pool_contention": func() any {
+		if m.contention == nil {
+			return nil
+		}
+		return m.contention.Snapshot()
+	}(), "replica": m.Replica.Snapshot(), "worker": m.Workers.Snapshot(), "storage_work": m.Storage.Statistics().Work, "replica_work": m.Replica.Statistics().Work, "storage_signals": m.Storage.DecisionSnapshot(), "replica_signals": m.Replica.DecisionSnapshot(), "replication": m.replication.Snapshot(), "pool": m.raw.Stats(), "stream_open": streamOpen, "pool_held": held, "queue_length": len(m.queue), "queue_capacity": cap(m.queue), "workers_enabled": m.enabled.Load(), "jobs": map[string]uint64{"submitted": m.submitted.Load(), "dropped": m.dropped.Load(), "started": m.started.Load(), "completed": m.completed.Load(), "rejected": m.rejected.Load(), "failed": m.failed.Load(), "canceled": m.canceled.Load()}})
 }
 func (m *Manager) Control(out http.ResponseWriter, r *http.Request) {
 	var c struct {

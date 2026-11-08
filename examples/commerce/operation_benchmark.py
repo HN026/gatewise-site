@@ -19,7 +19,7 @@ def drain(s):
 def load(s,seconds,rate):
  cfg={'urls':s.urls,'seconds':seconds,'start_rps':rate,'end_rps':rate,'business_slots':5,'operation_work':True,'run_id':uuid.uuid4().hex}
  return json.loads(subprocess.run([str(s.projects/'commerce-backend/bin/loadgen')],input=json.dumps(cfg),capture_output=True,text=True,check=True).stdout)
-def one(s,profile,policy,repeat):
+def one(s,profile,policy,repeat,phase_config=None):
  s.start_app(profile,operations=policy);trace=[];errors=[];stop=threading.Event();phase=['startup'];start=time.monotonic()
  def sample():
   while not stop.is_set():
@@ -28,11 +28,13 @@ def one(s,profile,policy,repeat):
    stop.wait(.1)
  worker=threading.Thread(target=sample,daemon=True);worker.start();phases=[]
  try:
-  for name,seconds,rate in [('healthy',1,30),('workers',3,120),('pool-exhaustion',3,120),('recovery',1,30)]:
+  for name,seconds,rate in (phase_config or [('healthy',1,30),('workers',3,120),('pool-exhaustion',3,120),('recovery',1,30)]):
    phase[0]=name
    if name=='workers':control(s,True)
    if name=='pool-exhaustion':
     drain(s);api(s.admins['orders'],'/operations/pool',{'count':3},'POST');control(s,True)
+   if name=='light-interactive':
+    control(s);api(s.admins['orders'],'/operations/pool',method='DELETE');drain(s);control(s,True)
    if name=='recovery':
     control(s);api(s.admins['orders'],'/operations/pool',method='DELETE');drain(s)
    before=state(s);result=load(s,seconds,rate)
@@ -43,7 +45,7 @@ def one(s,profile,policy,repeat):
    phases.append(result);print(profile,policy,repeat,name,result['traffic'],flush=True)
   checks=[{'name':'scheduled arrivals delivered','pass':all(p['sent']==p['scheduled'] and not p['dropped_schedules'] for p in phases)}, {'name':'no transport or unknown-status failures','pass':all(not t['transport_errors'] and not t['other_statuses'] and not t['rejection_reasons'].get('other_503',0) for p in phases for t in p['traffic'].values())},{'name':'healthy and recovery successful without rejection','pass':all(t['successful']==t['sent'] for p in [phases[0],phases[-1]] for t in p['traffic'].values())},{'name':'all connections and work drain','pass':all(not p['after']['pool']['InUse'] and not p['after']['storage']['Active'] and not p['after']['worker']['Active'] for p in phases)},{'name':'generator p95 dispatch below20ms','pass':all((t['dispatch_p95_ms'] or 0)<20 for p in phases for t in p['traffic'].values())},{'name':'worker queue bounded','pass':all(t['queue_length']<=16 and t['worker']['Active']<=6 for t in trace)},{'name':'monitoring available','pass':not errors}]
   if policy!='disabled':checks.append({'name':'database permit ceiling respected','pass':all(t['storage']['Active']<=4 for t in trace)})
-  if policy=='pool':checks.append({'name':'pool pressure actually measured','pass':any(x['State']=='pressure' for t in trace for x in t['storage_signals']['Signals'])})
+  if policy in ('pool','balanced'):checks.append({'name':'pool pressure actually measured','pass':any(x['State']=='pressure' for t in trace for x in t['storage_signals']['Signals'])})
   return {'profile':profile,'policy':policy,'repeat':repeat,'phases':phases,'trace':trace,'sampling_errors':errors,'checks':checks,'passed':all(c['pass'] for c in checks)}
  finally:stop.set();worker.join(5);s.stop_app()
 def replication(s,profile):

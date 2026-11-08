@@ -1,6 +1,54 @@
 // Newest published release first. Keep notes and downloads tied to its Git tag.
 export const releases = [
 {
+  "version": "v0.8.1",
+  "publishedAt": "2026-11-08T13:14:54Z",
+  "date": "8 November 2026",
+  "summary": "Optional SQL contention feedback and existing capacity sharing improve background progress in the measured example.",
+  "requirements": "Library: Go 1.22+; commerce example: Go 1.25+",
+  "changes": [
+    "New SQLPoolContention provider distinguishes occupancy from new pool waits. It returns 0/1, uses a construction-time counter baseline, and requires a configurable quiet interval plus a nonfull pool to recover. Snapshot explains the last observation.",
+    "Opt-in balanced demo policy combines contention feedback with existing 3:1 interactive/batch sharing and borrowing. Server-owned classes use the tenant-policy dimension; existing configurations and controller defaults are unchanged.",
+    "24,552 requests in 24 repeated comparison runs and 248 passing checks. Critical/background tradeoffs, recovery, rejection/error counts and min/max repeat ranges are published separately from retained v0.8.0 evidence.",
+    "Exact source-only demo passed 1,902 Postman assertions across 53 profiles, including actual pool-pressure activation and background recovery. Race tests, vet and CI passed."
+  ],
+  "upgrade": "Opt-in. Existing SQLPool and decision semantics remain unchanged. To try contention feedback, construct regulator.NewSQLPoolContention, collect in the background and use a rule threshold of 1. RecoveryQuiet defaults to 200 ms; earlier cumulative waits are ignored. The balanced example also needs explicit server-owned workload sharing. A pressure cap 1 with reservation 1 still blocks background work during actual contention. There is no new queue, retry, preemption, starvation bound or replacement controller. Repeat with your own operation costs and capacity before adoption.",
+  "downloads": [
+    {
+      "name": "Source ZIP",
+      "path": "archive/refs/tags/v0.8.1.zip"
+    },
+    {
+      "name": "Source tar.gz",
+      "path": "archive/refs/tags/v0.8.1.tar.gz"
+    },
+    {
+      "name": "Demo example",
+      "path": "releases/download/v0.8.1/gatewise-demo.zip"
+    },
+    {
+      "name": "Demo SHA-256",
+      "path": "releases/download/v0.8.1/gatewise-demo.sha256"
+    },
+    {
+      "name": "Postman bundle",
+      "path": "releases/download/v0.8.1/postman.zip"
+    },
+    {
+      "name": "Pool comparison \u00b7 gzip",
+      "path": "releases/download/v0.8.1/pool-balance-results.json.gz"
+    },
+    {
+      "name": "Calculations and criteria",
+      "path": "releases/download/v0.8.1/pool-balance-provenance.json"
+    },
+    {
+      "name": "Postman results",
+      "path": "releases/download/v0.8.1/commerce-contract-results.json"
+    }
+  ]
+},
+{
   "version": "v0.8.0",
   "publishedAt": "2026-11-08T11:28:32Z",
   "date": "8 November 2026",
