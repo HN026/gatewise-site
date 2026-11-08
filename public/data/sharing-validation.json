@@ -1,0 +1,1220 @@
+{
+  "recorded_at": "2026-11-08T08:17:06.052549+00:00",
+  "scope": "Live orders API with PostgreSQL; share 2, ceiling 12; 16 busy clients, 150ms SQL delay; start two requests for each of two returning tenants while at least six borrowed leases are active. Test clients retry 503 every 10ms for at most 3s; this targeted handoff test is not the open-loop performance experiment.",
+  "runs": [
+    {
+      "profile": "middleware-fixed",
+      "before_return": {
+        "borrowed": 10.0,
+        "leases": 12.0,
+        "active": 12.0
+      },
+      "returning": [
+        {
+          "tenant": "returning-0",
+          "completion_seconds": 0.6321122090157587,
+          "allocation": "share",
+          "share": "2",
+          "attempts": [
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 201,
+              "reason": null
+            }
+          ]
+        },
+        {
+          "tenant": "returning-0",
+          "completion_seconds": 0.472549042024184,
+          "allocation": "share",
+          "share": "2",
+          "attempts": [
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 201,
+              "reason": null
+            }
+          ]
+        },
+        {
+          "tenant": "returning-1",
+          "completion_seconds": 0.4732685839990154,
+          "allocation": "share",
+          "share": "2",
+          "attempts": [
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 201,
+              "reason": null
+            }
+          ]
+        },
+        {
+          "tenant": "returning-1",
+          "completion_seconds": 0.6328318340238184,
+          "allocation": "share",
+          "share": "2",
+          "attempts": [
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 201,
+              "reason": null
+            }
+          ]
+        }
+      ],
+      "busy_statuses": {
+        "201": 14,
+        "503": 850
+      },
+      "elapsed_seconds": 0.8195827919989824,
+      "checks": [
+        {
+          "name": "borrowed requests active before tenants return",
+          "pass": true
+        },
+        {
+          "name": "all four returning requests eventually succeed",
+          "pass": true
+        },
+        {
+          "name": "returning admissions use their share",
+          "pass": true
+        },
+        {
+          "name": "each returning request completes within three seconds",
+          "pass": true
+        },
+        {
+          "name": "no unexpected errors in returning attempts",
+          "pass": true
+        },
+        {
+          "name": "tenant leases released after clients stop",
+          "pass": true
+        },
+        {
+          "name": "SQL connections released",
+          "pass": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "profile": "proxy-fixed",
+      "before_return": {
+        "borrowed": 10.0,
+        "leases": 12.0,
+        "active": 12.0
+      },
+      "returning": [
+        {
+          "tenant": "returning-0",
+          "completion_seconds": 0.4865759169915691,
+          "allocation": "share",
+          "share": "2",
+          "attempts": [
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 201,
+              "reason": null
+            }
+          ]
+        },
+        {
+          "tenant": "returning-0",
+          "completion_seconds": 0.6435187500028405,
+          "allocation": "share",
+          "share": "2",
+          "attempts": [
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 201,
+              "reason": null
+            }
+          ]
+        },
+        {
+          "tenant": "returning-1",
+          "completion_seconds": 0.486002624995308,
+          "allocation": "share",
+          "share": "2",
+          "attempts": [
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 201,
+              "reason": null
+            }
+          ]
+        },
+        {
+          "tenant": "returning-1",
+          "completion_seconds": 0.48801833399920724,
+          "allocation": "share",
+          "share": "2",
+          "attempts": [
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 201,
+              "reason": null
+            }
+          ]
+        }
+      ],
+      "busy_statuses": {
+        "201": 14,
+        "503": 823
+      },
+      "elapsed_seconds": 0.8271196660061833,
+      "checks": [
+        {
+          "name": "borrowed requests active before tenants return",
+          "pass": true
+        },
+        {
+          "name": "all four returning requests eventually succeed",
+          "pass": true
+        },
+        {
+          "name": "returning admissions use their share",
+          "pass": true
+        },
+        {
+          "name": "each returning request completes within three seconds",
+          "pass": true
+        },
+        {
+          "name": "no unexpected errors in returning attempts",
+          "pass": true
+        },
+        {
+          "name": "tenant leases released after clients stop",
+          "pass": true
+        },
+        {
+          "name": "SQL connections released",
+          "pass": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "profile": "middleware-adaptive",
+      "before_return": {
+        "borrowed": 10.0,
+        "leases": 12.0,
+        "active": 12.0
+      },
+      "returning": [
+        {
+          "tenant": "returning-0",
+          "completion_seconds": 0.48617866600397974,
+          "allocation": "share",
+          "share": "2",
+          "attempts": [
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 201,
+              "reason": null
+            }
+          ]
+        },
+        {
+          "tenant": "returning-0",
+          "completion_seconds": 0.6432139160169754,
+          "allocation": "share",
+          "share": "2",
+          "attempts": [
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 201,
+              "reason": null
+            }
+          ]
+        },
+        {
+          "tenant": "returning-1",
+          "completion_seconds": 0.4857986660208553,
+          "allocation": "share",
+          "share": "2",
+          "attempts": [
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 201,
+              "reason": null
+            }
+          ]
+        },
+        {
+          "tenant": "returning-1",
+          "completion_seconds": 0.6434479580202606,
+          "allocation": "share",
+          "share": "2",
+          "attempts": [
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 201,
+              "reason": null
+            }
+          ]
+        }
+      ],
+      "busy_statuses": {
+        "201": 14,
+        "503": 837
+      },
+      "elapsed_seconds": 0.8218613330100197,
+      "checks": [
+        {
+          "name": "borrowed requests active before tenants return",
+          "pass": true
+        },
+        {
+          "name": "all four returning requests eventually succeed",
+          "pass": true
+        },
+        {
+          "name": "returning admissions use their share",
+          "pass": true
+        },
+        {
+          "name": "each returning request completes within three seconds",
+          "pass": true
+        },
+        {
+          "name": "no unexpected errors in returning attempts",
+          "pass": true
+        },
+        {
+          "name": "tenant leases released after clients stop",
+          "pass": true
+        },
+        {
+          "name": "SQL connections released",
+          "pass": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "profile": "proxy-adaptive",
+      "before_return": {
+        "borrowed": 10.0,
+        "leases": 12.0,
+        "active": 12.0
+      },
+      "returning": [
+        {
+          "tenant": "returning-0",
+          "completion_seconds": 0.47734387501259334,
+          "allocation": "share",
+          "share": "2",
+          "attempts": [
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 201,
+              "reason": null
+            }
+          ]
+        },
+        {
+          "tenant": "returning-0",
+          "completion_seconds": 0.4761149169935379,
+          "allocation": "share",
+          "share": "2",
+          "attempts": [
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 201,
+              "reason": null
+            }
+          ]
+        },
+        {
+          "tenant": "returning-1",
+          "completion_seconds": 0.6332773329922929,
+          "allocation": "share",
+          "share": "2",
+          "attempts": [
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 201,
+              "reason": null
+            }
+          ]
+        },
+        {
+          "tenant": "returning-1",
+          "completion_seconds": 0.6336853330140002,
+          "allocation": "share",
+          "share": "2",
+          "attempts": [
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 503,
+              "reason": "concurrency_limit"
+            },
+            {
+              "status": 201,
+              "reason": null
+            }
+          ]
+        }
+      ],
+      "busy_statuses": {
+        "201": 13,
+        "503": 851
+      },
+      "elapsed_seconds": 0.8154833749867976,
+      "checks": [
+        {
+          "name": "borrowed requests active before tenants return",
+          "pass": true
+        },
+        {
+          "name": "all four returning requests eventually succeed",
+          "pass": true
+        },
+        {
+          "name": "returning admissions use their share",
+          "pass": true
+        },
+        {
+          "name": "each returning request completes within three seconds",
+          "pass": true
+        },
+        {
+          "name": "no unexpected errors in returning attempts",
+          "pass": true
+        },
+        {
+          "name": "tenant leases released after clients stop",
+          "pass": true
+        },
+        {
+          "name": "SQL connections released",
+          "pass": true
+        }
+      ],
+      "passed": true
+    }
+  ],
+  "checks": 28,
+  "passed": true
+}

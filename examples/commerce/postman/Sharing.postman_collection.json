@@ -1,0 +1,565 @@
+{
+  "info": {
+    "name": "Gatewise tenant sharing",
+    "description": "Run against a fresh launch with --sharing 4. The tenant limit 2 is a target share; borrowing ceiling 4 is total concurrent work per identity, not four extra slots. Checks borrowing, unrelated tenant progress, bounded tracking and aggregate metrics. Local synthetic identities are not authentication.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.request.headers.upsert({key:\"X-Demo-Tenant\",value:\"contract\"});",
+          "if(pm.info.requestName.startsWith(\"Missing\"))pm.request.headers.remove(\"X-Demo-Tenant\");",
+          "if(pm.info.requestName===\"Malformed identity\")pm.request.headers.upsert({key:\"X-Demo-Tenant\",value:\"invalid tenant\"});",
+          "if(pm.info.requestName===\"Tenant checkout\")pm.collectionVariables.set(\"tenant_order_key\",pm.variables.replaceIn(\"{{$guid}}\"));"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Health outside admission",
+      "request": {
+        "method": "GET",
+        "url": "{{orders_url}}/healthz",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tenant checkout",
+      "request": {
+        "method": "POST",
+        "url": "{{orders_url}}/orders/checkout",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{tenant_order_key}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"amount_cents\": 1234}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\",()=>pm.response.to.have.status(201));",
+              "pm.collectionVariables.set(\"tenant_order_id\",pm.response.json().id);pm.test(\"protected mode\",()=>pm.expect(pm.response.headers.get(\"X-Gatewise-Mode\")).to.eql(pm.environment.get(\"expected_mode\")));",
+              "pm.test(\"sharing admission diagnosed\",()=>pm.expect([\"share\",\"borrowed\"]).includes(pm.response.headers.get(\"X-Gatewise-Tenant-Admission\")));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tenant checkout replay",
+      "request": {
+        "method": "POST",
+        "url": "{{orders_url}}/orders/checkout",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{tenant_order_key}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"amount_cents\": 1234}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
+              "pm.test(\"same persisted order\",()=>pm.expect(pm.response.json().id).to.eql(pm.collectionVariables.get(\"tenant_order_id\")));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tenant persisted read",
+      "request": {
+        "method": "GET",
+        "url": "{{orders_url}}/orders/{{tenant_order_id}}",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Missing identity",
+      "request": {
+        "method": "POST",
+        "url": "{{orders_url}}/orders/checkout",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{$guid}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"amount_cents\": 1234}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\",()=>pm.response.to.have.status(400));",
+              "pm.test(\"missing identity reason\",()=>pm.expect(pm.response.json().reason).to.eql(\"tenant_identity_missing\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Malformed identity",
+      "request": {
+        "method": "POST",
+        "url": "{{orders_url}}/orders/checkout",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{$guid}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"amount_cents\": 1234}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\",()=>pm.response.to.have.status(400));",
+              "pm.test(\"invalid identity reason\",()=>pm.expect(pm.response.json().reason).to.eql(\"tenant_identity_invalid\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hold SQL connections for admission check",
+      "request": {
+        "method": "PUT",
+        "url": "{{orders_admin}}/control",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"work_multiplier\": 1, \"sql_delay_ms\": 150, \"failure_every\": 0}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Noisy tenant versus ordinary tenants",
+      "request": {
+        "method": "GET",
+        "url": "{{orders_url}}/healthz",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
+              "let left=15;const outcomes=[];",
+              "for(let i=0;i<15;i++){",
+              " const noisy=i<12;const tenant=noisy?\"pm-noisy\":\"pm-ordinary-\"+i;",
+              " pm.sendRequest({url:pm.environment.get(\"orders_url\")+\"/orders/checkout\",method:\"POST\",header:{\"Content-Type\":\"application/json\",\"Idempotency-Key\":pm.variables.replaceIn(\"{{$guid}}\"),\"X-Demo-Tenant\":tenant},body:{mode:\"raw\",raw:JSON.stringify({amount_cents:1000})}},(error,response)=>{",
+              "  outcomes.push({noisy,error:!!error,code:response?response.code:0,allocation:response?response.headers.get(\"X-Gatewise-Tenant-Admission\"):null,reason:response&&response.code===503?response.json().reason:null});",
+              "  if(--left===0){",
+              "   pm.test(\"no transport errors\",()=>pm.expect(outcomes.every(x=>!x.error)).to.eql(true));",
+              "   pm.test(\"noisy tenant explicitly limited\",()=>pm.expect(outcomes.some(x=>x.noisy&&x.code===503&&x.reason===\"tenant_concurrency_limit\")).to.eql(true));",
+              "   pm.test(\"spare capacity was borrowed\",()=>pm.expect(outcomes.some(x=>x.noisy&&x.code===201&&x.allocation===\"borrowed\")).to.eql(true));",
+              "   pm.test(\"all three ordinary tenants complete\",()=>pm.expect(outcomes.filter(x=>!x.noisy&&x.code===201).length).to.eql(3));",
+              "   pm.test(\"no unexpected SQL or gateway failures\",()=>pm.expect(outcomes.every(x=>[201,503].includes(x.code))).to.eql(true));",
+              "  }",
+              " });",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Restore healthy SQL",
+      "request": {
+        "method": "PUT",
+        "url": "{{orders_admin}}/control",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"work_multiplier\": 1, \"sql_delay_ms\": 0, \"failure_every\": 0}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tenant recovery checkout",
+      "request": {
+        "method": "POST",
+        "url": "{{orders_url}}/orders/checkout",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{$guid}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"amount_cents\": 2000}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\",()=>pm.response.to.have.status(201));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Catalog tenant read",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_url}}/catalog/products?limit=1",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bounded tenant registry",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_backend}}/healthz",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
+              "const outcomes=[];function next(i){if(i===48){",
+              " pm.test(\"registry pressure explicitly rejected\",()=>pm.expect(outcomes.some(x=>x.code===503&&x.reason===\"tenant_registry_full\")).to.eql(true));",
+              " pm.test(\"churn has no unexpected failures\",()=>pm.expect(outcomes.every(x=>!x.error&&(x.code===200||(x.code===503&&x.reason===\"tenant_registry_full\")))).to.eql(true));return;}",
+              " pm.sendRequest({url:pm.environment.get(\"catalog_url\")+\"/catalog/products?limit=1\",method:\"GET\",header:{\"X-Demo-Tenant\":\"pm-churn-\"+i}},(error,response)=>{outcomes.push({error:!!error,code:response?response.code:0,reason:response&&response.code===503?response.json().reason:null});next(i+1);});",
+              "}next(0);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aggregate-only tenant metrics",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_url}}/metrics",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
+              "const text=pm.response.text();const m=text.match(/^gatewise_tenants_tracked\\{[^}]*service=\"catalog\"[^}]*\\}\\s+(\\d+)/m);",
+              "pm.test(\"identified registry stays bounded\",()=>{pm.expect(m).to.not.eql(null);pm.expect(Number(m[1])).to.be.at.most(Number(pm.environment.get(\"tenant_max_tracked\")));});",
+              "pm.test(\"aggregate tenant rejection metrics\",()=>pm.expect(text).to.include('reason=\"tenant_registry_full\"'));",
+              "pm.test(\"tenant identities absent from metrics\",()=>{pm.expect(text).to.not.include(\"pm-churn\");pm.expect(text).to.not.include(\"pm-noisy\");});",
+              "pm.test(\"sharing metrics are present\",()=>pm.expect(pm.response.text()).includes(\"gatewise_tenant_sharing_demanding_tenants\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Idle tenant entries expire",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_url}}/catalog/products?limit=1",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "setTimeout(()=>{},2300);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Expiration visible",
+      "request": {
+        "method": "GET",
+        "url": "{{catalog_url}}/metrics",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
+              "const m=pm.response.text().match(/^gatewise_tenant_entries_expired_total\\{[^}]*service=\"catalog\"[^}]*\\}\\s+(\\d+)/m);pm.test(\"expired entries counted\",()=>{pm.expect(m).to.not.eql(null);pm.expect(Number(m[1])).to.be.above(0);});",
+              "pm.test(\"sharing metrics are present\",()=>pm.expect(pm.response.text()).includes(\"gatewise_tenant_sharing_demanding_tenants\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Inventory tenant read",
+      "request": {
+        "method": "GET",
+        "url": "{{inventory_url}}/inventory/stock/1",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Missing inventory identity",
+      "request": {
+        "method": "GET",
+        "url": "{{inventory_url}}/inventory/stock/1",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\",()=>pm.response.to.have.status(400));",
+              "pm.test(\"inventory uses tenant admission\",()=>pm.expect(pm.response.json().reason).to.eql(\"tenant_identity_missing\"));"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "tenant_order_key",
+      "value": ""
+    },
+    {
+      "key": "tenant_order_id",
+      "value": ""
+    }
+  ]
+}

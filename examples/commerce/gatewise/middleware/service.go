@@ -174,7 +174,11 @@ func (s *Service) Middleware(priority Priority, next http.Handler, options ...Ha
 				s.reject(w, priority, decision, status)
 				return
 			}
-			lease, decision := s.tenants.Acquire(id, time.Now())
+			capacity := 0
+			if s.tenants.SharingEnabled() {
+				capacity = s.limiter.Snapshot().Limit
+			}
+			lease, decision := s.tenants.AcquireWithLimit(id, time.Now(), capacity)
 			if decision != admission.Admitted {
 				status := 503
 				if decision == admission.TenantMissing || decision == admission.TenantInvalid {
@@ -195,11 +199,20 @@ func (s *Service) Middleware(priority Priority, next http.Handler, options ...Ha
 			decision = s.limiter.TryAcquireCohort(p, bucket, buckets)
 		}
 		if decision != admission.Admitted {
+			if tenantLease != nil {
+				tenantLease.Rejected(decision, time.Now())
+			}
 			s.reject(w, priority, decision, 503)
 			return
 		}
 		if tenantLease != nil {
 			tenantLease.Retain()
+			if s.tenants.SharingEnabled() {
+				s.statistics.tenantAllocation(tenantLease.Allocation())
+				w.Header().Set("X-Gatewise-Tenant-Admission", tenantLease.Allocation())
+				w.Header().Set("X-Gatewise-Tenant-Share", strconv.Itoa(tenantLease.Share()))
+				w.Header().Set("X-Gatewise-Tenant-Ceiling", strconv.Itoa(tenantLease.Ceiling()))
+			}
 		}
 		s.statistics.admission(priority, decision)
 		s.setHeaders(w)

@@ -9,6 +9,7 @@ import (
 )
 
 type collector struct {
+	sharingDemand, sharingShares, sharingPause, sharingActive, sharingAdmissions                                    *prometheus.Desc
 	resolutions                                                                                                     *prometheus.Desc
 	tenantLimit, tenantTracked, tenantTrackingLimit, tenantActive, tenantExpired                                    *prometheus.Desc
 	controllerSamples, controllerRatio, controllerFailures, controllerTime, controllerDecision, controllerSaturated *prometheus.Desc
@@ -27,8 +28,13 @@ func Register(registry prometheus.Registerer, service *middleware.Service) error
 		return prometheus.NewDesc("gatewise_"+name, help, labels, prometheus.Labels{"service": serviceName})
 	}
 	c := &collector{service: service,
+		sharingDemand:       desc("tenant_sharing_demanding_tenants", "Identified tenants with active or recent demand."),
+		sharingShares:       desc("tenant_sharing_demand_shares", "Configured shares of tenants with active or recent demand."),
+		sharingPause:        desc("tenant_sharing_borrowing_paused", "One while lending is paused after below-share capacity rejection."),
+		sharingActive:       desc("tenant_sharing_requests_in_flight", "Reservations classified at acquisition, including brief uncommitted leases.", "allocation"),
+		sharingAdmissions:   desc("tenant_sharing_admissions_total", "Successful service admissions by tenant allocation class.", "allocation"),
 		resolutions:         desc("priority_resolutions_total", "Resolved configured priority and bounded source.", "priority", "source"),
-		tenantLimit:         desc("tenant_concurrency_limit", "Default per-tenant concurrency limit."),
+		tenantLimit:         desc("tenant_concurrency_limit", "Default tenant hard cap, or configured target share when sharing is enabled."),
 		tenantTracked:       desc("tenants_tracked", "Identified tenants currently retained in the bounded registry."),
 		tenantTrackingLimit: desc("tenants_tracking_limit", "Maximum identified tenant entries."),
 		tenantActive:        desc("tenant_requests_in_flight", "Tenant leases including brief service-admission reservations; never labeled by identity.", "bucket"),
@@ -55,7 +61,7 @@ func Register(registry prometheus.Registerer, service *middleware.Service) error
 }
 
 func (c *collector) Describe(out chan<- *prometheus.Desc) {
-	for _, desc := range []*prometheus.Desc{c.resolutions, c.limit, c.minimum, c.maximum, c.reserved, c.active, c.info, c.admitted, c.rejected, c.completed, c.duration, c.adjustments, c.controllerSamples, c.controllerRatio, c.controllerFailures, c.controllerTime, c.controllerDecision, c.controllerSaturated, c.tenantLimit, c.tenantTracked, c.tenantTrackingLimit, c.tenantActive, c.tenantExpired} {
+	for _, desc := range []*prometheus.Desc{c.sharingDemand, c.sharingShares, c.sharingPause, c.sharingActive, c.sharingAdmissions, c.resolutions, c.limit, c.minimum, c.maximum, c.reserved, c.active, c.info, c.admitted, c.rejected, c.completed, c.duration, c.adjustments, c.controllerSamples, c.controllerRatio, c.controllerFailures, c.controllerTime, c.controllerDecision, c.controllerSaturated, c.tenantLimit, c.tenantTracked, c.tenantTrackingLimit, c.tenantActive, c.tenantExpired} {
 		out <- desc
 	}
 }
@@ -77,6 +83,27 @@ func (c *collector) Collect(out chan<- prometheus.Metric) {
 		gauge(c.tenantActive, float64(t.MissingActive), "missing")
 		gauge(c.tenantActive, float64(t.OverflowActive), "overflow")
 		counter(c.tenantExpired, t.EntriesExpired)
+	}
+	if s.Tenants.SharingEnabled {
+		t := s.Tenants
+		gauge(c.sharingDemand, float64(t.DemandingTenants))
+		gauge(c.sharingShares, float64(t.DemandShares))
+		paused := 0.
+		if t.BorrowingPaused {
+			paused = 1
+		}
+		gauge(c.sharingPause, paused)
+		for i, kind := range []string{"share", "borrowed", "fallback"} {
+			active := t.IdentifiedActive - t.BorrowedActive
+			if i == 1 {
+				active = t.BorrowedActive
+			}
+			if i == 2 {
+				active = t.MissingActive + t.OverflowActive
+			}
+			gauge(c.sharingActive, float64(active), kind)
+			counter(c.sharingAdmissions, s.TenantAllocations[i], kind)
+		}
 	}
 	if s.Controller.Enabled {
 		e := s.Controller
@@ -122,6 +149,9 @@ func (c *collector) Collect(out chan<- prometheus.Metric) {
 		}
 		counter(c.rejected, p.RejectedConcurrency, priority, "concurrency_limit")
 		counter(c.rejected, p.RejectedReservation, priority, "critical_capacity_reserved")
+		if s.Tenants.SharingEnabled {
+			counter(c.rejected, p.RejectedTenantShare, priority, "tenant_share_reserved")
+		}
 		if s.Tenants.Enabled {
 			for _, v := range []struct {
 				reason string

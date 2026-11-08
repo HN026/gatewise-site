@@ -75,3 +75,11 @@ Run `python3 run.py --profile middleware-fixed --priorities` or `--profile proxy
 `python3 priority_benchmark.py --output results/priority-results.json` measures three repetitions of four integration modes across baseline, two downstream-pressure levels and recovery. The shared proxy serves both hops, retaining at most four application processes. All SQL pools have four connections; catalog admission is six and orders twelve. One unmeasured stable-key probe runs between phases. No application retries are used in measured traffic.
 
 `python3 validate_priority.py --output results/priority-validation.json` exercises trusted and untrusted orders entries during downstream SQL pressure. It preserves trust on the internal proxy-to-backend hop and checks that forged forwarding headers do not promote a caller.
+
+## Tenant sharing
+
+Use `python3 run.py --profile middleware-fixed --sharing 4` (or `proxy-adaptive`) for a share of 2 and total ceiling of 4. Add `--verify` to run `postman/Sharing.postman_collection.json`. `--tenants` alone retains hard caps. The demand window is 500ms; identities are synthetic and loopback-only.
+
+`python3 sharing_benchmark.py --output results/sharing-results.json` compares hard caps and ceilings 4/12 through solo load, returning tenants, all tenants busy, solo load again and healthy recovery. All traffic is critical. First-success time includes the wait until the tenant’s first scheduled arrival. Report throughput, ordinary latency and rejections together; a large ceiling can add SQL-pool waiting.
+
+`python3 validate_sharing.py --output results/sharing-validation.json` checks returning customers while borrowed requests are still running. This targeted test retries 503 every 10ms (up to 3s); the separate scheduled throughput experiment never retries.
