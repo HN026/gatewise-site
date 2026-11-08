@@ -35,6 +35,6 @@ export function Diagram({ name, caption }: { name: string; caption: string }) {
 export function ImageFigure({ src, alt, children, dashboard = false }: { src: string; alt: string; children: ReactNode; dashboard?: boolean }) {
   return <figure className={`screenshot-figure ${dashboard ? 'full-dashboard' : ''}`}><a href={src} target="_blank" rel="noreferrer" aria-label={`Open full image: ${alt}`}><img src={src} alt={alt} loading="lazy" /></a><figcaption>{children}<a href={src} download>Download PNG</a></figcaption></figure>;
 }
-export function Table({ headers, rows }: { headers: string[]; rows: readonly (readonly string[])[] }) {
-  return <div className="table-wrap" tabIndex={0}><table><thead><tr>{headers.map(h => <th key={h}>{h}</th>)}</tr></thead><tbody>{rows.map((r, i) => <tr key={i}>{r.map((c, j) => <td key={j}>{c}</td>)}</tr>)}</tbody></table></div>;
+export function Table({ headers, rows, prose = false }: { headers: string[]; rows: readonly (readonly string[])[]; prose?: boolean }) {
+  return <div className={`table-wrap${prose ? ' prose-table' : ''}`} tabIndex={0}><table><thead><tr>{headers.map(h => <th key={h}>{h}</th>)}</tr></thead><tbody>{rows.map((r, i) => <tr key={i}>{r.map((c, j) => <td key={j}>{c}</td>)}</tr>)}</tbody></table></div>;
 }

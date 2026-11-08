@@ -9,7 +9,7 @@ export function ResourceBenchmarks(){
  const rows=data.rows.filter(r=>r.phase===phase);
  const before=data.rows.find(r=>r.profile==='middleware-fixed'&&r.strategy==='disabled'&&r.phase==='hot-keys');
  const after=data.rows.find(r=>r.profile==='middleware-fixed'&&r.strategy==='enforce'&&r.phase==='hot-keys');
- return <Section id="resource-regulators" title="Real resource pressure · v0.7.0">
+ return <Section id="resource-regulators" title="Can resource signals protect other operations?">
  <h3>The problem</h3><p>Twelve small requests and twelve expensive requests are different loads. A request count alone cannot describe retained memory, a large fanout, write volume or contention on one database row. We test whether resource-specific protection leaves room for other work.</p>
  <h3>What we run</h3><p>Three PostgreSQL-backed services receive 240 requests/sec: 80% expensive work and 20% other requests. We compare regulators disabled, observe mode and enforce mode in fixed/adaptive middleware and proxy deployments. Each combination runs three times. The ordinary requests are database reads, except in the hot-key test, where they update 16 cold keys while the pressure traffic targets one hot key.</p>
  <Table headers={['Scenario','Pressure operation','Protection in this experiment']} rows={[
