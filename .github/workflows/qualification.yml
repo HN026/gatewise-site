@@ -5,7 +5,7 @@ on:
       core_ref:
         description: Exact Gatewise tag or commit to test
         required: true
-        default: v1.0.0-rc.2
+        default: v1.0.0-rc.4
       full_soak:
         description: Run four full three-minute scenarios instead of the exploratory smoke
         type: boolean
@@ -28,7 +28,9 @@ jobs:
           go-version: stable
           cache-dependency-path: examples/commerce/commerce-backend/go.sum
       - name: Install pinned Postman CLI
-        run: npm install --global --registry=https://registry.npmjs.org postman-cli@1.85.0
+        run: |
+          npm install --global --prefix "$RUNNER_TEMP/postman" --registry=https://registry.npmjs.org postman-cli@1.85.0
+          echo "$RUNNER_TEMP/postman/bin" >> "$GITHUB_PATH"
       - name: Backend race and vet checks
         working-directory: examples/commerce/commerce-backend
         run: |
