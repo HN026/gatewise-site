@@ -5,6 +5,34 @@ export default function Examples() {
   return <div className="container"><PageTitle title="Examples and demo">Three PostgreSQL-backed services. Run them directly, behind Gatewise, or with Gatewise middleware.</PageTitle>
     <div className="download-panel"><div className="download-mark"><img src="logo.svg" alt="Gatewise" /></div><div><span className="mono">Demo example · v0.11.1</span><h2>gatewise-demo.zip</h2><p>{demo.files} source files · {(demo.bytes / 1024).toFixed(0)} KB · Go 1.25+ · Python 3.10+ · Podman or Docker</p></div><Button href="downloads/gatewise-demo.zip" download>Download demo example</Button></div>
     <div className="download-links"><a href="downloads/gatewise-demo.sha256" download>SHA-256 <Arrow /></a><a href="downloads/postman.zip" download>Postman collection <Arrow /></a></div>
+<Section title="Application model"><Diagram name="commerce-services" caption="Each service owns a database, a four-connection pool and its admission budget. The proxy is the fourth HTTP application; middleware runs inside the three services." />
+      <Table headers={['Service', 'Critical business operation', 'Background operation']} rows={[
+        ['Orders', 'Idempotent checkout write and order lookup', 'Aggregate order amounts and update report'],
+        ['Catalog', 'Read a bounded list of persisted products', 'Aggregate prices and description lengths'],
+        ['Inventory', 'Idempotent reservation with atomic stock decrement', 'Aggregate available stock and update report'],
+      ]} /><p>Each database starts with 20,000 rows. Business requests and reports share that service’s SQL connection pool. Services run as independent processes; checkout does not orchestrate a distributed transaction across all three. PostgreSQL and optional monitoring are infrastructure, separate from the four application processes.</p>
+      <Note label="Example settings">Each guard has a ceiling of 12 requests and reserves 4 slots for critical work. Adaptive mode starts at 12 and stays between 5 and 12. The database pool allows 4 connections. HTTP concurrency and SQL connections are different limits; these experimental values require tuning for your application.</Note>
+    </Section>
+<Section title="Run the demo"><CodeBlock filename="terminal" language="shell" code={`unzip gatewise-demo.zip
+cd gatewise-demo
+python3 run.py --profile proxy-adaptive
+# Docker instead of Podman:
+python3 run.py --engine docker --profile middleware-adaptive`} /><p>Start your container engine first. The launcher builds the included source, starts an isolated PostgreSQL 18.6 container and three services, then prints the addresses and generated Postman environment. Ports are selected dynamically. Ctrl+C removes only this example’s processes and disposable database volume.</p>
+      <Table headers={['Profile', 'HTTP application processes', 'Admission placement']} rows={[
+        ['direct', '3', 'Unprotected baseline'], ['proxy-fixed / proxy-adaptive', '4', 'Gatewise routes to three unmodified backends'], ['middleware-fixed / middleware-adaptive', '3', 'A guard inside each Go service'],
+      ]} /><p>All listeners bind to localhost. Public disposable credentials are included for the local database. Add <code>--monitor</code> to start optional local Prometheus and Grafana with the correct scrape targets. No production credentials, compiled binaries or personal environment files are packaged. The included modules use local replacements so the example builds independently of a remote tag.</p>
+    </Section>
+<Section title="Postman scenarios"><p>Import <code>postman/Commerce.postman_collection.json</code> and the environment file printed by the launcher. Run the whole collection in order against a fresh launch; use a 5s request timeout and 15s script timeout.</p>
+      <Table headers={['Checks', 'Expected behavior']} rows={[
+        ['Orders persistence', 'Create 201 → replay 200 with the same ID → conflicting amount 409'],
+        ['Catalog', 'Persisted products; bounded query size; invalid limit 400'],
+        ['Inventory consistency', 'Replay decrements stock once; key conflict and insufficient stock return 409'],
+        ['SQL faults and recovery', 'Injected failures return 500; restored controls allow healthy requests'],
+        ['Admission', 'Protected background overload produces 503; critical work still completes'],
+        ['Observability', 'Bounded pools, mode headers, pool metrics and adaptive controller metrics'],
+      ]} /><CodeBlock filename="optional Postman CLI" language="shell" code={`# Runs the same collection and cleans up on completion:
+python3 run.py --profile proxy-adaptive --verify`} /><p>The separate loopback admin listeners expose benchmark controls. They are test instrumentation and are never routed through Gatewise. The collection restores controls after fault checks. Stop and relaunch for a clean repeat.</p><a className="text-link" href="data/commerce-contract-results.json" download>Recorded Postman contract results ↗</a>
+    </Section>
 <Section id="hardening-example" title="Seeded traffic, reservations and cancellation">
 <p>The v0.11.1 experiment removes the fixed arrival pattern from the earlier comparison. A seed determines arrival times, service assignments and priorities before traffic starts. Every policy receives the same plan and records its SHA-256; three seeds expose variation between runs. Fixed reservation sweeps cover 0, 1, 2 and 3 per service, plus an explicit orders2/catalog1/inventory1 example.</p>
 <CodeBlock filename="From the extracted demo example" language="shell" code={'python3 hardening_benchmark.py --output results/hardening-results.json\npython3 cancellation_check.py --output results/cancellation-results.json'} />
@@ -18,29 +46,22 @@ export default function Examples() {
 <p>The source bundle also includes focused reference tests and an allocation/handler-cost benchmark: <code>cd commerce-backend &amp;&amp; go test -run '^$' -bench BenchmarkSuccessfulHandler -benchmem -count 5 ./tests/baseline</code>. This isolates sequential no-op handler cost, not network capacity or saturated queue performance.</p>
 </Section>
 <Section id="queue-example" title="Waiting and overload example"><p>The current demo supports optional waiting in all four middleware/proxy fixed/adaptive deployments. The default command still rejects excess work immediately.</p><CodeBlock filename="Extract the demo example, then run" language="shell" code={'python3 run.py --queue --profile middleware-fixed --verify\npython3 run.py --queue --profile proxy-adaptive --verify\n# Compare both policies across all deployments:\npython3 queue_benchmark.py --output results/queue-results.json'}/><p>The example queue allows 16 waiting requests, a 40 ms wait, aging at 20 ms and 4 waiting slots protected for critical requests. The interactive launcher retains execution ceiling 12 and critical reservation 4 unless you override --max-concurrent / --reserved-critical. The measured comparison deliberately uses ceiling 4, execution reservation 1 and four SQL connections per service. Its adaptive runs start at 4 and use the stable profile with floor 2. These settings are examples.</p><p>The Queue Postman collection checks full and expired waits, successful delayed admission, background waiting reservations, large-body streaming fallback and SQL cleanup. The separate Go load generator induces real 20 ms client deadlines to check cancellation. The three service processes plus optional proxy retain the four-application-process boundary.</p></Section><Section id="adaptive-example" title="Controller evaluation">
-<p>The v0.9.0 example retains the existing tuned legacy settings and adds an explicit controller-profile option. With the option, unspecified adaptive fields use library defaults: floor/initial 5 for this reservation, nominal interval 1s and minimum samples 10. Without it, previous demo commands keep their tuned legacy behavior.</p>
+<p>The example supports an explicit controller-profile option alongside its retained tuned legacy settings. With the option, unspecified adaptive fields use library defaults: floor/initial 5 for this reservation, nominal interval 1s and minimum samples 10. Without it, previous demo commands keep their tuned legacy behavior.</p>
 <CodeBlock filename="From the extracted demo" language="shell" code={'python3 run.py --profile middleware-adaptive --controller-profile stable --verify\n# Include the controlled signal interaction contract:\npython3 run.py --profile proxy-adaptive --controller-profile stable --decisions enforce --verify\n# Repeat the full controller comparison:\npython3 adaptation_benchmark.py --output /tmp/adaptation-results.json'}/>
 <p>The Adaptive Postman collection verifies profile selection and metrics, real injected checkout failures, sparse-feedback holds after idle, and the optional signal ceiling below the adaptive floor. GET order lookup does not inject SQL failures; the fault check uses checkout deliberately. Set a 5s request timeout and 15s script timeout. The sparse check includes a 5.2s idle pause and three spaced requests.</p>
-<p>The benchmark compares the retained tuned legacy controller, legacy defaults and stable defaults across middleware and proxy deployments. Its scenarios cover abrupt/gradual slowdown, periodic overload, errors, sparse traffic, idle restart, mixed costs and a controlled signal ceiling. The controller is the only changed policy; v0.8.1’s SQL/worker balanced policy is not enabled in this experiment. Three service processes plus the optional proxy retain the four-application-process limit.</p>
+<p>The benchmark compares the retained tuned legacy controller, legacy defaults and stable defaults across middleware and proxy deployments. Its scenarios cover abrupt/gradual slowdown, periodic overload, errors, sparse traffic, idle restart, mixed costs and a controlled signal ceiling. The controller is the only changed policy; the separate SQL/worker balanced policy is not enabled in this experiment. Three service processes plus the optional proxy retain the four-application-process limit.</p>
 <p>Reports include both priority classes, individual services, generator dispatch, scheduled-time client latency, exact adjustment-counter deltas and sampled limit traces. Acceptance criteria and aggregation live in controller_evaluation/. Early exploratory runs informed the candidate; published charts use the fixed-code repeated matrix.</p>
 </Section><Section id="operation-example" title="SQL, worker jobs and a real standby">
 <p>The orders process contains a reference storage service: interactive transactions and six background workers compete for the same four PostgreSQL connections. A physical streaming standby serves read queries. Catalog and inventory stay available; proxy mode adds one HTTP proxy, keeping the application-process maximum at four.</p>
 <CodeBlock filename="From the extracted demo · requires running Podman or Docker" language="shell" code={'python3 run.py --profile middleware-fixed --operations pool --verify\n# Or keep services running and import the printed Postman environment:\npython3 run.py --profile proxy-adaptive --operations pool'} />
-<p>For the opt-in v0.8.1 policy, run <code>python3 run.py --operations balanced --profile middleware-fixed --verify</code>. Balanced uses real pool-wait feedback and existing 3:1 workload sharing; the prior modes remain unchanged. Repeat its comparison with <code>python3 pool_balance_benchmark.py --output /tmp/pool-balance-results.json</code>.</p><p>Use <code>--operations disabled</code> to bypass public SQL admission, <code>fixed</code> for a four-operation SQL budget with a critical reservation, or <code>pool</code> to add real pool pressure feedback for background jobs. Worker admission stays enabled in all variants. The lifetime probe uses sqlguard in every variant. The launcher creates isolated primary/standby containers and volumes; stopping it removes only its own fixtures.</p>
+<p>To compare contention feedback with workload sharing, run <code>python3 run.py --operations balanced --profile middleware-fixed --verify</code>. Balanced uses real pool-wait feedback and existing 3:1 workload sharing; the prior modes remain unchanged. Repeat its comparison with <code>python3 pool_balance_benchmark.py --output /tmp/pool-balance-results.json</code>.</p><p>Use <code>--operations disabled</code> to bypass public SQL admission, <code>fixed</code> for a four-operation SQL budget with a critical reservation, or <code>pool</code> to add real pool pressure feedback for background jobs. Worker admission stays enabled in all variants. The lifetime probe uses sqlguard in every variant. The launcher creates isolated primary/standby containers and volumes; stopping it removes only its own fixtures.</p>
 <p>The Operations Postman collection commits a transaction, reads the standby, verifies that a SQL stream keeps a permit after its HTTP handler returns, exhausts the pool, checks deadline cleanup and recovery, submits background jobs and inspects operation metrics. Admin controls bind numeric loopback and are fixture tools, not production APIs.</p>
 <CodeBlock filename="Repeat contention and replication validation" language="shell" code={'python3 operation_benchmark.py --output /tmp/operation-results.json'} />
 <p>The runner pauses actual WAL replay, generates database writes, resumes replay, stops the standby and verifies reconnect recovery. No fake lag values are injected. Jobs use a bounded, non-durable example queue with visible drops and rejections; durable delivery, retries and idempotency belong to the application.</p>
 </Section>
-    <Section title="Application model"><Diagram name="commerce-services" caption="Each service owns a database, a four-connection pool and its admission budget. The proxy is the fourth HTTP application; middleware runs inside the three services." />
-      <Table headers={['Service', 'Critical business operation', 'Background operation']} rows={[
-        ['Orders', 'Idempotent checkout write and order lookup', 'Aggregate order amounts and update report'],
-        ['Catalog', 'Read a bounded list of persisted products', 'Aggregate prices and description lengths'],
-        ['Inventory', 'Idempotent reservation with atomic stock decrement', 'Aggregate available stock and update report'],
-      ]} /><p>Each database starts with 20,000 rows. Business requests and reports share that service’s SQL connection pool. Services run as independent processes; checkout does not orchestrate a distributed transaction across all three. PostgreSQL and optional monitoring are infrastructure, separate from the four application processes.</p>
-      <Note label="Example settings">Each guard has a ceiling of 12 requests and reserves 4 slots for critical work. Adaptive mode starts at 12 and stays between 5 and 12. The database pool allows 4 connections. HTTP concurrency and SQL connections are different limits; these experimental values require tuning for your application.</Note>
-    </Section>
+
     <Section id="priority-chain" title="Priority through a real service chain">
-      <p>Enable the optional v0.4.0 scenario. Orders calls the catalog API, which performs a real PostgreSQL read. The flow reads catalog data; checkout remains a separate operation. Middleware uses three business processes; proxy mode adds one shared proxy for both hops.</p>
+      <p>Enable the optional priority-chain scenario. Orders calls the catalog API, which performs a real PostgreSQL read. The flow reads catalog data; checkout remains a separate operation. Middleware uses three business processes; proxy mode adds one shared proxy for both hops.</p>
       <CodeBlock filename="terminal · extracted demo" language="shell" code={`python3 run.py --profile middleware-fixed --priorities
 # Or exercise both hops through one Gatewise proxy:
 python3 run.py --profile proxy-adaptive --priorities
@@ -74,26 +95,8 @@ python3 run.py --profile proxy-fixed --sharing 4 --verify`} />
       <CodeBlock filename="Compare capacity use and returning customers" language="shell" code={`python3 sharing_benchmark.py --output results/sharing-results.json`} />
       <p>The benchmark starts with one busy customer, brings three others back, makes all four busy, lets the other customers leave, then restores healthy traffic. It compares a hard cap of 2 with a share of 2 and borrowing ceilings of 4 and 12. Every service still has 4 SQL connections, so more borrowed HTTP requests can also mean more database waiting. Loopback identities and these limits are only local demo settings.</p>
     </Section>
-    <Section title="Run the demo"><CodeBlock filename="terminal" language="shell" code={`unzip gatewise-demo.zip
-cd gatewise-demo
-python3 run.py --profile proxy-adaptive
-# Docker instead of Podman:
-python3 run.py --engine docker --profile middleware-adaptive`} /><p>Start your container engine first. The launcher builds the included source, starts an isolated PostgreSQL 18.6 container and three services, then prints the addresses and generated Postman environment. Ports are selected dynamically. Ctrl+C removes only this example’s processes and disposable database volume.</p>
-      <Table headers={['Profile', 'HTTP application processes', 'Admission placement']} rows={[
-        ['direct', '3', 'Unprotected baseline'], ['proxy-fixed / proxy-adaptive', '4', 'Gatewise routes to three unmodified backends'], ['middleware-fixed / middleware-adaptive', '3', 'A guard inside each Go service'],
-      ]} /><p>All listeners bind to localhost. Public disposable credentials are included for the local database. Add <code>--monitor</code> to start optional local Prometheus and Grafana with the correct scrape targets. No production credentials, compiled binaries or personal environment files are packaged. The included modules use local replacements so the example builds independently of a remote tag.</p>
-    </Section>
-    <Section title="Postman scenarios"><p>Import <code>postman/Commerce.postman_collection.json</code> and the environment file printed by the launcher. Run the whole collection in order against a fresh launch; use a 5s request timeout and 15s script timeout.</p>
-      <Table headers={['Checks', 'Expected behavior']} rows={[
-        ['Orders persistence', 'Create 201 → replay 200 with the same ID → conflicting amount 409'],
-        ['Catalog', 'Persisted products; bounded query size; invalid limit 400'],
-        ['Inventory consistency', 'Replay decrements stock once; key conflict and insufficient stock return 409'],
-        ['SQL faults and recovery', 'Injected failures return 500; restored controls allow healthy requests'],
-        ['Admission', 'Protected background overload produces 503; critical work still completes'],
-        ['Observability', 'Bounded pools, mode headers, pool metrics and adaptive controller metrics'],
-      ]} /><CodeBlock filename="optional Postman CLI" language="shell" code={`# Runs the same collection and cleans up on completion:
-python3 run.py --profile proxy-adaptive --verify`} /><p>The separate loopback admin listeners expose benchmark controls. They are test instrumentation and are never routed through Gatewise. The collection restores controls after fault checks. Stop and relaunch for a clean repeat.</p><a className="text-link" href="data/commerce-contract-results.json" download>Recorded Postman contract results ↗</a>
-    </Section>
+
+
     <Section id="tenant-isolation" title="Tenant isolation example">
       <CodeBlock filename="terminal · extracted gatewise-demo" language="shell" code={`python3 run.py --profile proxy-adaptive --tenants
 # Middleware mode:

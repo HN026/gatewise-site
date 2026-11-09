@@ -15,7 +15,7 @@ function AdmissionFlow() {
       <rect x="391" y="108" width="73" height="61" rx="3" fill="#17261c" stroke="#4b7157" /><text x="427" y="135" textAnchor="middle" className="flow-title small">Handler</text><text x="427" y="153" textAnchor="middle" className="flow-detail small">execute</text>
       <rect x="178" y="258" width="130" height="38" rx="3" fill="#281d18" stroke="#9b5b4b" /><text x="243" y="282" textAnchor="middle" className="flow-rejection">503 · rejected</text>
     </svg>
-    <figcaption>Background work cannot occupy the critical reservation. Both classes remain subject to the total limit.</figcaption><button className="flow-toggle" onClick={() => setPaused(p => !p)} aria-pressed={paused}>{paused ? 'Resume animation' : 'Pause animation'}</button>
+    <figcaption>Example: 20 concurrent requests, with 5 slots unavailable to background work. Both values are configurable; critical requests still need a free total slot.</figcaption><button className="flow-toggle" onClick={() => setPaused(p => !p)} aria-pressed={paused}>{paused ? 'Resume animation' : 'Pause animation'}</button>
   </figure>;
 }
 
