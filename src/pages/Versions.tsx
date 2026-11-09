@@ -1,4 +1,5 @@
 import { CodeBlock, Note, PageTitle, Section, Table } from '../components/ui';
+import { developmentTimeline } from '../data/development';
 import { latestRelease, releases, repositoryUrl } from '../data/releases';
 
 export default function Versions() {
@@ -21,6 +22,11 @@ export default function Versions() {
       <p>To build the standalone proxy from the same release:</p>
       <CodeBlock filename="Standalone proxy" language="shell" code={`git clone --branch ${latestRelease.version} https://github.com/HN026/gatewise.git\ncd gatewise\ngo build -o bin/gatewise ./cmd/gatewise`} />
       <p>See <a href="#/installation">Installation &amp; deployment</a> for handler integration, proxy configuration and verification. Demo startup instructions are in <a href="#/examples">Examples</a>.</p>
+    </Section>
+    <Section id="development" title="Development timeline">
+      <p>Gatewise and its documentation were developed over approximately 15 October–9 November 2026. This timeline reconstructs the order of the work from the maintainer’s reported development period. Individual dates are approximate; they are not independently recorded completion dates.</p>
+      <p>The main branches use reconstructed author dates for this timeline. Original committer timestamps and published release tags are retained. The publication dates in the release history below record when versions actually became available; benchmark and CI timestamps remain unchanged.</p>
+      <Table headers={['Approximate development date (IST)', 'Milestone', 'Work']} rows={developmentTimeline.map(item => [item.label, item.milestone, item.work])} />
     </Section>
     <Section id="release-history" title="Release history">
       {releases.map(release => <article key={release.version} id={release.version}>
