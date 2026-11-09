@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/HN026/gatewise/decision"
+	"github.com/HN026/gatewise/internal/adaptive"
 	"github.com/HN026/gatewise/internal/admission"
 	"github.com/HN026/gatewise/internal/tenancy"
 	"sync"
@@ -79,14 +80,16 @@ func (p *Permit) Finish(outcome Outcome) {
 		elapsed := time.Since(p.started)
 		canceled := outcome.Canceled || p.ctx.Err() != nil
 		priority := admission.Priority(p.request.Priority)
+		// Queue selection must see released capacity and a new selection epoch
+		// atomically. Otherwise a waiter with an old ready notification can use
+		// a free slot while a higher tier is still marked blocked in that epoch.
+		// Release tenant/resource leases before waking the next queued caller.
+		if s.queue != nil {
+			s.queue.mu.Lock()
+		}
+		var change *adaptive.Adjustment
 		if s.controller != nil {
-			change := s.controller.End(priority, p.generation, time.Now(), elapsed, p.request.LatencyTarget, outcome.Err != nil || outcome.Panicked || outcome.StatusCode >= 500, canceled)
-			if change != nil {
-				s.statistics.adjustment(change.Previous, change.Limit, change.Reason)
-				if s.logger != nil {
-					s.logger.Info("concurrency limit adjusted", "service", s.name, "previous", change.Previous, "limit", change.Limit, "reason", change.Reason, "p90_ratio", change.P90Ratio, "control_ratio", change.ControlRatio, "control_priority", change.ControlPriority, "control_failure_fraction", change.ControlFailureFraction, "profile", change.Profile, "samples", change.Samples)
-				}
-			}
+			change = s.controller.End(priority, p.generation, time.Now(), elapsed, p.request.LatencyTarget, outcome.Err != nil || outcome.Panicked || outcome.StatusCode >= 500, canceled)
 		} else {
 			s.limiter.Release(priority)
 		}
@@ -96,14 +99,24 @@ func (p *Permit) Finish(outcome Outcome) {
 		if p.resources != nil {
 			p.resources.Release()
 		}
+		if s.queue != nil {
+			if s.queue.depth > 0 {
+				s.queue.pulse(true)
+			}
+			s.queue.mu.Unlock()
+		}
+		if change != nil {
+			s.statistics.adjustment(change.Previous, change.Limit, change.Reason)
+			// Application-owned logging runs outside the queue lock.
+			if s.logger != nil {
+				s.logger.Info("concurrency limit adjusted", "service", s.name, "previous", change.Previous, "limit", change.Limit, "reason", change.Reason, "p90_ratio", change.P90Ratio, "control_ratio", change.ControlRatio, "control_priority", change.ControlPriority, "control_failure_fraction", change.ControlFailureFraction, "profile", change.Profile, "samples", change.Samples)
+			}
+		}
 		p.active.mu.Lock()
 		p.active.live = false
 		p.active.mu.Unlock()
 		s.statistics.complete(p.request.Priority, outcome.StatusCode, !outcome.Panicked, canceled, elapsed)
 		s.statistics.workComplete(p.request.Kind, outcome, canceled, elapsed)
-		if s.queue != nil {
-			s.queue.wake()
-		}
 	})
 }
 

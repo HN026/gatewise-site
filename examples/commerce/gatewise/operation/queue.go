@@ -132,13 +132,6 @@ func (q *waitingQueue) pulse(advance bool) {
 		}
 	}
 }
-func (q *waitingQueue) wake() {
-	q.mu.Lock()
-	defer q.mu.Unlock()
-	if q.depth > 0 {
-		q.pulse(true)
-	}
-}
 
 // A single short-lived retry timer also observes independently changing cached
 // signals/limits. No permanent dispatcher or goroutine survives an empty queue.
