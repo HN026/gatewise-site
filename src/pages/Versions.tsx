@@ -35,7 +35,7 @@ export default function Versions() {
     </Section>
     <Section id="upgrading" title="Upgrading">
       <p>Read the target release notes, update the pinned module version, run <code>go mod tidy</code>, and validate your application before deployment. For the proxy, build the target tag and verify the configuration and route behavior before replacing the running binary.</p>
-      <Note>Gatewise is currently in the 0.x release series. Review API and configuration changes before upgrading. Concurrency limits apply per process; a new release does not change how replica budgets must be sized.</Note>
+      <Note>Gatewise v1 follows the documented compatibility contract. Review release notes and optional policy changes before upgrading. Concurrency limits apply per process; a new release does not change how replica budgets must be sized.</Note>
       <a className="text-link" href={`${repositoryUrl}/releases`}>All GitHub releases ↗</a>
     </Section>
   </div>;

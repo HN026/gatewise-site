@@ -1,0 +1,62 @@
+{
+  "release": "v1.0.0",
+  "source_commit": "2280af3863166c4c260837f789d0826120381f46",
+  "core_ci": {
+    "conclusion": "success",
+    "databaseId": 42571135112,
+    "headSha": "2280af3863166c4c260837f789d0826120381f46",
+    "status": "completed",
+    "url": "https://github.com/HN026/gatewise/actions/runs/42571135112"
+  },
+  "candidate_image_workflow": {
+    "run_id": "42571139364",
+    "url": "https://github.com/HN026/gatewise/actions/runs/42571139364",
+    "passed": true
+  },
+  "example_workflow": {
+    "run_id": "42572076568",
+    "url": "https://github.com/HN026/gatewise-site/actions/runs/42572076568",
+    "passed": true
+  },
+  "archive_sha256": "4f8dc43ef1153d8ead7b8c83bee99ddc33a6417aad4b543af14d91372e701280",
+  "postman": {
+    "profiles": 69,
+    "assertions": 2288,
+    "passed": true
+  },
+  "local_soak": {
+    "sent": 616400,
+    "runs": 4,
+    "checks": 60,
+    "passed": true
+  },
+  "linux_soak": {
+    "sent": 616400,
+    "runs": 4,
+    "checks": 60,
+    "passed": true
+  },
+  "api_baseline_sha256": "7e235302f722e1b118e915a8bd2f9ea99c3f415b2507558820a3d7b21419045a",
+  "published_image": {
+    "workflow": "https://github.com/HN026/gatewise/actions/runs/42575205596",
+    "passed": true,
+    "image": "ghcr.io/hn026/gatewise:v1.0.0",
+    "digest": "sha256:becdab43d2b84bc8178eecf7230dc0d63f6d5cc220ba80571bdd1040521d8c43",
+    "architectures": [
+      "linux/amd64",
+      "linux/arm64"
+    ],
+    "native_runtime_checks_per_architecture": 8,
+    "high_critical_vulnerabilities_per_architecture": 0,
+    "sbom_and_provenance_verified": true,
+    "anonymous_native_pull": true,
+    "database_checks": 7,
+    "postman_assertions": 74
+  },
+  "public_module_consumer": {
+    "passed": true,
+    "version": "v1.0.0",
+    "local_replace": false,
+    "checked_at": "2026-11-09T06:50:40.634557+00:00"
+  }
+}

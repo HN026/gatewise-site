@@ -12,3 +12,5 @@
 
 /* Explanatory tables use reading text; API and measurement tables retain monospace labels. */
 .prose-table td,.prose-table td:first-child{font-family:inherit;font-size:13px;line-height:1.75;white-space:normal;overflow-wrap:normal}.prose-table td:first-child{color:#dce5df;font-weight:550}.prose-table th{font-family:inherit;font-size:12px}
+/* Keep document overflow inside its explicit table/code scroll containers. */
+.document-column{overflow-x:clip}

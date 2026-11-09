@@ -1,6 +1,59 @@
 // Newest published release first. Keep notes and downloads tied to its Git tag.
 export const releases = [
 {
+  "version": "v1.0.0",
+  "publishedAt": "2026-11-09T06:47:17Z",
+  "date": "9 November 2026",
+  "summary": "Stable public APIs, verified overload and recovery behavior, and native AMD64/ARM64 proxy images.",
+  "requirements": "Library: Go 1.22+; commerce example: Go 1.25+; published image: linux/amd64 and linux/arm64",
+  "changes": [
+    "Established compatibility checks for eight public packages. Native Linux AMD64 and ARM64 CI runs race tests, vet and builds with Go 1.22 and current stable Go.",
+    "Fixed a queue priority inversion exposed by ARM64 CI: releasing capacity and advancing queue selection now happen atomically. The ordering test passed 1,000 local repetitions and is repeated in CI.",
+    "Completed eight three-minute PostgreSQL runs across local and Linux environments: 1,232,800 requests and 120 passing checks. Results retain rejections, latency misses, caller deadlines and recovery outcomes. These experiments do not establish production capacity or long-term leak freedom.",
+    "The exact downloadable example passed 2,288 Postman assertions across 69 database-backed profiles. A separate short exploratory smoke missed its recovery target; the original report remains available alongside the passing full protocol.",
+    "Both native proxy images passed eight runtime/overload/shutdown checks and had zero HIGH/CRITICAL findings in the release scans. SBOM and provenance subjects were verified for both architectures; the published ARM64 image passed seven real-PostgreSQL checks and 74 further Postman assertions. Installation, compatibility, operations, metrics and benchmark guidance explain the guarantees and their limits."
+  ],
+  "upgrade": "No configuration migration from v0.11.1. Update the module to v1.0.0 or use ghcr.io/hn026/gatewise:v1.0.0. Existing defaults remain: immediate refusal and legacy adaptive feedback. Waiting and other policies are opt-in. Use constructors and keyed configuration literals. Capacity limits remain per engine/process; cancellation of a proxy request does not guarantee immediate termination of remote work. Earlier release reports remain unchanged.",
+  "downloads": [
+    {
+      "name": "Source ZIP",
+      "path": "archive/refs/tags/v1.0.0.zip"
+    },
+    {
+      "name": "Demo example",
+      "path": "releases/download/v1.0.0/gatewise-demo.zip"
+    },
+    {
+      "name": "Demo SHA-256",
+      "path": "releases/download/v1.0.0/gatewise-demo.sha256"
+    },
+    {
+      "name": "Postman bundle",
+      "path": "releases/download/v1.0.0/postman.zip"
+    },
+    {
+      "name": "Release qualification",
+      "path": "releases/download/v1.0.0/release-qualification.json"
+    },
+    {
+      "name": "Local reliability results",
+      "path": "releases/download/v1.0.0/reliability-results.json.gz"
+    },
+    {
+      "name": "Linux reliability results",
+      "path": "releases/download/v1.0.0/release-linux-results.json.gz"
+    },
+    {
+      "name": "Postman results",
+      "path": "releases/download/v1.0.0/release-contract-results.json"
+    },
+    {
+      "name": "Retained exploratory smoke",
+      "path": "releases/download/v1.0.0/release-exploratory-smoke.json"
+    }
+  ]
+},
+{
   "version": "v0.11.1",
   "publishedAt": "2026-11-08T22:28:41Z",
   "date": "9 November 2026",

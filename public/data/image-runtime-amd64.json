@@ -1,0 +1,40 @@
+{
+  "image": "ghcr.io/hn026/gatewise@sha256:df43f4f682cbf42e76bc7d3b6dc814ecc92ed64a68816181a99d8c9ba5158608",
+  "image_id": "sha256:e9fec95d8042d0cf48fa3290300518ce96fae7b0a316b2d3f8679d37344cd177",
+  "architecture": "amd64",
+  "checks": [
+    {
+      "name": "nonroot runtime",
+      "pass": true
+    },
+    {
+      "name": "offline configuration validation",
+      "pass": true
+    },
+    {
+      "name": "forwards real HTTP backend",
+      "pass": true
+    },
+    {
+      "name": "overload admits2 and refuses4",
+      "pass": true
+    },
+    {
+      "name": "metrics available",
+      "pass": true
+    },
+    {
+      "name": "shutdown begins with work in flight",
+      "pass": true
+    },
+    {
+      "name": "inflight response completes during shutdown",
+      "pass": true
+    },
+    {
+      "name": "graceful shutdown exits0",
+      "pass": true
+    }
+  ],
+  "passed": true
+}

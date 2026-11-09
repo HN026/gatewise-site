@@ -33,27 +33,25 @@ python3 tools/package_demo.py --sync-sources --projects ..
 
 Canonical modules are `../gatewise` and `../commerce-backend`. Make code changes there before syncing. The example launcher, workload and portable Postman contract are owned by `examples/commerce/`. Packaging excludes compiled binaries, local dotenv files, logs and result directories; its ZIP includes a SHA-256 source manifest. The replacement demo starts at most four HTTP application processes: three service roles and, in proxy mode, Gatewise. PostgreSQL and optional monitoring are infrastructure.
 
-## Reproduce current measurements
+## Reproduce release validation
 
-Extract the demo and follow its README. It requires Go 1.25+, Python 3.10+ and running Podman or Docker. Default runs take about 32 minutes plus startup/drain; controller validation is separate. Stop competing load before measurement.
+The current reliability protocol uses four independent three-minute PostgreSQL runs, one for each fixed/adaptive middleware/proxy deployment. It checks overload, SQL delay and errors, caller deadlines, cleanup and recovery. Stop competing local load before collecting a report. The short `--quick` mode is exploratory and cannot qualify a release.
 
 ```sh
-python3 examples/commerce/benchmark.py --output /tmp/commerce-results.json
-python3 examples/commerce/validate_controller.py --output /tmp/controller-validation.json
-# Plot measured results in an environment containing Matplotlib:
-python3 tools/export_commerce_benchmark.py --report /tmp/commerce-results.json --controller-report /tmp/controller-validation.json
-# Separate native Grafana captures; requires the official image renderer:
-python3 tools/capture_commerce_metrics.py --projects examples/commerce
-python3 tools/generate_commerce_diagram.py
+python3 examples/commerce/reliability_benchmark.py --engine podman
+# Plot the completed report with Matplotlib installed:
+python3 tools/export_reliability.py
+# Validate the exact ZIP and all saved Postman profiles against real PostgreSQL:
+python3 tools/verify_demo.py --engine podman
 ```
 
-The exporter requires all fifteen measured runs and their checks to pass. Figures preserve run-level percentiles, rejection/error counts and data provenance. Controller traces are sampled observations. The full report includes generator delivery, pool waits, backend heap/goroutines, runtime versions and binary hashes. Captured dashboard PNGs come from a separate monitoring run against the same real services, not the repeated performance experiment. Historical v0.1.0 synthetic data remains available in Git history and its tagged release; current documentation and default demo focus on commerce.
+The release-example workflow can run this full protocol on Linux as well. Local and Linux reports remain separate because their hosts differ. The original failed exploratory smoke is retained alongside its exact recovery counts. Memory/goroutine checks are bounded observations, not proof of long-term leak freedom or production capacity.
 
-Measurements were made on macOS with Podman. They are local production-style workloads, not production capacity or long-duration soak evidence. Optional monitoring requires containers to reach host listeners; adapt scrape networking for your deployment. The library itself is independent of PostgreSQL and example APIs. Production operations, authentication, TLS and replica budgets remain application concerns.
+Earlier policy, controller, tenant, priority, resource and SQL/standby experiments retain their own raw reports, settings and source provenance. Use the matching release example and its README to reproduce a historical dataset. Recorded dashboard images come from separate monitoring captures; they are not additional repetitions of a performance experiment. The library is independent of PostgreSQL and these example APIs.
 
 ## Releases and deployment
 
-The site targets Gatewise v0.11.1. Add published versions to `src/data/releases.ts`, newest first, with verified GitHub timestamps, IST dates, requirements, upgrade notes and tag-specific downloads. The Versions page and sidebar use this shared source. Never change an existing release tag to update the site.
+The site targets Gatewise v1.0.0. Add published versions to `src/data/releases.ts`, newest first, with verified GitHub timestamps, IST dates, requirements, upgrade notes and tag-specific downloads. The Versions page and sidebar use this shared source. Never change an existing release tag to update the site.
 
 The Pages workflow type-checks/builds and deploys `main`. Library: https://github.com/HN026/gatewise · Site: https://hn026.github.io/gatewise-site/ · License: MIT.
 

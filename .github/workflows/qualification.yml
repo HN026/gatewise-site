@@ -9,7 +9,7 @@ on:
       full_soak:
         description: Run four full three-minute scenarios instead of the exploratory smoke
         type: boolean
-        default: false
+        default: true
 permissions:
   contents: read
 jobs:

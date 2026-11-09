@@ -1,0 +1,10 @@
+/bin/
+*.log
+
+.env
+.env.*
+!.env.example
+
+/benchmarks/results/
+
+.DS_Store
