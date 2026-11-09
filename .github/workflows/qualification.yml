@@ -1,0 +1,62 @@
+name: Qualify release example
+on:
+  workflow_dispatch:
+    inputs:
+      core_ref:
+        description: Exact Gatewise tag or commit to test
+        required: true
+        default: v1.0.0-rc.2
+      full_soak:
+        description: Run four full three-minute scenarios instead of the exploratory smoke
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: HN026/gatewise
+          ref: ${{ inputs.core_ref }}
+          path: examples/commerce/gatewise
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: stable
+          cache-dependency-path: examples/commerce/commerce-backend/go.sum
+      - name: Install pinned Postman CLI
+        run: npm install --global --registry=https://registry.npmjs.org postman-cli@1.85.0
+      - name: Backend race and vet checks
+        working-directory: examples/commerce/commerce-backend
+        run: |
+          go test -race ./...
+          go vet ./...
+      - name: Isolated consumer integration
+        run: python3 examples/commerce/release_consumer.py --candidate examples/commerce/gatewise
+      - name: Package and validate the exact demo
+        run: |
+          python3 tools/package_demo.py
+          python3 tools/verify_demo.py --engine docker
+      - name: Full sustained validation
+        if: inputs.full_soak
+        working-directory: examples/commerce
+        env:
+          CORE_REF: ${{ inputs.core_ref }}
+        run: python3 reliability_benchmark.py --engine docker --source-ref "$CORE_REF"
+      - name: Exploratory smoke
+        if: ${{ !inputs.full_soak }}
+        working-directory: examples/commerce
+        env:
+          CORE_REF: ${{ inputs.core_ref }}
+        run: python3 reliability_benchmark.py --engine docker --source-ref "$CORE_REF" --quick
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: release-example-evidence
+          path: |
+            examples/commerce/results/release-contract-results.json
+            examples/commerce/results/reliability-results.json
+          if-no-files-found: warn
