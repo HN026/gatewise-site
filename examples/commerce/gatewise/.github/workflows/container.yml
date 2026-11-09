@@ -60,23 +60,26 @@ jobs:
         run: |
           docker pull "$IMAGE"
           python3 tests/container/check.py --image "$IMAGE" --output container-check.json
-      - name: Install verified native scanner
-        env:
-          ARCH: ${{ matrix.arch }}
-        run: |
-          PLATFORM=Linux-64bit
-          if [ "$ARCH" = arm64 ]; then PLATFORM=Linux-ARM64; fi
-          ARCHIVE="trivy_0.70.0_${PLATFORM}.tar.gz"
-          BASE=https://github.com/aquasecurity/trivy/releases/download/v0.70.0
-          curl --fail --location --retry 3 --retry-all-errors "$BASE/$ARCHIVE" -o "$ARCHIVE"
-          curl --fail --location --retry 3 --retry-all-errors "$BASE/trivy_0.70.0_checksums.txt" -o checksums.txt
-          grep " $ARCHIVE$" checksums.txt | sha256sum --check --strict
-          tar -xzf "$ARCHIVE" trivy
-          ./trivy --version
+      - name: Checkout pinned scanner source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: aquasecurity/trivy
+          ref: 8a3177aedf7ee0864920eb1852eef031cd3742b8 # v0.70.0
+          path: .release-tools/trivy
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: '1.27.3'
+          cache-dependency-path: .release-tools/trivy/go.sum
+      - name: Build native scanner from verified source
+        working-directory: .release-tools/trivy
+        run: go build -ldflags '-X github.com/aquasecurity/trivy/pkg/version/app.ver=0.70.0' -o "$RUNNER_TEMP/trivy" ./cmd/trivy
       - name: Scan final runtime image
         env:
           IMAGE: ghcr.io/hn026/gatewise@${{ steps.build.outputs.digest }}
-        run: ./trivy image --scanners vuln --severity HIGH,CRITICAL --format json --output vulnerabilities.json --exit-code 1 "$IMAGE"
+        run: |
+          "$RUNNER_TEMP/trivy" --version
+          "$RUNNER_TEMP/trivy" image --scanners vuln --severity HIGH,CRITICAL --format json --output vulnerabilities.json --exit-code 1 "$IMAGE"
       - name: Record the qualified digest
         env:
           DIGEST: ${{ steps.build.outputs.digest }}
