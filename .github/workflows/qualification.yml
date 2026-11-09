@@ -5,7 +5,7 @@ on:
       core_ref:
         description: Exact Gatewise tag or commit to test
         required: true
-        default: v1.0.0-rc.4
+        default: v1.0.0
       full_soak:
         description: Run four full three-minute scenarios instead of the exploratory smoke
         type: boolean
@@ -61,4 +61,7 @@ jobs:
           path: |
             examples/commerce/results/release-contract-results.json
             examples/commerce/results/reliability-results.json
+            public/downloads/gatewise-demo.zip
+            public/downloads/gatewise-demo.sha256
+            public/downloads/postman.zip
           if-no-files-found: warn
