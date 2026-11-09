@@ -4,8 +4,8 @@ import argparse,datetime,hashlib,json,pathlib,subprocess,time
 from run import ROOT,Stack,api,port,request
 
 def main():
- p=argparse.ArgumentParser(description=__doc__);p.add_argument('--projects',type=pathlib.Path,default=ROOT);p.add_argument('--engine',default='podman');p.add_argument('--image',default='localhost/gatewise:v0.11.1');p.add_argument('--output',type=pathlib.Path,default=ROOT/'results/container-results.json');a=p.parse_args()
- report={'release':'v0.11.1','started_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'checks':[]}
+ p=argparse.ArgumentParser(description=__doc__);p.add_argument('--projects',type=pathlib.Path,default=ROOT);p.add_argument('--engine',default='podman');p.add_argument('--image',default='localhost/gatewise:v1.0.0');p.add_argument('--output',type=pathlib.Path,default=ROOT/'results/container-results.json');a=p.parse_args()
+ report={'release':'v1.0.0','started_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'checks':[]}
  def check(name,passed):report['checks'].append({'name':name,'pass':bool(passed)});assert passed,name
  info=json.loads(subprocess.check_output([a.engine,'image','inspect',a.image],text=True))[0];report.update(image_id=info['Id'],architecture=info['Architecture'],size_bytes=info['Size']);check('image runs as nonroot',info['Config']['User']=='65532:65532')
  result=subprocess.run([a.engine,'run','--rm','--read-only','--cap-drop=ALL','--security-opt=no-new-privileges','-e','GATEWISE_SERVICE_ORDERS_URL=http://example.invalid',a.image,'-config','/etc/gatewise/config.json','-check-config'],capture_output=True,text=True);check('configuration validation works without a backend',result.returncode==0)
