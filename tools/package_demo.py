@@ -10,8 +10,8 @@ def main():
    for source in sorted((a.projects/name).rglob('*')):
     if not source.is_file():continue
     rel=source.relative_to(a.projects/name)
-    if any(x in {'.git','.github','bin','results','__pycache__','node_modules'} for x in rel.parts):continue
-    if source.suffix not in {'.go','.mod','.sum','.json','.sh','.py','.yaml','.yml','.svg'} and source.name not in {'LICENSE','.env.example','Dockerfile','.dockerignore'}:continue
+    if any(x in {'.git','bin','results','__pycache__','node_modules'} for x in rel.parts):continue
+    if source.suffix not in {'.go','.mod','.sum','.json','.sh','.py','.yaml','.yml','.svg'} and source.name not in {'LICENSE','README.md','.gitignore','.env.example','Dockerfile','.dockerignore'}:continue
     out=target/rel;out.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(source,out)
  contents={}
  for source in sorted(example.rglob('*')):

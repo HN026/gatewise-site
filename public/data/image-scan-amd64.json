@@ -1,0 +1,334 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.70.0"
+  },
+  "ReportID": "01a1bf11-4be2-7a2a-b7c2-30266f00369b",
+  "CreatedAt": "2026-11-09T06:49:04.226667529Z",
+  "ArtifactID": "sha256:cebcf3a788fe3e38e1ed984e3168aa6e216e53774c44c92a9b6bdfb50224781f",
+  "ArtifactName": "ghcr.io/hn026/gatewise@sha256:df43f4f682cbf42e76bc7d3b6dc814ecc92ed64a68816181a99d8c9ba5158608",
+  "ArtifactType": "container_image",
+  "Metadata": {
+    "Size": 12621824,
+    "ImageID": "sha256:e9fec95d8042d0cf48fa3290300518ce96fae7b0a316b2d3f8679d37344cd177",
+    "DiffIDs": [
+      "sha256:ac917f7047be97f1a8b02e9fc884930dfbdbbe8a5baca966efb98ac38b38d28d",
+      "sha256:0fd295fc17f6c1bf22808f9f5fc9bb6cdf98cefc51e4800fd954c49a1181f1b2",
+      "sha256:6dee2ac1ff01fef19dfa08a3f219e8d14ef991fa7c654fb57e0be002da05910e",
+      "sha256:020a8b0610f71254d20ec144e458858ed32e596744a0f5cfea64da4a21983f94"
+    ],
+    "RepoDigests": [
+      "ghcr.io/hn026/gatewise@sha256:df43f4f682cbf42e76bc7d3b6dc814ecc92ed64a68816181a99d8c9ba5158608"
+    ],
+    "Reference": "ghcr.io/hn026/gatewise@sha256:df43f4f682cbf42e76bc7d3b6dc814ecc92ed64a68816181a99d8c9ba5158608",
+    "ImageConfig": {
+      "architecture": "amd64",
+      "created": "2026-11-09T06:47:58.799133072Z",
+      "history": [
+        {
+          "created": "2026-11-09T06:47:58Z",
+          "created_by": "ARG VERSION=v1.0.0",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2026-11-09T06:47:58Z",
+          "created_by": "ARG REVISION=2280af3863166c4c260837f789d0826120381f46",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2026-11-09T06:47:58Z",
+          "created_by": "LABEL org.opencontainers.image.source=https://github.com/HN026/gatewise org.opencontainers.image.description=Gatewise HTTP admission-control proxy org.opencontainers.image.licenses=MIT org.opencontainers.image.version=v1.0.0 org.opencontainers.image.revision=2280af3863166c4c260837f789d0826120381f46",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2026-11-09T06:47:58Z",
+          "created_by": "COPY /out/gatewise /gatewise # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2026-11-09T06:47:58Z",
+          "created_by": "COPY /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2026-11-09T06:47:58Z",
+          "created_by": "COPY configs/docker.json /etc/gatewise/config.json # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2026-11-09T06:47:58Z",
+          "created_by": "COPY LICENSE /LICENSE # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2026-11-09T06:47:58Z",
+          "created_by": "USER 65532:65532",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2026-11-09T06:47:58Z",
+          "created_by": "EXPOSE [8080/tcp]",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2026-11-09T06:47:58Z",
+          "created_by": "STOPSIGNAL SIGTERM",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2026-11-09T06:47:58Z",
+          "created_by": "ENTRYPOINT [\"/gatewise\" \"-env-file\" \"\"]",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2026-11-09T06:47:58Z",
+          "created_by": "CMD [\"-config\" \"/etc/gatewise/config.json\"]",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        }
+      ],
+      "os": "linux",
+      "rootfs": {
+        "type": "layers",
+        "diff_ids": [
+          "sha256:ac917f7047be97f1a8b02e9fc884930dfbdbbe8a5baca966efb98ac38b38d28d",
+          "sha256:0fd295fc17f6c1bf22808f9f5fc9bb6cdf98cefc51e4800fd954c49a1181f1b2",
+          "sha256:6dee2ac1ff01fef19dfa08a3f219e8d14ef991fa7c654fb57e0be002da05910e",
+          "sha256:020a8b0610f71254d20ec144e458858ed32e596744a0f5cfea64da4a21983f94"
+        ]
+      },
+      "config": {
+        "Cmd": [
+          "-config",
+          "/etc/gatewise/config.json"
+        ],
+        "Entrypoint": [
+          "/gatewise",
+          "-env-file",
+          ""
+        ],
+        "Env": [
+          "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+        ],
+        "Labels": {
+          "org.opencontainers.image.description": "Gatewise HTTP admission-control proxy",
+          "org.opencontainers.image.licenses": "MIT",
+          "org.opencontainers.image.revision": "2280af3863166c4c260837f789d0826120381f46",
+          "org.opencontainers.image.source": "https://github.com/HN026/gatewise",
+          "org.opencontainers.image.version": "v1.0.0"
+        },
+        "User": "65532:65532",
+        "WorkingDir": "/",
+        "ExposedPorts": {
+          "8080/tcp": {}
+        },
+        "ArgsEscaped": true,
+        "StopSignal": "SIGTERM"
+      }
+    },
+    "Layers": [
+      {
+        "Size": 12433408,
+        "DiffID": "sha256:ac917f7047be97f1a8b02e9fc884930dfbdbbe8a5baca966efb98ac38b38d28d"
+      },
+      {
+        "Size": 182272,
+        "DiffID": "sha256:0fd295fc17f6c1bf22808f9f5fc9bb6cdf98cefc51e4800fd954c49a1181f1b2"
+      },
+      {
+        "Size": 3072,
+        "DiffID": "sha256:6dee2ac1ff01fef19dfa08a3f219e8d14ef991fa7c654fb57e0be002da05910e"
+      },
+      {
+        "Size": 3072,
+        "DiffID": "sha256:020a8b0610f71254d20ec144e458858ed32e596744a0f5cfea64da4a21983f94"
+      }
+    ]
+  },
+  "Results": [
+    {
+      "Target": "gatewise",
+      "Class": "lang-pkgs",
+      "Type": "gobinary",
+      "Packages": [
+        {
+          "ID": "github.com/HN026/gatewise",
+          "Name": "github.com/HN026/gatewise",
+          "Identifier": {
+            "PURL": "pkg:golang/github.com/hn026/gatewise",
+            "UID": "da07b4c5ed13496b"
+          },
+          "Relationship": "root",
+          "DependsOn": [
+            "github.com/beorn7/perks@v1.0.1",
+            "github.com/cespare/xxhash/v2@v2.3.0",
+            "github.com/felixge/httpsnoop@v1.0.4",
+            "github.com/munnerz/goautoneg@v0.0.0-20191010083416-a7dc8b61c822",
+            "github.com/prometheus/client_golang@v1.22.0",
+            "github.com/prometheus/client_model@v0.6.1",
+            "github.com/prometheus/common@v0.62.0",
+            "github.com/prometheus/procfs@v0.15.1",
+            "golang.org/x/sys@v0.30.0",
+            "google.golang.org/protobuf@v1.36.5",
+            "stdlib@v1.27.3"
+          ],
+          "Layer": {
+            "DiffID": "sha256:ac917f7047be97f1a8b02e9fc884930dfbdbbe8a5baca966efb98ac38b38d28d"
+          },
+          "AnalyzedBy": "gobinary"
+        },
+        {
+          "ID": "stdlib@v1.27.3",
+          "Name": "stdlib",
+          "Identifier": {
+            "PURL": "pkg:golang/stdlib@v1.27.3",
+            "UID": "2ae720cbee3cabed"
+          },
+          "Version": "v1.27.3",
+          "Relationship": "direct",
+          "Layer": {
+            "DiffID": "sha256:ac917f7047be97f1a8b02e9fc884930dfbdbbe8a5baca966efb98ac38b38d28d"
+          },
+          "AnalyzedBy": "gobinary"
+        },
+        {
+          "ID": "github.com/beorn7/perks@v1.0.1",
+          "Name": "github.com/beorn7/perks",
+          "Identifier": {
+            "PURL": "pkg:golang/github.com/beorn7/perks@v1.0.1",
+            "UID": "79a86f02e816e86a"
+          },
+          "Version": "v1.0.1",
+          "Layer": {
+            "DiffID": "sha256:ac917f7047be97f1a8b02e9fc884930dfbdbbe8a5baca966efb98ac38b38d28d"
+          },
+          "AnalyzedBy": "gobinary"
+        },
+        {
+          "ID": "github.com/cespare/xxhash/v2@v2.3.0",
+          "Name": "github.com/cespare/xxhash/v2",
+          "Identifier": {
+            "PURL": "pkg:golang/github.com/cespare/xxhash/v2@v2.3.0",
+            "UID": "72c52667d83eec0b"
+          },
+          "Version": "v2.3.0",
+          "Layer": {
+            "DiffID": "sha256:ac917f7047be97f1a8b02e9fc884930dfbdbbe8a5baca966efb98ac38b38d28d"
+          },
+          "AnalyzedBy": "gobinary"
+        },
+        {
+          "ID": "github.com/felixge/httpsnoop@v1.0.4",
+          "Name": "github.com/felixge/httpsnoop",
+          "Identifier": {
+            "PURL": "pkg:golang/github.com/felixge/httpsnoop@v1.0.4",
+            "UID": "2adc05b42a640c1d"
+          },
+          "Version": "v1.0.4",
+          "Layer": {
+            "DiffID": "sha256:ac917f7047be97f1a8b02e9fc884930dfbdbbe8a5baca966efb98ac38b38d28d"
+          },
+          "AnalyzedBy": "gobinary"
+        },
+        {
+          "ID": "github.com/munnerz/goautoneg@v0.0.0-20191010083416-a7dc8b61c822",
+          "Name": "github.com/munnerz/goautoneg",
+          "Identifier": {
+            "PURL": "pkg:golang/github.com/munnerz/goautoneg@v0.0.0-20191010083416-a7dc8b61c822",
+            "UID": "cd27c36a900ad4ae"
+          },
+          "Version": "v0.0.0-20191010083416-a7dc8b61c822",
+          "Layer": {
+            "DiffID": "sha256:ac917f7047be97f1a8b02e9fc884930dfbdbbe8a5baca966efb98ac38b38d28d"
+          },
+          "AnalyzedBy": "gobinary"
+        },
+        {
+          "ID": "github.com/prometheus/client_golang@v1.22.0",
+          "Name": "github.com/prometheus/client_golang",
+          "Identifier": {
+            "PURL": "pkg:golang/github.com/prometheus/client_golang@v1.22.0",
+            "UID": "a5b68406c07990fe"
+          },
+          "Version": "v1.22.0",
+          "Layer": {
+            "DiffID": "sha256:ac917f7047be97f1a8b02e9fc884930dfbdbbe8a5baca966efb98ac38b38d28d"
+          },
+          "AnalyzedBy": "gobinary"
+        },
+        {
+          "ID": "github.com/prometheus/client_model@v0.6.1",
+          "Name": "github.com/prometheus/client_model",
+          "Identifier": {
+            "PURL": "pkg:golang/github.com/prometheus/client_model@v0.6.1",
+            "UID": "9518a40d16d3f7b0"
+          },
+          "Version": "v0.6.1",
+          "Layer": {
+            "DiffID": "sha256:ac917f7047be97f1a8b02e9fc884930dfbdbbe8a5baca966efb98ac38b38d28d"
+          },
+          "AnalyzedBy": "gobinary"
+        },
+        {
+          "ID": "github.com/prometheus/common@v0.62.0",
+          "Name": "github.com/prometheus/common",
+          "Identifier": {
+            "PURL": "pkg:golang/github.com/prometheus/common@v0.62.0",
+            "UID": "a07081bb604acc34"
+          },
+          "Version": "v0.62.0",
+          "Layer": {
+            "DiffID": "sha256:ac917f7047be97f1a8b02e9fc884930dfbdbbe8a5baca966efb98ac38b38d28d"
+          },
+          "AnalyzedBy": "gobinary"
+        },
+        {
+          "ID": "github.com/prometheus/procfs@v0.15.1",
+          "Name": "github.com/prometheus/procfs",
+          "Identifier": {
+            "PURL": "pkg:golang/github.com/prometheus/procfs@v0.15.1",
+            "UID": "591520630daff78f"
+          },
+          "Version": "v0.15.1",
+          "Layer": {
+            "DiffID": "sha256:ac917f7047be97f1a8b02e9fc884930dfbdbbe8a5baca966efb98ac38b38d28d"
+          },
+          "AnalyzedBy": "gobinary"
+        },
+        {
+          "ID": "golang.org/x/sys@v0.30.0",
+          "Name": "golang.org/x/sys",
+          "Identifier": {
+            "PURL": "pkg:golang/golang.org/x/sys@v0.30.0",
+            "UID": "bea97a534bda9d4e"
+          },
+          "Version": "v0.30.0",
+          "Layer": {
+            "DiffID": "sha256:ac917f7047be97f1a8b02e9fc884930dfbdbbe8a5baca966efb98ac38b38d28d"
+          },
+          "AnalyzedBy": "gobinary"
+        },
+        {
+          "ID": "google.golang.org/protobuf@v1.36.5",
+          "Name": "google.golang.org/protobuf",
+          "Identifier": {
+            "PURL": "pkg:golang/google.golang.org/protobuf@v1.36.5",
+            "UID": "c3e04c118a411326"
+          },
+          "Version": "v1.36.5",
+          "Layer": {
+            "DiffID": "sha256:ac917f7047be97f1a8b02e9fc884930dfbdbbe8a5baca966efb98ac38b38d28d"
+          },
+          "AnalyzedBy": "gobinary"
+        }
+      ]
+    }
+  ]
+}

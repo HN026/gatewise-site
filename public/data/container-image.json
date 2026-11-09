@@ -1,11 +1,44 @@
 {
-  "image": "ghcr.io/hn026/gatewise:v0.11.1",
-  "anonymous": true,
-  "verified_at": "2026-11-08T22:31:35.401706+00:00",
-  "digest": "sha256:b12a02d7324941c3acd1f3eaddb6e7e2b5706317f387b1d01d6f7b7c54e07f58",
-  "configuration_digest": "sha256:b5bb5bc40730dc1748ff9f20641c6beeb93289cd6c0ae52c2cb531488064f7e8",
-  "platform": "linux/amd64",
-  "user": "65532:65532",
-  "compressed_layer_bytes": 5001867,
-  "verification": "OCI manifest and configuration fetched using a token issued without credentials; no cookies or auth-file fallback."
+  "image": "ghcr.io/hn026/gatewise:v1.0.0",
+  "digest": "sha256:becdab43d2b84bc8178eecf7230dc0d63f6d5cc220ba80571bdd1040521d8c43",
+  "revision": "2280af3863166c4c260837f789d0826120381f46",
+  "verified_at": "2026-11-09T06:49:50.991939+00:00",
+  "anonymous_manifest_access": true,
+  "architectures": [
+    {
+      "architecture": "amd64",
+      "platform_digest": "sha256:c25c33321ed546dd7993b39139e420642336c7a4b74e34b2894943b3396d10de",
+      "config_digest": "sha256:e9fec95d8042d0cf48fa3290300518ce96fae7b0a316b2d3f8679d37344cd177",
+      "compressed_layer_bytes": 5001811,
+      "user": "65532:65532",
+      "attestations": {
+        "sbom": {
+          "predicate_type": "https://spdx.dev/Document",
+          "blob_digest": "sha256:300137af70326abc9532e7c3596f67458e7e82a5f92037e21be0f5c3333696b7"
+        },
+        "provenance": {
+          "predicate_type": "https://slsa.dev/provenance/v1",
+          "blob_digest": "sha256:94e90c496e3b99572c2b5fa45c374cf5c60a5c9df0b637b2d12dd480b96bef21"
+        }
+      }
+    },
+    {
+      "architecture": "arm64",
+      "platform_digest": "sha256:c02b20f4c7caeea23fb091f1ee3e0e1946e6cd2825038ae48b88ea04b4f1d937",
+      "config_digest": "sha256:c29e97d4eb5d4e1632b0b4726f1d1d2b4227e0290be8246731a32837e861e87e",
+      "compressed_layer_bytes": 4544931,
+      "user": "65532:65532",
+      "attestations": {
+        "sbom": {
+          "predicate_type": "https://spdx.dev/Document",
+          "blob_digest": "sha256:9a91d8741090d4dbe72865edd083a4a5fec8630392ef16efd9f5ea7537dcf803"
+        },
+        "provenance": {
+          "predicate_type": "https://slsa.dev/provenance/v1",
+          "blob_digest": "sha256:58e283381c3e3b95dabc50e9374216c33aeb72ecda6cd2af3dfff38d3211cfe2"
+        }
+      }
+    }
+  ],
+  "anonymous_native_pull": true
 }

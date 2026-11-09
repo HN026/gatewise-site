@@ -1,3 +1,4 @@
+import { ReliabilityBenchmarks } from '../components/ReliabilityBenchmarks';
 import { HardeningBenchmarks } from '../components/HardeningBenchmarks';
 import { ComparisonBenchmarks } from '../components/ComparisonBenchmarks';
 import { QueueBenchmarks } from '../components/QueueBenchmarks';
@@ -44,6 +45,7 @@ export default function Benchmarks() {
 
     <Note label="Read success, latency and refusals together">A fast refusal is not a successful request. Many experiments count successes within a 100 ms goal, then report successful-request p95, refusals, errors and caller deadlines separately. A lower p95 can result from admitting fewer requests, so it is not enough on its own. Each experiment defines its timing boundary and workload; older reports do not all include generator scheduling delay. RPS means requests per second. These local experiments support comparisons within their documented setup, not a production-capacity promise.</Note>
     <p>We compare two ways to use Gatewise: middleware inside a Go service, and a proxy in front of a service. Fixed mode keeps the configured concurrency limit. Adaptive mode adjusts that limit within the bounds set by the operator.</p>
+    <ReliabilityBenchmarks/>
     <HardeningBenchmarks/>
     <ComparisonBenchmarks/>
     <QueueBenchmarks/>

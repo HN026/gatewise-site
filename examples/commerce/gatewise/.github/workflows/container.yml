@@ -1,0 +1,126 @@
+name: Publish proxy image
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to qualify and publish
+        required: true
+        default: v1.0.0
+permissions:
+  contents: read
+jobs:
+  native:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: amd64
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.tag || github.event.release.tag_name }}
+      - name: Resolve immutable source
+        id: source
+        env:
+          TAG: ${{ inputs.tag || github.event.release.tag_name }}
+        run: |
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build candidate with attestations
+        id: build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          platforms: linux/${{ matrix.arch }}
+          push: true
+          tags: ghcr.io/hn026/gatewise:build-${{ steps.source.outputs.sha }}-${{ matrix.arch }}
+          build-args: |
+            VERSION=${{ inputs.tag || github.event.release.tag_name }}
+            REVISION=${{ steps.source.outputs.sha }}
+          provenance: mode=max
+          sbom: true
+      - name: Native runtime, overload and graceful-shutdown checks
+        env:
+          IMAGE: ghcr.io/hn026/gatewise@${{ steps.build.outputs.digest }}
+        run: |
+          docker pull "$IMAGE"
+          python3 tests/container/check.py --image "$IMAGE" --output container-check.json
+      - name: Checkout pinned scanner source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: aquasecurity/trivy
+          ref: 8a3177aedf7ee0864920eb1852eef031cd3742b8 # v0.70.0
+          path: .release-tools/trivy
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: .release-tools/trivy/go.mod
+          cache-dependency-path: .release-tools/trivy/go.sum
+      - name: Build native scanner from verified source
+        working-directory: .release-tools/trivy
+        env:
+          GOEXPERIMENT: jsonv2
+        run: go build -ldflags '-X github.com/aquasecurity/trivy/pkg/version/app.ver=0.70.0' -o "$RUNNER_TEMP/trivy" ./cmd/trivy
+      - name: Scan final runtime image
+        env:
+          IMAGE: ghcr.io/hn026/gatewise@${{ steps.build.outputs.digest }}
+        run: |
+          "$RUNNER_TEMP/trivy" --version
+          "$RUNNER_TEMP/trivy" image --scanners vuln --severity HIGH,CRITICAL --format json --output vulnerabilities.json --exit-code 1 "$IMAGE"
+      - name: Record the qualified digest
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: echo "$DIGEST" > digest-${{ matrix.arch }}.txt
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: qualification-${{ matrix.arch }}
+          path: |
+            container-check.json
+            vulnerabilities.json
+            digest-*.txt
+          if-no-files-found: error
+  publish:
+    needs: native
+    runs-on: ubuntu-24.04
+    permissions:
+      packages: write
+    steps:
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: qualification-*
+          merge-multiple: true
+          path: qualification
+      - name: Publish only qualified architectures
+        env:
+          TAG: ${{ inputs.tag || github.event.release.tag_name }}
+        run: |
+          AMD64=$(cat qualification/digest-amd64.txt)
+          ARM64=$(cat qualification/digest-arm64.txt)
+          docker buildx imagetools create -t "ghcr.io/hn026/gatewise:$TAG" "ghcr.io/hn026/gatewise@$AMD64" "ghcr.io/hn026/gatewise@$ARM64"
+          docker buildx imagetools inspect "ghcr.io/hn026/gatewise:$TAG" --raw > image-index.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: published-image-index
+          path: image-index.json
